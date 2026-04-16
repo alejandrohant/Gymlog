@@ -935,6 +935,7 @@ function startTimer(seconds) {
     timerSeconds--;
     if (timerSeconds <= 0) {
       stopTimer();
+      try { new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play(); } catch(e) {}
       showToast('⏱ Descanso terminado — ¡siguiente serie!');
     } else {
       updateTimerDisplay();
