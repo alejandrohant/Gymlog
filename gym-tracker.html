@@ -731,7 +731,7 @@ function renderExercises() {
         <div class="set-num">${si + 1}</div>
         <input type="number" class="set-input ${set.done ? 'completed' : ''}"
           id="weight-${ei}-${si}"
-          placeholder="${lastEx?.sets?.[si]?.weight || 'kg'}"
+          placeholder="${lastEx?.sets?.[si]?.weight || 'lbs'}"
           value="${set.weight}"
           onchange="updateSet(${ei},${si},'weight',this.value)"
           inputmode="decimal">
