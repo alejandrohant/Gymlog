@@ -686,6 +686,7 @@ function renderHome() {
 // SESSION
 // =====================
 function startSession(routineId) {
+  if (!confirm('¿Iniciar sesión de ' + ROUTINES.find(r => r.id === routineId).name + '?')) return;
   const routine = ROUTINES.find(r => r.id === routineId);
   currentSession = {
     routineId,
