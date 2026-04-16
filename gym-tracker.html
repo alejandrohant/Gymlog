@@ -821,7 +821,7 @@ function toggleSet(ei, si) {
   btn.className = `set-check ${set.done ? 'done' : ''}`;
   btn.textContent = set.done ? '✓' : '';
 
-  if (set.done) startTimer(120);
+  if (set.done) {   const t = {'Elevacion Laterales (Mancuerna)':60,'Tirón a la Cara':60,'Elevación de Gemelos Sentado':60,'Elevación de Gemelos de Pie (Máquina)':60,'Extensión de Pierna':90,'Curl de Bíceps (Barra)':90,'Curl Martillo (Mancuerna)':90,'Aperturas (Máquina)':90,'Sentadilla Búlgara':90,'Curl de Pierna Sentado':90,'Fondo de Tríceps':90,'Tríceps con Polea':90,'Press de Hombros Sentado (Barra)':120,'Jalón al Pecho (Cable)':120,'Remo Sentado con Agarre en V (Cable)':120,'Jalón al Pecho - Agarre Cerrado (Cable)':120,'Press de Hombros (Mancuerna)':120,'Vuelos invertidos para deltoides posteriores (mancuerna)':120,'Hack Squat (Máquina)':180,'Peso Muerto Rumano (Barra)':180,'Press de Piernas':150,'Press de Banca Inclinado (Mancuerna)':150,'Remo Inclinado (Barra)':150,'Press de Banca (Barra)':180};   const exName = currentSession.exercises[ei].name;   startTimer(t[exName] || 120); }
 }
 function replaceExercise(ei) {
   const name = prompt('Nombre del nuevo ejercicio:');
