@@ -670,7 +670,7 @@ function renderHome() {
     const last = getLastSession(r.id);
     const lastText = last ? formatDate(last.date) : 'Sin sesiones';
     return `
-      <div class="routine-card" onclick="startSession('${r.id}')">
+      <div class="routine-card" onclick="viewRoutine('${r.id}')">
         <div class="routine-emoji">${r.emoji}</div>
         <div class="routine-info">
           <div class="routine-name">${r.name}</div>
@@ -685,6 +685,16 @@ function renderHome() {
 // =====================
 // SESSION
 // =====================
+function viewRoutine(routineId) {
+  const routine = ROUTINES.find(r => r.id === routineId);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('sessionScreen').classList.add('active');
+  document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
+  document.getElementById('sessionDate').textContent = 'Toca INICIAR para comenzar';
+  document.getElementById('exerciseList').innerHTML = routine.exercises.map(ex => `<div class="exercise-card"><div class="exercise-header"><div class="exercise-name">${ex.name}</div><div class="exercise-name" style="color:var(--muted);font-size:12px">${ex.sets} series</div></div></div>`).join('');
+  document.querySelector('.finish-btn').textContent = 'INICIAR SESIÓN';
+  document.querySelector('.finish-btn').onclick = () => startSession(routineId);
+}
 function startSession(routineId) {
   if (!confirm('¿Iniciar sesión de ' + ROUTINES.find(r => r.id === routineId).name + '?')) return;
   const routine = ROUTINES.find(r => r.id === routineId);
