@@ -507,7 +507,7 @@
 </div>
 
 <div id="sessionScreen" class="screen">
-  <button class="back-btn" onclick="goBack()">← Volver</button>
+  <button class="back-btn" onclick="goBack()">← Volver</button> <button class="back-btn" onclick="discardSession()" style="color:#ff4444">✕ Descartar</button>
   <div class="session-header">
     <div class="session-title" id="sessionTitle"></div>
     <div class="session-date" id="sessionDate"></div>
@@ -656,7 +656,12 @@ function showScreen(name) {
   if (name === 'history') renderHistory();
   if (name === 'home') renderHome();
 }
-
+function discardSession() {
+  if (confirm('¿Descartar entrenamiento?')) {
+    currentSession = null;
+    showScreen('home');
+  }
+}
 function goBack() {
   showScreen('home');
 }
