@@ -771,7 +771,7 @@ function renderExercises() {
           <div class="exercise-name">${ex.name}</div>
           ${lastEx ? '<div class="prev-badge">ANTERIOR ↑</div>' : ''}
         </div>
-        ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''}
+        ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''} <div style="text-align:right;padding:4px 16px"><button onclick="replaceExercise(${ei})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer">✏️ Cambiar ejercicio</button></div>
         ${prevHtml}
         <div class="sets-table">
           <div class="sets-header">
@@ -823,7 +823,10 @@ function toggleSet(ei, si) {
 
   if (set.done) startTimer(120);
 }
-
+function replaceExercise(ei) {
+  const name = prompt('Nombre del nuevo ejercicio:');
+  if (name) { currentSession.exercises[ei].name = name; renderExercises(); }
+}
 function addSet(ei) {
   const ex = currentSession.exercises[ei];
   const lastSet = ex.sets[ex.sets.length - 1];
