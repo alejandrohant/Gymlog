@@ -660,6 +660,7 @@ function showScreen(name) {
 function discardSession() {
   if (confirm('¿Descartar entrenamiento?')) {
     currentSession = null;
+    stopTimer();
     showScreen('home');
   }
 }
