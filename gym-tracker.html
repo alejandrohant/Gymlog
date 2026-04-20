@@ -655,13 +655,27 @@ function getLastExerciseData(routineId, exerciseName) {
 // SCREENS
 // =====================
 function showScreen(name) {
+  const goingToSession = name === 'session';
+
+  if (currentSession && !goingToSession) {
+    const sessionScreenActive = document.getElementById('sessionScreen').classList.contains('active');
+
+    if (sessionScreenActive) {
+      if (!confirm('Hay una sesión en curso. ¿Salir sin guardar?')) return;
+      currentSession = null;
+      stopTimer();
+    }
+  }
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(name + 'Screen').classList.add('active');
+
   const navMap = { home: 0, history: 1 };
   if (navMap[name] !== undefined) {
     document.querySelectorAll('.nav-btn')[navMap[name]].classList.add('active');
   }
+
   if (name === 'history') renderHistory();
   if (name === 'home') renderHome();
 }
