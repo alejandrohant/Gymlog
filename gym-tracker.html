@@ -511,7 +511,12 @@
 </div>
 
 <div id="historyScreen" class="screen">
-  <div class="section-title">SESIONES</div>
+  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div class="section-title" style="margin:0;">SESIONES</div>
+    <button onclick="exportSessions()" style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer">
+      EXPORTAR
+    </button>
+  </div>
   <div id="historyList"></div>
 </div>
 
@@ -1076,6 +1081,33 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+function exportSessions() {
+  const sessions = getSessions();
+
+  if (!sessions.length) {
+    showToast('⚠️ No hay sesiones para exportar');
+    return;
+  }
+
+  const dataStr = JSON.stringify(sessions, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+
+  a.href = url;
+  a.download = `gymlog-sesiones-${yyyy}-${mm}-${dd}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+  showToast('✅ Sesiones exportadas');
 }
 
 // =====================
