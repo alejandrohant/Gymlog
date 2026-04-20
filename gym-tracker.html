@@ -790,6 +790,22 @@ function editProfile() {
 // =====================
 // SCREENS
 // =====================
+function handleProfilePhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    const profile = getProfile();
+    profile.photo = e.target.result;
+    saveProfile(profile);
+    renderProfile();
+    showToast('✅ Foto guardada');
+  };
+
+  reader.readAsDataURL(file);
+}
 function showScreen(name) {
   const goingToSession = name === 'session';
 
