@@ -725,7 +725,14 @@ function viewRoutine(routineId) {
   document.getElementById('sessionScreen').classList.add('active');
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').textContent = 'Toca INICIAR para comenzar';
-  document.getElementById('exerciseList').innerHTML = routine.exercises.map((ex, ei) => `<div class="exercise-card"><div class="exercise-header"><div class="exercise-name">${ex.name}</div><div style="color:var(--muted);font-size:12px">${ex.sets} series</div></div><div style="text-align:right;padding:4px 16px"><button onclick="replacePreview(${ei},'${routineId}')" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer">✏️ Cambiar</button></div></div>`).join('');
+  document.getElementById('exerciseList').innerHTML = routine.exercises.map((ex) => `
+  <div class="exercise-card">
+    <div class="exercise-header">
+      <div class="exercise-name">${ex.name}</div>
+      <div style="color:var(--muted);font-size:12px">${ex.sets} series</div>
+    </div>
+  </div>
+`).join('');
   document.querySelector('.finish-btn').textContent = 'INICIAR SESIÓN';
   document.querySelector('.finish-btn').onclick = () => { startSession(routineId); };
 }
