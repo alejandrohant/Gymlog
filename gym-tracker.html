@@ -538,52 +538,9 @@
 
 <div id="profileScreen" class="screen">
   <div class="section-title">PERFIL</div>
-
-  <div class="exercise-card" style="padding:20px;">
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
-      <div style="width:72px;height:72px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent);border:1px solid var(--border);">
-        👤
-      </div>
-      <div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--accent);line-height:1;">
-          Alejandro
-        </div>
-        <div style="font-size:13px;color:var(--muted);margin-top:4px;">
-          Objetivo: ganar músculo
-        </div>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Peso</div>
-        <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">73 kg</div>
-      </div>
-
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Estatura</div>
-        <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">170 cm</div>
-      </div>
-
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Edad</div>
-        <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">--</div>
-      </div>
-
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Split</div>
-        <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">PPL</div>
-      </div>
-    </div>
-
-    <div style="margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Nota</div>
-      <div style="font-size:14px;color:var(--text);line-height:1.5;">
-        Enfoque actual: progresar en fuerza y masa muscular con rutina PPL.
-      </div>
-    </div>
-  </div>
+  <div id="profileContent"></div>
 </div>
+  
 <div class="toast" id="toast"></div>
 
 <script>
@@ -703,6 +660,120 @@ function getLastExerciseData(routineId, exerciseName) {
   if (!last) return null;
   const ex = last.exercises.find(e => e.name === exerciseName);
   return ex || null;
+}
+function getProfile() {
+  const defaultProfile = {
+    name: 'Alejandro',
+    goal: 'Ganar músculo',
+    weight: '73 kg',
+    height: '170 cm',
+    age: '',
+    split: 'PPL',
+    note: 'Enfoque actual: progresar en fuerza y masa muscular con rutina PPL.'
+  };
+
+  try {
+    return JSON.parse(localStorage.getItem('gymlog_profile')) || defaultProfile;
+  } catch {
+    return defaultProfile;
+  }
+}
+
+function saveProfile(profile) {
+  localStorage.setItem('gymlog_profile', JSON.stringify(profile));
+}
+
+function renderProfile() {
+  const profile = getProfile();
+
+  document.getElementById('profileContent').innerHTML = `
+    <div class="exercise-card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent);border:1px solid var(--border);">
+          👤
+        </div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--accent);line-height:1;">
+            ${profile.name || 'Sin nombre'}
+          </div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;">
+            Objetivo: ${profile.goal || '--'}
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Peso</div>
+          <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.weight || '--'}</div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Estatura</div>
+          <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.height || '--'}</div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Edad</div>
+          <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.age || '--'}</div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Split</div>
+          <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.split || '--'}</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Nota</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.5;">
+          ${profile.note || '--'}
+        </div>
+      </div>
+
+      <button onclick="editProfile()" style="margin-top:14px;width:100%;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+        EDITAR PERFIL
+      </button>
+    </div>
+  `;
+}
+
+function editProfile() {
+  const current = getProfile();
+
+  const name = prompt('Nombre:', current.name || '');
+  if (name === null) return;
+
+  const goal = prompt('Objetivo:', current.goal || '');
+  if (goal === null) return;
+
+  const weight = prompt('Peso:', current.weight || '');
+  if (weight === null) return;
+
+  const height = prompt('Estatura:', current.height || '');
+  if (height === null) return;
+
+  const age = prompt('Edad:', current.age || '');
+  if (age === null) return;
+
+  const split = prompt('Split:', current.split || '');
+  if (split === null) return;
+
+  const note = prompt('Nota:', current.note || '');
+  if (note === null) return;
+
+  saveProfile({
+    name,
+    goal,
+    weight,
+    height,
+    age,
+    split,
+    note
+  });
+
+  renderProfile();
+  showToast('✅ Perfil guardado');
 }
 
 // =====================
