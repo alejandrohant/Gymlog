@@ -663,14 +663,15 @@ function getLastExerciseData(routineId, exerciseName) {
 }
 function getProfile() {
   const defaultProfile = {
-    name: 'Alejandro',
-    goal: 'Ganar músculo',
-    weight: '73 kg',
-    height: '170 cm',
-    age: '',
-    split: 'PPL',
-    note: 'Enfoque actual: progresar en fuerza y masa muscular con rutina PPL.'
-  };
+  name: 'Alejandro',
+  goal: 'Ganar músculo',
+  weight: '73 kg',
+  height: '170 cm',
+  age: '',
+  split: 'PPL',
+  note: 'Enfoque actual: progresar en fuerza y masa muscular con rutina PPL.',
+  photo: ''
+};
 
   try {
     return JSON.parse(localStorage.getItem('gymlog_profile')) || defaultProfile;
@@ -689,9 +690,11 @@ function renderProfile() {
   document.getElementById('profileContent').innerHTML = `
     <div class="exercise-card" style="padding:20px;">
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
-        <div style="width:72px;height:72px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent);border:1px solid var(--border);">
-          👤
-        </div>
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent);border:1px solid var(--border);overflow:hidden;">
+  ${profile.photo
+    ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">`
+    : '👤'}
+</div>
         <div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--accent);line-height:1;">
             ${profile.name || 'Sin nombre'}
@@ -731,9 +734,17 @@ function renderProfile() {
         </div>
       </div>
 
-      <button onclick="editProfile()" style="margin-top:14px;width:100%;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-        EDITAR PERFIL
-      </button>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+  <button onclick="editProfile()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+    EDITAR PERFIL
+  </button>
+
+  <button onclick="document.getElementById('profilePhotoInput').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+    FOTO
+  </button>
+</div>
+
+<input id="profilePhotoInput" type="file" accept="image/*" style="display:none" onchange="handleProfilePhoto(event)">
     </div>
   `;
 }
