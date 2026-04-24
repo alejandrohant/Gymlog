@@ -633,7 +633,8 @@ const ROUTINES = [
 
 let currentSession = null;
 let timerInterval = null;
-let timerSeconds = 0;
+let timerEndTime = null;
+let audioCtx = null;
 
 // =====================
 // STORAGE
@@ -1187,16 +1188,83 @@ function startTimer(seconds) {
   }, 1000);
 }
 
+// =====================
+// TIMER
+// =====================
+function unlockTimerAudio() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+}
+
+function playTimerBeep() {
+  if (!audioCtx) return;
+
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+
+  gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.01);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.26);
+}
+
+function startTimer(seconds) {
+  stopTimer();
+  unlockTimerAudio();
+
+  timerEndTime = Date.now() + (seconds * 1000);
+
+  const el = document.getElementById('timerDisplay');
+  el.classList.add('visible');
+
+  updateTimerDisplay();
+
+  timerInterval = setInterval(() => {
+    const remainingMs = timerEndTime - Date.now();
+
+    if (remainingMs <= 0) {
+      stopTimer();
+      playTimerBeep();
+      showToast('⏱ Descanso terminado — ¡siguiente serie!');
+    } else {
+      updateTimerDisplay();
+    }
+  }, 250);
+}
+
 function stopTimer() {
   clearInterval(timerInterval);
   timerInterval = null;
+  timerEndTime = null;
+
   const el = document.getElementById('timerDisplay');
   el.classList.remove('visible');
 }
 
 function updateTimerDisplay() {
-  const m = Math.floor(timerSeconds / 60);
-  const s = timerSeconds % 60;
+  if (!timerEndTime) return;
+
+  const remainingMs = Math.max(timerEndTime - Date.now(), 0);
+  const totalSeconds = Math.ceil(remainingMs / 1000);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+
   document.getElementById('timerDisplay').textContent =
     `${m}:${s.toString().padStart(2, '0')}`;
 }
