@@ -633,6 +633,7 @@ async function signOut() {
   }
 
   currentUser = null;
+  localStorage.removeItem('gymlog_profile');
   await renderAuthStatus();
   await renderProfile();
   showToast('👋 Sesión cerrada');
