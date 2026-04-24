@@ -1119,15 +1119,20 @@ function renderHistory() {
         a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
 
     return `
-      <div class="history-card" onclick="showDetail(${i})">
-        <div class="history-top">
+      <div class="history-card">
+        <div class="history-top" onclick="showDetail(${i})" style="cursor:pointer;">
           <div class="history-name">${s.routineName}</div>
           <div class="history-date">${formatDate(s.date)}</div>
         </div>
-        <div class="history-stats">
+        <div class="history-stats" onclick="showDetail(${i})" style="cursor:pointer;">
           <div class="history-stat"><strong>${totalSets}</strong> series</div>
           <div class="history-stat"><strong>${Math.round(totalVol).toLocaleString()}</strong> lbs vol.</div>
           <div class="history-stat"><strong>${s.exercises.length}</strong> ejercicios</div>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+          <button onclick="deleteSession(${i})" style="padding:8px 12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">
+            ELIMINAR
+          </button>
         </div>
       </div>
     `;
