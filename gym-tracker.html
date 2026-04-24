@@ -504,6 +504,7 @@
   <button class="nav-btn active" onclick="showScreen('home')">Rutinas</button>
   <button class="nav-btn" onclick="showScreen('history')">Historial</button>
   <button class="nav-btn" onclick="showScreen('profile')">Perfil</button>
+  <button class="nav-btn" onclick="showScreen('auth')">Cuenta</button>
 </div>
 
 <div id="homeScreen" class="screen active">
@@ -540,6 +541,36 @@
   <div class="section-title">PERFIL</div>
   <div id="profileContent"></div>
 </div>
+
+<div id="authScreen" class="screen">
+  <div class="section-title">CUENTA</div>
+
+  <div class="exercise-card" style="padding:20px;">
+    <input id="authEmail" type="email" placeholder="Correo"
+      style="width:100%;margin-bottom:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
+
+    <input id="authPassword" type="password" placeholder="Contraseña"
+      style="width:100%;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
+
+    <div style="display:flex;gap:10px;">
+      <button onclick="signUp()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+        CREAR CUENTA
+      </button>
+
+      <button onclick="signIn()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+        ENTRAR
+      </button>
+    </div>
+
+    <button onclick="signOut()" style="margin-top:10px;width:100%;padding:12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+      CERRAR SESIÓN
+    </button>
+
+    <div id="authStatus" style="margin-top:14px;font-size:13px;color:var(--muted);">
+      Sin sesión
+    </div>
+  </div>
+</div>
   
 <div class="toast" id="toast"></div>
 
@@ -548,6 +579,74 @@
 const SUPABASE_URL = 'https://zflsvgnvxtozinucrnsp.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_4470upMpfTWgS6H6cOiG_g_Uc6fLe2h';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let currentUser = null;
+
+async function signUp() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+
+  if (!email || !password) {
+    showToast('⚠️ Pon correo y contraseña');
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
+
+  if (error) {
+    showToast('❌ ' + error.message);
+    return;
+  }
+
+  currentUser = data.user || null;
+  renderAuthStatus();
+  showToast('✅ Cuenta creada');
+}
+
+async function signIn() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+
+  if (!email || !password) {
+    showToast('⚠️ Pon correo y contraseña');
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    showToast('❌ ' + error.message);
+    return;
+  }
+
+  currentUser = data.user || null;
+  renderAuthStatus();
+  showToast('✅ Sesión iniciada');
+}
+
+async function signOut() {
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    showToast('❌ ' + error.message);
+    return;
+  }
+
+  currentUser = null;
+  renderAuthStatus();
+  showToast('👋 Sesión cerrada');
+}
+
+async function renderAuthStatus() {
+  const { data } = await supabaseClient.auth.getUser();
+  currentUser = data.user || null;
+
+  const el = document.getElementById('authStatus');
+  if (!el) return;
+
+  el.textContent = currentUser
+    ? 'Sesión activa: ' + currentUser.email
+    : 'Sin sesión';
+}
   
 // =====================
 // DATA
@@ -829,7 +928,7 @@ function showScreen(name) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(name + 'Screen').classList.add('active');
 
-  const navMap = { home: 0, history: 1, profile: 2 };
+  const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
   if (navMap[name] !== undefined) {
     document.querySelectorAll('.nav-btn')[navMap[name]].classList.add('active');
   }
@@ -837,6 +936,7 @@ function showScreen(name) {
   if (name === 'history') renderHistory();
   if (name === 'home') renderHome();
   if (name === 'profile') renderProfile();
+  if (name === 'auth') renderAuthStatus();
 }
 function discardSession() {
   if (confirm('¿Descartar entrenamiento?')) {
@@ -1351,6 +1451,7 @@ function exportSessions() {
 // INIT
 // =====================
 renderHome();
+renderAuthStatus();
 </script>
 </body>
 </html>
