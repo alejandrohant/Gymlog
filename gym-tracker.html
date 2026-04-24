@@ -543,7 +543,12 @@
   
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL = 'https://zflsvgnvxtozinucrnsp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_4470upMpfTWgS6H6cOiG_g_Uc6fLe2h';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  
 // =====================
 // DATA
 // =====================
