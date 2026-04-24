@@ -619,7 +619,8 @@ async function signIn() {
   }
 
   currentUser = data.user || null;
-  renderAuthStatus();
+  await renderAuthStatus();
+  await renderProfile();
   showToast('✅ Sesión iniciada');
 }
 
@@ -632,7 +633,8 @@ async function signOut() {
   }
 
   currentUser = null;
-  renderAuthStatus();
+  await renderAuthStatus();
+  await renderProfile();
   showToast('👋 Sesión cerrada');
 }
 
@@ -766,17 +768,21 @@ function getLastExerciseData(routineId, exerciseName) {
   const ex = last.exercises.find(e => e.name === exerciseName);
   return ex || null;
 }
-function getProfile() {
-  const defaultProfile = {
-  name: 'Alejandro',
-  goal: 'Ganar músculo',
-  weight: '73 kg',
-  height: '170 cm',
-  age: '',
-  split: 'PPL',
-  note: 'Enfoque actual: progresar en fuerza y masa muscular con rutina PPL.',
-  photo: ''
-};
+function getDefaultProfile() {
+  return {
+    name: 'Alejandro',
+    goal: 'Ganar músculo',
+    weight: '73 kg',
+    height: '170 cm',
+    age: '',
+    split: 'PPL',
+    note: 'Enfoque actual: progresar en fuerza y masa muscular con rutina PPL.',
+    photo: ''
+  };
+}
+
+function getProfileLocal() {
+  const defaultProfile = getDefaultProfile();
 
   try {
     return JSON.parse(localStorage.getItem('gymlog_profile')) || defaultProfile;
@@ -785,21 +791,42 @@ function getProfile() {
   }
 }
 
-function saveProfile(profile) {
+function saveProfileLocal(profile) {
   localStorage.setItem('gymlog_profile', JSON.stringify(profile));
 }
 
-function renderProfile() {
-  const profile = getProfile();
+async function renderProfile() {
+  let profile = getProfileLocal();
+
+  if (currentUser) {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (!error && data) {
+      profile = {
+        name: data.name || '',
+        goal: data.goal || '',
+        weight: data.weight || '',
+        height: data.height || '',
+        age: data.age || '',
+        split: data.split || '',
+        note: data.note || '',
+        photo: data.photo_url || ''
+      };
+    }
+  }
 
   document.getElementById('profileContent').innerHTML = `
     <div class="exercise-card" style="padding:20px;">
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
         <div style="width:72px;height:72px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent);border:1px solid var(--border);overflow:hidden;">
-  ${profile.photo
-    ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">`
-    : '👤'}
-</div>
+          ${profile.photo
+            ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">`
+            : '👤'}
+        </div>
         <div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--accent);line-height:1;">
             ${profile.name || 'Sin nombre'}
@@ -840,22 +867,43 @@ function renderProfile() {
       </div>
 
       <div style="display:flex;gap:10px;margin-top:14px;">
-  <button onclick="editProfile()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-    EDITAR PERFIL
-  </button>
+        <button onclick="editProfile()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+          EDITAR PERFIL
+        </button>
 
-  <button onclick="document.getElementById('profilePhotoInput').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-    FOTO
-  </button>
-</div>
+        <button onclick="document.getElementById('profilePhotoInput').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+          FOTO
+        </button>
+      </div>
 
-<input id="profilePhotoInput" type="file" accept="image/*" style="display:none" onchange="handleProfilePhoto(event)">
+      <input id="profilePhotoInput" type="file" accept="image/*" style="display:none" onchange="handleProfilePhoto(event)">
     </div>
   `;
 }
 
-function editProfile() {
-  const current = getProfile();
+async function editProfile() {
+  let current = getProfileLocal();
+
+  if (currentUser) {
+    const { data } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (data) {
+      current = {
+        name: data.name || '',
+        goal: data.goal || '',
+        weight: data.weight || '',
+        height: data.height || '',
+        age: data.age || '',
+        split: data.split || '',
+        note: data.note || '',
+        photo: data.photo_url || ''
+      };
+    }
+  }
 
   const name = prompt('Nombre:', current.name || '');
   if (name === null) return;
@@ -878,34 +926,79 @@ function editProfile() {
   const note = prompt('Nota:', current.note || '');
   if (note === null) return;
 
-  saveProfile({
+  const updatedProfile = {
     name,
     goal,
     weight,
     height,
     age,
     split,
-    note
-  });
+    note,
+    photo: current.photo || ''
+  };
 
-  renderProfile();
+  if (currentUser) {
+    const { error } = await supabaseClient
+      .from('profiles')
+      .upsert({
+        id: currentUser.id,
+        name,
+        goal,
+        weight,
+        height,
+        age,
+        split,
+        note,
+        photo_url: updatedProfile.photo || ''
+      });
+
+    if (error) {
+      showToast('❌ Error al guardar perfil');
+      return;
+    }
+  }
+
+  saveProfileLocal(updatedProfile);
+  await renderProfile();
   showToast('✅ Perfil guardado');
 }
 
 // =====================
 // SCREENS
 // =====================
-function handleProfilePhoto(event) {
+async function handleProfilePhoto(event) {
   const file = event.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
 
-  reader.onload = function(e) {
-    const profile = getProfile();
+  reader.onload = async function(e) {
+    let profile = getProfileLocal();
     profile.photo = e.target.result;
-    saveProfile(profile);
-    renderProfile();
+
+    if (currentUser) {
+      const { error } = await supabaseClient
+        .from('profiles')
+        .upsert({
+          id: currentUser.id,
+          name: profile.name || '',
+          goal: profile.goal || '',
+          weight: profile.weight || '',
+          height: profile.height || '',
+          age: profile.age || '',
+          split: profile.split || '',
+          note: profile.note || '',
+          photo_url: profile.photo || ''
+        });
+
+      if (error) {
+        showToast('❌ Error al guardar foto');
+        return;
+      }
+    }
+
+    saveProfileLocal(profile);
+    await renderProfile();
     showToast('✅ Foto guardada');
   };
 
