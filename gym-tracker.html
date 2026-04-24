@@ -1139,6 +1139,17 @@ function renderHistory() {
   }).join('');
 }
 
+function deleteSession(index) {
+  const sessions = getSessions();
+
+  if (!confirm('¿Eliminar esta sesión del historial?')) return;
+
+  sessions.splice(index, 1);
+  localStorage.setItem('gymlog_sessions', JSON.stringify(sessions));
+  renderHistory();
+  showToast('🗑️ Sesión eliminada');
+}
+  
 function showDetail(index) {
   const sessions = getSessions();
   const s = sessions[index];
