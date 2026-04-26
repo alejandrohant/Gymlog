@@ -619,9 +619,11 @@ async function signIn() {
   }
 
   currentUser = data.user || null;
-  await renderAuthStatus();
-  await renderProfile();
-  showToast('✅ Sesión iniciada');
+await renderAuthStatus();
+await renderProfile();
+await renderHome();
+await renderHistory();
+showToast('✅ Sesión iniciada');
 }
 
 async function signOut() {
@@ -633,10 +635,12 @@ async function signOut() {
   }
 
   currentUser = null;
-  localStorage.removeItem('gymlog_profile');
-  await renderAuthStatus();
-  await renderProfile();
-  showToast('👋 Sesión cerrada');
+localStorage.removeItem('gymlog_profile');
+await renderAuthStatus();
+await renderProfile();
+await renderHome();
+await renderHistory();
+showToast('👋 Sesión cerrada');
 }
 
 async function renderAuthStatus() {
@@ -746,25 +750,62 @@ let audioCtx = null;
 // =====================
 // STORAGE
 // =====================
-function saveSession(session) {
-  const sessions = getSessions();
+async function saveSession(session) {
+  const sessions = getSessionsLocal();
   sessions.unshift(session);
   localStorage.setItem('gymlog_sessions', JSON.stringify(sessions));
+
+  if (currentUser) {
+    const { error } = await supabaseClient
+      .from('sessions')
+      .insert({
+        user_id: currentUser.id,
+        routine_id: session.routineId,
+        routine_name: session.routineName,
+        date: session.date,
+        data_json: session
+      });
+
+    if (error) {
+      showToast('❌ Error al guardar en la nube');
+      return false;
+    }
+  }
+
+  return true;
 }
 
-function getSessions() {
+function getSessionsLocal() {
   try {
     return JSON.parse(localStorage.getItem('gymlog_sessions') || '[]');
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
-function getLastSession(routineId) {
-  const sessions = getSessions();
+async function getSessions() {
+  if (currentUser) {
+    const { data, error } = await supabaseClient
+      .from('sessions')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending: false });
+
+    if (!error && data) {
+      return data.map(row => row.data_json);
+    }
+  }
+
+  return getSessionsLocal();
+}
+
+async function getLastSession(routineId) {
+  const sessions = await getSessions();
   return sessions.find(s => s.routineId === routineId) || null;
 }
 
-function getLastExerciseData(routineId, exerciseName) {
-  const last = getLastSession(routineId);
+async function getLastExerciseData(routineId, exerciseName) {
+  const last = await getLastSession(routineId);
   if (!last) return null;
   const ex = last.exercises.find(e => e.name === exerciseName);
   return ex || null;
@@ -1051,11 +1092,14 @@ function goBack() {
 // =====================
 // HOME
 // =====================
-function renderHome() {
+async function renderHome() {
   const grid = document.getElementById('routineGrid');
+  const sessions = await getSessions();
+
   grid.innerHTML = ROUTINES.map(r => {
-    const last = getLastSession(r.id);
+    const last = sessions.find(s => s.routineId === r.id) || null;
     const lastText = last ? formatDate(last.date) : 'Sin sesiones';
+
     return `
       <div class="routine-card" onclick="viewRoutine('${r.id}')">
         <div class="routine-emoji">${r.emoji}</div>
