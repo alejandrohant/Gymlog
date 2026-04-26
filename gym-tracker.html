@@ -1145,7 +1145,7 @@ function viewRoutine(routineId) {
     viewRoutine(routineId);
   }
 }
-function startSession(routineId) {
+async function startSession(routineId) {
   const routine = ROUTINES.find(r => r.id === routineId);
 
   if (!confirm('¿Iniciar sesión de ' + routine.name + '?')) return;
@@ -1154,22 +1154,25 @@ function startSession(routineId) {
     routineId,
     routineName: routine.name,
     date: new Date().toISOString(),
-    exercises: routine.exercises.map(ex => {
-      const lastEx = getLastExerciseData(routineId, ex.name);
-      return {
-        name: ex.name,
-        note: ex.note || null,
-        sets: Array.from({ length: ex.sets }, (_, i) => {
-          const lastSet = lastEx?.sets?.[i];
-          return {
-            weight: lastSet?.weight || '',
-            reps: lastSet?.reps || '',
-            done: false
-          };
-        })
-      };
-    })
+    exercises: []
   };
+
+  for (const ex of routine.exercises) {
+    const lastEx = await getLastExerciseData(routineId, ex.name);
+
+    currentSession.exercises.push({
+      name: ex.name,
+      note: ex.note || null,
+      sets: Array.from({ length: ex.sets }, (_, i) => {
+        const lastSet = lastEx?.sets?.[i];
+        return {
+          weight: lastSet?.weight || '',
+          reps: lastSet?.reps || '',
+          done: false
+        };
+      })
+    });
+  }
 
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').textContent = formatDateFull(new Date());
@@ -1312,7 +1315,7 @@ function addSet(ei) {
   renderExercises();
 }
 
-function finishSession() {
+async function finishSession() {
   if (!currentSession) {
     showToast('⚠️ No hay una sesión activa');
     return;
@@ -1325,6 +1328,20 @@ function finishSession() {
     showToast('⚠️ Marca al menos una serie como completada');
     return;
   }
+
+  const ok = await saveSession(currentSession);
+  if (ok === false) return;
+
+  currentSession = null;
+  stopTimer();
+  showToast('✅ Sesión guardada');
+
+  const finishBtn = document.querySelector('.finish-btn');
+  finishBtn.textContent = 'TERMINAR SESIÓN';
+  finishBtn.onclick = () => finishSession();
+
+  setTimeout(() => { showScreen('home'); }, 1200);
+}
 
   saveSession(currentSession);
   currentSession = null;
@@ -1341,8 +1358,8 @@ function finishSession() {
 // =====================
 // HISTORY
 // =====================
-function renderHistory() {
-  const sessions = getSessions();
+async function renderHistory() {
+  const sessions = await getSessions();
   const list = document.getElementById('historyList');
 
   if (sessions.length === 0) {
@@ -1382,19 +1399,65 @@ function renderHistory() {
   }).join('');
 }
 
-function deleteSession(index) {
-  const sessions = getSessions();
+  list.innerHTML = sessions.map((s, i) => {
+    const totalSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
+    const totalVol = s.exercises.reduce((acc, ex) =>
+      acc + ex.sets.filter(st => st.done).reduce((a, st) =>
+        a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
+
+    return `
+      <div class="history-card">
+        <div class="history-top" onclick="showDetail(${i})" style="cursor:pointer;">
+          <div class="history-name">${s.routineName}</div>
+          <div class="history-date">${formatDate(s.date)}</div>
+        </div>
+        <div class="history-stats" onclick="showDetail(${i})" style="cursor:pointer;">
+          <div class="history-stat"><strong>${totalSets}</strong> series</div>
+          <div class="history-stat"><strong>${Math.round(totalVol).toLocaleString()}</strong> lbs vol.</div>
+          <div class="history-stat"><strong>${s.exercises.length}</strong> ejercicios</div>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+          <button onclick="deleteSession(${i})" style="padding:8px 12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">
+            ELIMINAR
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function deleteSession(index) {
+  const sessions = await getSessions();
+  const session = sessions[index];
 
   if (!confirm('¿Eliminar esta sesión del historial?')) return;
 
-  sessions.splice(index, 1);
-  localStorage.setItem('gymlog_sessions', JSON.stringify(sessions));
-  renderHistory();
+  const localSessions = getSessionsLocal();
+  localSessions.splice(index, 1);
+  localStorage.setItem('gymlog_sessions', JSON.stringify(localSessions));
+
+  if (currentUser) {
+    const { data } = await supabaseClient
+      .from('sessions')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .eq('date', session.date)
+      .maybeSingle();
+
+    if (data?.id) {
+      await supabaseClient
+        .from('sessions')
+        .delete()
+        .eq('id', data.id);
+    }
+  }
+
+  await renderHistory();
   showToast('🗑️ Sesión eliminada');
 }
   
-function showDetail(index) {
-  const sessions = getSessions();
+async function showDetail(index) {
+  const sessions = await getSessions();
   const s = sessions[index];
 
   const content = `
