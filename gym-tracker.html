@@ -1453,27 +1453,7 @@ async function showDetail(index) {
 // =====================
 // TIMER
 // =====================
-function startTimer(seconds) {
-  stopTimer();
-  timerSeconds = seconds;
-  const el = document.getElementById('timerDisplay');
-  el.classList.add('visible');
-  updateTimerDisplay();
-  timerInterval = setInterval(() => {
-    timerSeconds--;
-    if (timerSeconds <= 0) {
-      stopTimer();
-      try { new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play(); } catch(e) {}
-      showToast('⏱ Descanso terminado — ¡siguiente serie!');
-    } else {
-      updateTimerDisplay();
-    }
-  }, 1000);
-}
 
-// =====================
-// TIMER
-// =====================
 function unlockTimerAudio() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
