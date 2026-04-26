@@ -579,8 +579,16 @@
 const SUPABASE_URL = 'https://zflsvgnvxtozinucrnsp.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_4470upMpfTWgS6H6cOiG_g_Uc6fLe2h';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  let currentUser = null;
 
+let currentUser = null;
+let currentSession = null;
+let timerInterval = null;
+let timerEndTime = null;
+let audioCtx = null;
+
+// =====================
+// AUTH
+// =====================
 async function signUp() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value.trim();
@@ -598,7 +606,10 @@ async function signUp() {
   }
 
   currentUser = data.user || null;
-  renderAuthStatus();
+  await renderAuthStatus();
+  await renderProfile();
+  renderHome();
+  renderHistory();
   showToast('✅ Cuenta creada');
 }
 
@@ -619,11 +630,11 @@ async function signIn() {
   }
 
   currentUser = data.user || null;
-await renderAuthStatus();
-await renderProfile();
-await renderHome();
-await renderHistory();
-showToast('✅ Sesión iniciada');
+  await renderAuthStatus();
+  await renderProfile();
+  renderHome();
+  renderHistory();
+  showToast('✅ Sesión iniciada');
 }
 
 async function signOut() {
@@ -635,12 +646,12 @@ async function signOut() {
   }
 
   currentUser = null;
-localStorage.removeItem('gymlog_profile');
-await renderAuthStatus();
-await renderProfile();
-await renderHome();
-await renderHistory();
-showToast('👋 Sesión cerrada');
+  localStorage.removeItem('gymlog_profile');
+  await renderAuthStatus();
+  await renderProfile();
+  renderHome();
+  renderHistory();
+  showToast('👋 Sesión cerrada');
 }
 
 async function renderAuthStatus() {
@@ -654,7 +665,7 @@ async function renderAuthStatus() {
     ? 'Sesión activa: ' + currentUser.email
     : 'Sin sesión';
 }
-  
+
 // =====================
 // DATA
 // =====================
@@ -742,45 +753,17 @@ const ROUTINES = [
   },
 ];
 
-let currentSession = null;
-let timerInterval = null;
-let timerEndTime = null;
-let audioCtx = null;
-
 // =====================
-// STORAGE
+// STORAGE - SESSIONS LOCAL ONLY
 // =====================
-async function saveSession(session) {
-  const sessions = getSessionsLocal();
+function saveSession(session) {
+  const sessions = getSessions();
   sessions.unshift(session);
   localStorage.setItem('gymlog_sessions', JSON.stringify(sessions));
-
- if (currentUser) {
-  const { error } = await supabaseClient
-    .from('sessions')
-    .insert({
-      user_id: currentUser.id,
-      routine_id: session.routineId,
-      routine_name: session.routineName,
-      date: session.date,
-      data_json: session
-    });
-
-  if (error) {
-    console.error('SUPABASE SAVE SESSION ERROR:', error);
-    showToast('❌ ' + error.message);
-    return false;
-  } else {
-    showToast('☁️ Sesión subida');
-  }
-} else {
-  showToast('⚠️ No hay sesión iniciada');
-}
-
   return true;
 }
 
-function getSessionsLocal() {
+function getSessions() {
   try {
     return JSON.parse(localStorage.getItem('gymlog_sessions') || '[]');
   } catch {
@@ -788,33 +771,21 @@ function getSessionsLocal() {
   }
 }
 
-async function getSessions() {
-  if (currentUser) {
-    const { data, error } = await supabaseClient
-      .from('sessions')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .order('date', { ascending: false });
-
-    if (!error && data) {
-      return data.map(row => row.data_json);
-    }
-  }
-
-  return getSessionsLocal();
-}
-
-async function getLastSession(routineId) {
-  const sessions = await getSessions();
+function getLastSession(routineId) {
+  const sessions = getSessions();
   return sessions.find(s => s.routineId === routineId) || null;
 }
 
-async function getLastExerciseData(routineId, exerciseName) {
-  const last = await getLastSession(routineId);
+function getLastExerciseData(routineId, exerciseName) {
+  const last = getLastSession(routineId);
   if (!last) return null;
   const ex = last.exercises.find(e => e.name === exerciseName);
   return ex || null;
 }
+
+// =====================
+// PROFILE
+// =====================
 function getDefaultProfile() {
   return {
     name: 'Alejandro',
@@ -1010,9 +981,6 @@ async function editProfile() {
   showToast('✅ Perfil guardado');
 }
 
-// =====================
-// SCREENS
-// =====================
 async function handleProfilePhoto(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1051,6 +1019,10 @@ async function handleProfilePhoto(event) {
 
   reader.readAsDataURL(file);
 }
+
+// =====================
+// SCREENS
+// =====================
 function showScreen(name) {
   const goingToSession = name === 'session';
 
@@ -1078,6 +1050,7 @@ function showScreen(name) {
   if (name === 'profile') renderProfile();
   if (name === 'auth') renderAuthStatus();
 }
+
 function discardSession() {
   if (confirm('¿Descartar entrenamiento?')) {
     currentSession = null;
@@ -1085,6 +1058,7 @@ function discardSession() {
     showScreen('home');
   }
 }
+
 function goBack() {
   if (currentSession) {
     if (!confirm('Hay una sesión en curso. ¿Salir sin guardar?')) return;
@@ -1097,12 +1071,10 @@ function goBack() {
 // =====================
 // HOME
 // =====================
-async function renderHome() {
+function renderHome() {
   const grid = document.getElementById('routineGrid');
-  const sessions = await getSessions();
-
   grid.innerHTML = ROUTINES.map(r => {
-    const last = sessions.find(s => s.routineId === r.id) || null;
+    const last = getLastSession(r.id);
     const lastText = last ? formatDate(last.date) : 'Sin sesiones';
 
     return `
@@ -1128,29 +1100,18 @@ function viewRoutine(routineId) {
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').textContent = 'Toca INICIAR para comenzar';
   document.getElementById('exerciseList').innerHTML = routine.exercises.map((ex) => `
-  <div class="exercise-card">
-    <div class="exercise-header">
-      <div class="exercise-name">${ex.name}</div>
-      <div style="color:var(--muted);font-size:12px">${ex.sets} series</div>
+    <div class="exercise-card">
+      <div class="exercise-header">
+        <div class="exercise-name">${ex.name}</div>
+        <div style="color:var(--muted);font-size:12px">${ex.sets} series</div>
+      </div>
     </div>
-  </div>
-`).join('');
+  `).join('');
   document.querySelector('.finish-btn').textContent = 'INICIAR SESIÓN';
   document.querySelector('.finish-btn').onclick = () => { startSession(routineId); };
 }
-  function replacePreview(ei, routineId) {
-  const r = ROUTINES.find(x => x.id === routineId);
-  const all = ROUTINES.flatMap(x => x.exercises.map(e => e.name));
-  const unique = [...new Set(all)];
-  const list = unique.map((n, i) => `${i+1}. ${n}`).join('\n');
-  const choice = prompt('Elige número:\n' + list);
-  const idx = parseInt(choice) - 1;
-  if (idx >= 0 && idx < unique.length) {
-    r.exercises[ei].name = unique[idx];
-    viewRoutine(routineId);
-  }
-}
-async function startSession(routineId) {
+
+function startSession(routineId) {
   const routine = ROUTINES.find(r => r.id === routineId);
 
   if (!confirm('¿Iniciar sesión de ' + routine.name + '?')) return;
@@ -1159,25 +1120,22 @@ async function startSession(routineId) {
     routineId,
     routineName: routine.name,
     date: new Date().toISOString(),
-    exercises: []
+    exercises: routine.exercises.map(ex => {
+      const lastEx = getLastExerciseData(routineId, ex.name);
+      return {
+        name: ex.name,
+        note: ex.note || null,
+        sets: Array.from({ length: ex.sets }, (_, i) => {
+          const lastSet = lastEx?.sets?.[i];
+          return {
+            weight: lastSet?.weight || '',
+            reps: lastSet?.reps || '',
+            done: false
+          };
+        })
+      };
+    })
   };
-
-  for (const ex of routine.exercises) {
-    const lastEx = await getLastExerciseData(routineId, ex.name);
-
-    currentSession.exercises.push({
-      name: ex.name,
-      note: ex.note || null,
-      sets: Array.from({ length: ex.sets }, (_, i) => {
-        const lastSet = lastEx?.sets?.[i];
-        return {
-          weight: lastSet?.weight || '',
-          reps: lastSet?.reps || '',
-          done: false
-        };
-      })
-    });
-  }
 
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').textContent = formatDateFull(new Date());
@@ -1228,7 +1186,10 @@ function renderExercises() {
           <div class="exercise-name">${ex.name}</div>
           ${lastEx ? '<div class="prev-badge">ANTERIOR ↑</div>' : ''}
         </div>
-        ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''} <div style="text-align:right;padding:4px 16px"><button onclick="replaceExercise(${ei})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer">✏️ Cambiar ejercicio</button></div>
+        ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''}
+        <div style="text-align:right;padding:4px 16px">
+          <button onclick="replaceExercise(${ei})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer">✏️ Cambiar ejercicio</button>
+        </div>
         ${prevHtml}
         <div class="sets-table">
           <div class="sets-header">
@@ -1278,8 +1239,38 @@ function toggleSet(ei, si) {
   btn.className = `set-check ${set.done ? 'done' : ''}`;
   btn.textContent = set.done ? '✓' : '';
 
-  if (set.done) {   const t = {'Elevacion Laterales (Mancuerna)':60,'Tirón a la Cara':60,'Elevación de Gemelos Sentado':60,'Elevación de Gemelos de Pie (Máquina)':60,'Extensión de Pierna':90,'Curl de Bíceps (Barra)':90,'Curl Martillo (Mancuerna)':90,'Aperturas (Máquina)':90,'Sentadilla Búlgara':90,'Curl de Pierna Sentado':90,'Fondo de Tríceps':90,'Tríceps con Polea':90,'Press de Hombros Sentado (Barra)':120,'Jalón al Pecho (Cable)':120,'Remo Sentado con Agarre en V (Cable)':120,'Jalón al Pecho - Agarre Cerrado (Cable)':120,'Press de Hombros (Mancuerna)':120,'Vuelos invertidos para deltoides posteriores (mancuerna)':120,'Sentadilla Hack (Máquina)':180,'Peso Muerto Rumano (Barra)':180,'Press de Piernas':150,'Press de Banca Inclinado (Mancuerna)':150,'Remo Inclinado (Barra)':150,'Press de Banca (Barra)':180};   const exName = currentSession.exercises[ei].name;   startTimer(t[exName] || 120); }
+  if (set.done) {
+    const t = {
+      'Elevacion Laterales (Mancuerna)': 60,
+      'Tirón a la Cara': 60,
+      'Elevación de Gemelos Sentado': 60,
+      'Elevación de Gemelos de Pie (Máquina)': 60,
+      'Extensión de Pierna': 90,
+      'Curl de Bíceps (Barra)': 90,
+      'Curl Martillo (Mancuerna)': 90,
+      'Aperturas (Máquina)': 90,
+      'Sentadilla Búlgara': 90,
+      'Curl de Pierna Sentado': 90,
+      'Fondo de Tríceps': 90,
+      'Tríceps con Polea': 90,
+      'Press de Hombros Sentado (Barra)': 120,
+      'Jalón al Pecho (Cable)': 120,
+      'Remo Sentado con Agarre en V (Cable)': 120,
+      'Jalón al Pecho - Agarre Cerrado (Cable)': 120,
+      'Press de Hombros (Mancuerna)': 120,
+      'Vuelos invertidos para deltoides posteriores (mancuerna)': 120,
+      'Sentadilla Hack (Máquina)': 180,
+      'Peso Muerto Rumano (Barra)': 180,
+      'Press de Piernas': 150,
+      'Press de Banca Inclinado (Mancuerna)': 150,
+      'Remo Inclinado (Barra)': 150,
+      'Press de Banca (Barra)': 180
+    };
+    const exName = currentSession.exercises[ei].name;
+    startTimer(t[exName] || 120);
+  }
 }
+
 function replaceExercise(ei) {
   const allExercises = ROUTINES.flatMap(r => r.exercises);
   const uniqueExercises = allExercises.filter(
@@ -1293,7 +1284,6 @@ function replaceExercise(ei) {
   if (idx >= 0 && idx < uniqueExercises.length) {
     const selected = uniqueExercises[idx];
     const lastEx = getLastExerciseData(currentSession.routineId, selected.name);
-
     const currentSetsCount = currentSession.exercises[ei].sets.length;
 
     currentSession.exercises[ei] = {
@@ -1313,6 +1303,7 @@ function replaceExercise(ei) {
     renderExercises();
   }
 }
+
 function addSet(ei) {
   const ex = currentSession.exercises[ei];
   const lastSet = ex.sets[ex.sets.length - 1];
@@ -1320,7 +1311,7 @@ function addSet(ei) {
   renderExercises();
 }
 
-async function finishSession() {
+function finishSession() {
   if (!currentSession) {
     showToast('⚠️ No hay una sesión activa');
     return;
@@ -1334,7 +1325,7 @@ async function finishSession() {
     return;
   }
 
-  const ok = await saveSession(currentSession);
+  const ok = saveSession(currentSession);
   if (ok === false) return;
 
   currentSession = null;
@@ -1351,8 +1342,8 @@ async function finishSession() {
 // =====================
 // HISTORY
 // =====================
-async function renderHistory() {
-  const sessions = await getSessions();
+function renderHistory() {
+  const sessions = getSessions();
   const list = document.getElementById('historyList');
 
   if (sessions.length === 0) {
@@ -1392,38 +1383,19 @@ async function renderHistory() {
   }).join('');
 }
 
-async function deleteSession(index) {
-  const sessions = await getSessions();
-  const session = sessions[index];
+function deleteSession(index) {
+  const sessions = getSessions();
 
   if (!confirm('¿Eliminar esta sesión del historial?')) return;
 
-  const localSessions = getSessionsLocal();
-  localSessions.splice(index, 1);
-  localStorage.setItem('gymlog_sessions', JSON.stringify(localSessions));
-
-  if (currentUser) {
-    const { data } = await supabaseClient
-      .from('sessions')
-      .select('id')
-      .eq('user_id', currentUser.id)
-      .eq('date', session.date)
-      .maybeSingle();
-
-    if (data?.id) {
-      await supabaseClient
-        .from('sessions')
-        .delete()
-        .eq('id', data.id);
-    }
-  }
-
-  await renderHistory();
+  sessions.splice(index, 1);
+  localStorage.setItem('gymlog_sessions', JSON.stringify(sessions));
+  renderHistory();
   showToast('🗑️ Sesión eliminada');
 }
-  
-async function showDetail(index) {
-  const sessions = await getSessions();
+
+function showDetail(index) {
+  const sessions = getSessions();
   const s = sessions[index];
 
   const content = `
@@ -1458,7 +1430,6 @@ async function showDetail(index) {
 // =====================
 // TIMER
 // =====================
-
 function unlockTimerAudio() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -1566,6 +1537,7 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
+
 function exportSessions() {
   const sessions = getSessions();
 
@@ -1600,5 +1572,3 @@ function exportSessions() {
 renderHome();
 renderAuthStatus();
 </script>
-</body>
-</html>
