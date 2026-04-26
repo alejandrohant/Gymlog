@@ -755,22 +755,27 @@ async function saveSession(session) {
   sessions.unshift(session);
   localStorage.setItem('gymlog_sessions', JSON.stringify(sessions));
 
-  if (currentUser) {
-    const { error } = await supabaseClient
-      .from('sessions')
-      .insert({
-        user_id: currentUser.id,
-        routine_id: session.routineId,
-        routine_name: session.routineName,
-        date: session.date,
-        data_json: session
-      });
+ if (currentUser) {
+  const { error } = await supabaseClient
+    .from('sessions')
+    .insert({
+      user_id: currentUser.id,
+      routine_id: session.routineId,
+      routine_name: session.routineName,
+      date: session.date,
+      data_json: session
+    });
 
-    if (error) {
-      showToast('❌ Error al guardar en la nube');
-      return false;
-    }
+  if (error) {
+    console.error('SUPABASE SAVE SESSION ERROR:', error);
+    showToast('❌ ' + error.message);
+    return false;
+  } else {
+    showToast('☁️ Sesión subida');
   }
+} else {
+  showToast('⚠️ No hay sesión iniciada');
+}
 
   return true;
 }
