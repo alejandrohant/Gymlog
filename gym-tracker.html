@@ -1342,47 +1342,6 @@ async function finishSession() {
 
   setTimeout(() => { showScreen('home'); }, 1200);
 }
-async function finishSession() {
-
-  if (!currentSession) {
-
-    showToast('⚠️ No hay una sesión activa');
-
-    return;
-
-  }
-
-  const doneSets = currentSession.exercises.reduce((acc, ex) =>
-
-    acc + ex.sets.filter(s => s.done).length, 0);
-
-  if (doneSets === 0) {
-
-    showToast('⚠️ Marca al menos una serie como completada');
-
-    return;
-
-  }
-
-  const ok = await saveSession(currentSession);
-
-  if (ok === false) return;
-
-  currentSession = null;
-
-  stopTimer();
-
-  showToast('✅ Sesión guardada');
-
-  const finishBtn = document.querySelector('.finish-btn');
-
-  finishBtn.textContent = 'TERMINAR SESIÓN';
-
-  finishBtn.onclick = () => finishSession();
-
-  setTimeout(() => { showScreen('home'); }, 1200);
-
-}
 
 // =====================
 // HISTORY
