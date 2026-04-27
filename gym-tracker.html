@@ -879,11 +879,31 @@ async function initializeCloudState() {
 }
 
 async function saveSession(session) {
+  const cleanSession = stripCloudMeta(session);
+
   const localSessions = getSessionsLocal();
-  localSessions.unshift(stripCloudMeta(session));
+  localSessions.unshift(cleanSession);
   setSessionsLocal(localSessions);
 
   if (!currentUser) {
+    return true;
+  }
+
+  const { data: existing, error: checkError } = await supabaseClient
+    .from('sessions')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .eq('routine_name', session.routineName)
+    .eq('date', session.date)
+    .limit(1);
+
+  if (checkError) {
+    console.error('saveSession check', checkError);
+    showToast('❌ ' + checkError.message);
+    return false;
+  }
+
+  if (existing && existing.length > 0) {
     return true;
   }
 
@@ -894,16 +914,19 @@ async function saveSession(session) {
       routine_id: session.routineId,
       routine_name: session.routineName,
       date: session.date,
-      data_json: stripCloudMeta(session),
+      data_json: cleanSession,
     })
     .select('id')
     .single();
 
   if (error) {
-    console.error('saveSession', error);
+    console.error('saveSession insert', error);
     showToast('❌ ' + error.message);
     return false;
   }
+
+  return true;
+}
 
   cloudSessions.unshift({ ...stripCloudMeta(session), _cloudId: data.id });
   return true;
@@ -1491,15 +1514,18 @@ async function deleteSession(index) {
 
   if (!confirm('¿Eliminar esta sesión del historial?')) return;
 
-  const localSessions = getSessionsLocal().filter(s => s.date !== session.date);
+  const localSessions = getSessionsLocal().filter(
+    s => !(s.routineName === session.routineName && s.date === session.date)
+  );
   setSessionsLocal(localSessions);
 
-  if (currentUser && session._cloudId) {
+  if (currentUser) {
     const { error } = await supabaseClient
       .from('sessions')
       .delete()
-      .eq('id', session._cloudId)
-      .eq('user_id', currentUser.id);
+      .eq('user_id', currentUser.id)
+      .eq('routine_name', session.routineName)
+      .eq('date', session.date);
 
     if (error) {
       console.error('deleteSession', error);
@@ -1507,7 +1533,9 @@ async function deleteSession(index) {
       return;
     }
 
-    cloudSessions = cloudSessions.filter(s => s._cloudId !== session._cloudId);
+    cloudSessions = cloudSessions.filter(
+      s => !(s.routineName === session.routineName && s.date === session.date)
+    );
   }
 
   renderHome();
