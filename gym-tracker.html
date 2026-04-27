@@ -928,10 +928,6 @@ async function saveSession(session) {
   return true;
 }
 
-  cloudSessions.unshift({ ...stripCloudMeta(session), _cloudId: data.id });
-  return true;
-}
-
 // =====================
 // PROFILE
 // =====================
