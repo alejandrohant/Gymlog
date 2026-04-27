@@ -574,7 +574,6 @@
   
 <div class="toast" id="toast"></div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://zflsvgnvxtozinucrnsp.supabase.co';
@@ -589,181 +588,75 @@ let audioCtx = null;
 let cloudSessions = [];
 
 // =====================
-// AUTH
-// =====================
-async function signUp() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value.trim();
-
-  if (!email || !password) {
-    showToast('⚠️ Pon correo y contraseña');
-    return;
-  }
-
-  const { data, error } = await supabaseClient.auth.signUp({ email, password });
-
-  if (error) {
-    showToast('❌ ' + error.message);
-    return;
-  }
-
-  currentUser = data.user || null;
-  await initializeCloudState();
-  await renderAuthStatus();
-  await renderProfile();
-  renderHome();
-  renderHistory();
-  showToast('✅ Cuenta creada');
-}
-
-async function signIn() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value.trim();
-
-  if (!email || !password) {
-    showToast('⚠️ Pon correo y contraseña');
-    return;
-  }
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    showToast('❌ ' + error.message);
-    return;
-  }
-
-  currentUser = data.user || null;
-  await initializeCloudState();
-  await renderAuthStatus();
-  await renderProfile();
-  renderHome();
-  renderHistory();
-  showToast('✅ Sesión iniciada');
-}
-
-async function signOut() {
-  const { error } = await supabaseClient.auth.signOut();
-
-  if (error) {
-    showToast('❌ ' + error.message);
-    return;
-  }
-
-  currentUser = null;
-  cloudSessions = [];
-  localStorage.removeItem('gymlog_profile');
-  await renderAuthStatus();
-  await renderProfile();
-  renderHome();
-  renderHistory();
-  showToast('👋 Sesión cerrada');
-}
-
-async function renderAuthStatus() {
-  const { data } = await supabaseClient.auth.getUser();
-  currentUser = data.user || null;
-
-  const el = document.getElementById('authStatus');
-  if (!el) return;
-
-  el.textContent = currentUser
-    ? 'Sesión activa: ' + currentUser.email
-    : 'Sin sesión';
-}
-
-// =====================
 // DATA
 // =====================
 const ROUTINES = [
-  {
-    id: 'push_a',
-    name: 'Push A',
-    day: 'Martes',
-    emoji: '💥',
-    desc: 'Pecho Superior + Hombros',
-    exercises: [
-      { name: 'Press de Banca Inclinado (Mancuerna)', sets: 4 },
-      { name: 'Press de Hombros Sentado (Barra)', sets: 3, note: 'Incluir 45 lbs de barra' },
-      { name: 'Elevacion Laterales (Mancuerna)', sets: 4 },
-      { name: 'Tríceps con Polea', sets: 3 },
-    ]
-  },
-  {
-    id: 'pull_a',
-    name: 'Pull A',
-    day: 'Miércoles',
-    emoji: '⚡',
-    desc: 'Espalda + Bíceps',
-    exercises: [
-      { name: 'Jalón al Pecho (Cable)', sets: 4 },
-      { name: 'Remo Inclinado (Barra)', sets: 4, note: 'Incluir 45 lbs de barra' },
-      { name: 'Tirón a la Cara', sets: 4 },
-      { name: 'Curl de Bíceps (Barra)', sets: 3, note: 'Incluir 45 lbs de barra' },
-    ]
-  },
-  {
-    id: 'legs_a',
-    name: 'Legs A',
-    day: 'Jueves',
-    emoji: '🦵',
-    desc: 'Cuádriceps + Gemelos',
-    exercises: [
-      { name: 'Sentadilla Hack (Máquina)', sets: 4 },
-      { name: 'Peso Muerto Rumano (Barra)', sets: 4, note: 'Incluir 45 lbs de barra' },
-      { name: 'Extensión de Pierna', sets: 3 },
-      { name: 'Elevación de Gemelos Sentado', sets: 4 },
-    ]
-  },
-  {
-    id: 'push_b',
-    name: 'Push B',
-    day: 'Viernes',
-    emoji: '🔥',
-    desc: 'Pecho Completo + Hombros',
-    exercises: [
-      { name: 'Press de Banca (Barra)', sets: 4, note: 'Incluir 45 lbs de barra' },
-      { name: 'Aperturas (Máquina)', sets: 3 },
-      { name: 'Elevacion Laterales (Mancuerna)', sets: 4 },
-      { name: 'Press de Hombros (Mancuerna)', sets: 3 },
-      { name: 'Fondo de Tríceps', sets: 3 },
-    ]
-  },
-  {
-    id: 'pull_b',
-    name: 'Pull B + Hombros',
-    day: 'Sábado',
-    emoji: '💪',
-    desc: 'Espalda + Especialización Hombros',
-    exercises: [
-      { name: 'Jalón al Pecho - Agarre Cerrado (Cable)', sets: 4 },
-      { name: 'Remo Sentado con Agarre en V (Cable)', sets: 4 },
-      { name: 'Vuelos invertidos para deltoides posteriores (mancuerna)', sets: 4 },
-      { name: 'Elevacion Laterales (Mancuerna)', sets: 5 },
-      { name: 'Curl Martillo (Mancuerna)', sets: 3 },
-    ]
-  },
-  {
-    id: 'legs_b',
-    name: 'Legs B',
-    day: 'Domingo',
-    emoji: '🏋️',
-    desc: 'Isquios/Glúteos + Gemelos',
-    exercises: [
-      { name: 'Sentadilla Búlgara', sets: 3 },
-      { name: 'Press de Piernas', sets: 4 },
-      { name: 'Curl de Pierna Sentado', sets: 4 },
-      { name: 'Extensión de Pierna', sets: 3 },
-      { name: 'Elevación de Gemelos de Pie (Máquina)', sets: 5 },
-    ]
-  },
+  { id: 'push_a', name: 'Push A', day: 'Martes', emoji: '💥', desc: 'Pecho Superior + Hombros', exercises: [
+    { name: 'Press de Banca Inclinado (Mancuerna)', sets: 4 },
+    { name: 'Press de Hombros Sentado (Barra)', sets: 3, note: 'Incluir 45 lbs de barra' },
+    { name: 'Elevacion Laterales (Mancuerna)', sets: 4 },
+    { name: 'Tríceps con Polea', sets: 3 },
+  ]},
+  { id: 'pull_a', name: 'Pull A', day: 'Miércoles', emoji: '⚡', desc: 'Espalda + Bíceps', exercises: [
+    { name: 'Jalón al Pecho (Cable)', sets: 4 },
+    { name: 'Remo Inclinado (Barra)', sets: 4, note: 'Incluir 45 lbs de barra' },
+    { name: 'Tirón a la Cara', sets: 4 },
+    { name: 'Curl de Bíceps (Barra)', sets: 3, note: 'Incluir 45 lbs de barra' },
+  ]},
+  { id: 'legs_a', name: 'Legs A', day: 'Jueves', emoji: '🦵', desc: 'Cuádriceps + Gemelos', exercises: [
+    { name: 'Sentadilla Hack (Máquina)', sets: 4 },
+    { name: 'Peso Muerto Rumano (Barra)', sets: 4, note: 'Incluir 45 lbs de barra' },
+    { name: 'Extensión de Pierna', sets: 3 },
+    { name: 'Elevación de Gemelos Sentado', sets: 4 },
+  ]},
+  { id: 'push_b', name: 'Push B', day: 'Viernes', emoji: '🔥', desc: 'Pecho Completo + Hombros', exercises: [
+    { name: 'Press de Banca (Barra)', sets: 4, note: 'Incluir 45 lbs de barra' },
+    { name: 'Aperturas (Máquina)', sets: 3 },
+    { name: 'Elevacion Laterales (Mancuerna)', sets: 4 },
+    { name: 'Press de Hombros (Mancuerna)', sets: 3 },
+    { name: 'Fondo de Tríceps', sets: 3 },
+  ]},
+  { id: 'pull_b', name: 'Pull B + Hombros', day: 'Sábado', emoji: '💪', desc: 'Espalda + Especialización Hombros', exercises: [
+    { name: 'Jalón al Pecho - Agarre Cerrado (Cable)', sets: 4 },
+    { name: 'Remo Sentado con Agarre en V (Cable)', sets: 4 },
+    { name: 'Vuelos invertidos para deltoides posteriores (mancuerna)', sets: 4 },
+    { name: 'Elevacion Laterales (Mancuerna)', sets: 5 },
+    { name: 'Curl Martillo (Mancuerna)', sets: 3 },
+  ]},
+  { id: 'legs_b', name: 'Legs B', day: 'Domingo', emoji: '🏋️', desc: 'Isquios/Glúteos + Gemelos', exercises: [
+    { name: 'Sentadilla Búlgara', sets: 3 },
+    { name: 'Press de Piernas', sets: 4 },
+    { name: 'Curl de Pierna Sentado', sets: 4 },
+    { name: 'Extensión de Pierna', sets: 3 },
+    { name: 'Elevación de Gemelos de Pie (Máquina)', sets: 5 },
+  ]},
 ];
 
-// =====================
-// STORAGE - SESSIONS
-// =====================
+function stripCloudMeta(session) {
+  if (!session) return session;
+  const copy = JSON.parse(JSON.stringify(session));
+  delete copy._cloudId;
+  return copy;
+}
+
+function sessionKey(session) {
+  return `${session.routineName}__${session.date}`;
+}
+
+function dedupeSessions(sessions) {
+  const map = new Map();
+  for (const session of sessions || []) {
+    if (!session || !session.routineName || !session.date) continue;
+    const key = sessionKey(session);
+    if (!map.has(key)) map.set(key, session);
+  }
+  return Array.from(map.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
 function getSessionsLocal() {
   try {
-    return JSON.parse(localStorage.getItem('gymlog_sessions') || '[]');
+    const raw = JSON.parse(localStorage.getItem('gymlog_sessions') || '[]');
+    return Array.isArray(raw) ? raw : [];
   } catch {
     return [];
   }
@@ -773,14 +666,8 @@ function setSessionsLocal(sessions) {
   localStorage.setItem('gymlog_sessions', JSON.stringify(sessions.map(stripCloudMeta)));
 }
 
-function stripCloudMeta(session) {
-  const copy = JSON.parse(JSON.stringify(session));
-  delete copy._cloudId;
-  return copy;
-}
-
 function getSessions() {
-  return currentUser ? cloudSessions : getSessionsLocal();
+  return currentUser ? dedupeSessions(cloudSessions) : dedupeSessions(getSessionsLocal());
 }
 
 function getLastSession(routineId) {
@@ -791,11 +678,10 @@ function getLastSession(routineId) {
 function getLastExerciseData(routineId, exerciseName) {
   const last = getLastSession(routineId);
   if (!last) return null;
-  const ex = last.exercises.find(e => e.name === exerciseName);
-  return ex || null;
+  return last.exercises.find(e => e.name === exerciseName) || null;
 }
 
-async function fetchCloudSessions() {
+async function loadCloudSessions() {
   if (!currentUser) {
     cloudSessions = [];
     return [];
@@ -808,47 +694,43 @@ async function fetchCloudSessions() {
     .order('date', { ascending: false });
 
   if (error) {
-    console.error('fetchCloudSessions', error);
+    console.error('loadCloudSessions', error);
     showToast('❌ ' + error.message);
-    return cloudSessions;
+    return [];
   }
 
-  cloudSessions = (data || []).map(row => ({
+  cloudSessions = dedupeSessions((data || []).map(row => ({
     ...row.data_json,
     _cloudId: row.id,
     routineId: row.data_json?.routineId || row.routine_id,
     routineName: row.data_json?.routineName || row.routine_name,
     date: row.data_json?.date || row.date,
-  }));
+  })));
 
   return cloudSessions;
 }
 
 async function syncLocalSessionsToCloud() {
-  if (!currentUser) return;
+  if (!currentUser) return true;
 
-  const localSessions = getSessionsLocal();
-  if (!localSessions.length) {
-    await fetchCloudSessions();
-    return;
-  }
+  const localSessions = dedupeSessions(getSessionsLocal());
+  if (!localSessions.length) return true;
 
-  const { data: existingRows, error } = await supabaseClient
+  const { data: existingRows, error: fetchError } = await supabaseClient
     .from('sessions')
-    .select('date')
+    .select('id, routine_name, date')
     .eq('user_id', currentUser.id);
 
-  if (error) {
-    console.error('syncLocalSessionsToCloud', error);
-    showToast('❌ ' + error.message);
-    return;
+  if (fetchError) {
+    console.error('syncLocalSessionsToCloud', fetchError);
+    showToast('❌ ' + fetchError.message);
+    return false;
   }
 
-  const existingDates = new Set((existingRows || []).map(row => row.date));
-  const missing = localSessions.filter(session => !existingDates.has(session.date));
-
-  if (missing.length) {
-    const rows = missing.map(session => ({
+  const existingKeys = new Set((existingRows || []).map(row => `${row.routine_name}__${row.date}`));
+  const rows = localSessions
+    .filter(session => !existingKeys.has(sessionKey(session)))
+    .map(session => ({
       user_id: currentUser.id,
       routine_id: session.routineId,
       routine_name: session.routineName,
@@ -856,45 +738,33 @@ async function syncLocalSessionsToCloud() {
       data_json: stripCloudMeta(session),
     }));
 
-    const { error: insertError } = await supabaseClient
-      .from('sessions')
-      .insert(rows);
-
-    if (insertError) {
-      console.error('syncLocalSessionsToCloud insert', insertError);
-      showToast('❌ ' + insertError.message);
-      return;
+  if (rows.length) {
+    const { error } = await supabaseClient.from('sessions').insert(rows);
+    if (error) {
+      console.error('syncLocalSessionsToCloud insert', error);
+      showToast('❌ ' + error.message);
+      return false;
     }
   }
 
-  await fetchCloudSessions();
-}
-
-async function initializeCloudState() {
-  if (!currentUser) {
-    cloudSessions = [];
-    return;
-  }
-  await syncLocalSessionsToCloud();
+  await loadCloudSessions();
+  setSessionsLocal(dedupeSessions(cloudSessions));
+  return true;
 }
 
 async function saveSession(session) {
   const cleanSession = stripCloudMeta(session);
-
-  const localSessions = getSessionsLocal();
-  localSessions.unshift(cleanSession);
+  const localSessions = dedupeSessions([cleanSession, ...getSessionsLocal()]);
   setSessionsLocal(localSessions);
 
-  if (!currentUser) {
-    return true;
-  }
+  if (!currentUser) return true;
 
   const { data: existing, error: checkError } = await supabaseClient
     .from('sessions')
     .select('id')
     .eq('user_id', currentUser.id)
-    .eq('routine_name', session.routineName)
-    .eq('date', session.date)
+    .eq('routine_name', cleanSession.routineName)
+    .eq('date', cleanSession.date)
     .limit(1);
 
   if (checkError) {
@@ -903,34 +773,33 @@ async function saveSession(session) {
     return false;
   }
 
-  if (existing && existing.length > 0) {
-    return true;
+  if (!existing || existing.length === 0) {
+    const { data, error } = await supabaseClient
+      .from('sessions')
+      .insert({
+        user_id: currentUser.id,
+        routine_id: cleanSession.routineId,
+        routine_name: cleanSession.routineName,
+        date: cleanSession.date,
+        data_json: cleanSession,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('saveSession insert', error);
+      showToast('❌ ' + error.message);
+      return false;
+    }
+
+    cloudSessions.unshift({ ...cleanSession, _cloudId: data.id });
   }
 
-  const { data, error } = await supabaseClient
-    .from('sessions')
-    .insert({
-      user_id: currentUser.id,
-      routine_id: session.routineId,
-      routine_name: session.routineName,
-      date: session.date,
-      data_json: cleanSession,
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    console.error('saveSession insert', error);
-    showToast('❌ ' + error.message);
-    return false;
-  }
-
+  cloudSessions = dedupeSessions(cloudSessions);
+  setSessionsLocal(currentUser ? dedupeSessions(cloudSessions) : localSessions);
   return true;
 }
 
-// =====================
-// PROFILE
-// =====================
 function getDefaultProfile() {
   return {
     name: 'Alejandro',
@@ -946,7 +815,6 @@ function getDefaultProfile() {
 
 function getProfileLocal() {
   const defaultProfile = getDefaultProfile();
-
   try {
     return JSON.parse(localStorage.getItem('gymlog_profile')) || defaultProfile;
   } catch {
@@ -986,57 +854,29 @@ async function renderProfile() {
     <div class="exercise-card" style="padding:20px;">
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
         <div style="width:72px;height:72px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent);border:1px solid var(--border);overflow:hidden;">
-          ${profile.photo
-            ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">`
-            : '👤'}
+          ${profile.photo ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">` : '👤'}
         </div>
         <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--accent);line-height:1;">
-            ${profile.name || 'Sin nombre'}
-          </div>
-          <div style="font-size:13px;color:var(--muted);margin-top:4px;">
-            Objetivo: ${profile.goal || '--'}
-          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--accent);line-height:1;">${profile.name || 'Sin nombre'}</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;">Objetivo: ${profile.goal || '--'}</div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Peso</div>
-          <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.weight || '--'}</div>
-        </div>
-
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Estatura</div>
-          <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.height || '--'}</div>
-        </div>
-
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Edad</div>
-          <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.age || '--'}</div>
-        </div>
-
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Split</div>
-          <div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.split || '--'}</div>
-        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Peso</div><div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.weight || '--'}</div></div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Estatura</div><div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.height || '--'}</div></div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Edad</div><div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.age || '--'}</div></div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Split</div><div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.split || '--'}</div></div>
       </div>
 
       <div style="margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Nota</div>
-        <div style="font-size:14px;color:var(--text);line-height:1.5;">
-          ${profile.note || '--'}
-        </div>
+        <div style="font-size:14px;color:var(--text);line-height:1.5;">${profile.note || '--'}</div>
       </div>
 
       <div style="display:flex;gap:10px;margin-top:14px;">
-        <button onclick="editProfile()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-          EDITAR PERFIL
-        </button>
-
-        <button onclick="document.getElementById('profilePhotoInput').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-          FOTO
-        </button>
+        <button onclick="editProfile()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">EDITAR PERFIL</button>
+        <button onclick="document.getElementById('profilePhotoInput').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">FOTO</button>
       </div>
 
       <input id="profilePhotoInput" type="file" accept="image/*" style="display:none" onchange="handleProfilePhoto(event)">
@@ -1048,77 +888,25 @@ async function editProfile() {
   let current = getProfileLocal();
 
   if (currentUser) {
-    const { data } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('id', currentUser.id)
-      .maybeSingle();
-
-    if (data) {
-      current = {
-        name: data.name || '',
-        goal: data.goal || '',
-        weight: data.weight || '',
-        height: data.height || '',
-        age: data.age || '',
-        split: data.split || '',
-        note: data.note || '',
-        photo: data.photo_url || ''
-      };
-    }
+    const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+    if (data) current = { name: data.name || '', goal: data.goal || '', weight: data.weight || '', height: data.height || '', age: data.age || '', split: data.split || '', note: data.note || '', photo: data.photo_url || '' };
   }
 
-  const name = prompt('Nombre:', current.name || '');
-  if (name === null) return;
+  const name = prompt('Nombre:', current.name || ''); if (name === null) return;
+  const goal = prompt('Objetivo:', current.goal || ''); if (goal === null) return;
+  const weight = prompt('Peso:', current.weight || ''); if (weight === null) return;
+  const height = prompt('Estatura:', current.height || ''); if (height === null) return;
+  const age = prompt('Edad:', current.age || ''); if (age === null) return;
+  const split = prompt('Split:', current.split || ''); if (split === null) return;
+  const note = prompt('Nota:', current.note || ''); if (note === null) return;
 
-  const goal = prompt('Objetivo:', current.goal || '');
-  if (goal === null) return;
-
-  const weight = prompt('Peso:', current.weight || '');
-  if (weight === null) return;
-
-  const height = prompt('Estatura:', current.height || '');
-  if (height === null) return;
-
-  const age = prompt('Edad:', current.age || '');
-  if (age === null) return;
-
-  const split = prompt('Split:', current.split || '');
-  if (split === null) return;
-
-  const note = prompt('Nota:', current.note || '');
-  if (note === null) return;
-
-  const updatedProfile = {
-    name,
-    goal,
-    weight,
-    height,
-    age,
-    split,
-    note,
-    photo: current.photo || ''
-  };
+  const updatedProfile = { name, goal, weight, height, age, split, note, photo: current.photo || '' };
 
   if (currentUser) {
-    const { error } = await supabaseClient
-      .from('profiles')
-      .upsert({
-        id: currentUser.id,
-        name,
-        goal,
-        weight,
-        height,
-        age,
-        split,
-        note,
-        photo_url: updatedProfile.photo || ''
-      });
-
-    if (error) {
-      showToast('❌ Error al guardar perfil');
-      return;
-    }
+    const { error } = await supabaseClient.from('profiles').upsert({
+      id: currentUser.id, name, goal, weight, height, age, split, note, photo_url: updatedProfile.photo || ''
+    });
+    if (error) { showToast('❌ Error al guardar perfil'); return; }
   }
 
   saveProfileLocal(updatedProfile);
@@ -1131,30 +919,23 @@ async function handleProfilePhoto(event) {
   if (!file) return;
 
   const reader = new FileReader();
-
   reader.onload = async function(e) {
     let profile = getProfileLocal();
     profile.photo = e.target.result;
 
     if (currentUser) {
-      const { error } = await supabaseClient
-        .from('profiles')
-        .upsert({
-          id: currentUser.id,
-          name: profile.name || '',
-          goal: profile.goal || '',
-          weight: profile.weight || '',
-          height: profile.height || '',
-          age: profile.age || '',
-          split: profile.split || '',
-          note: profile.note || '',
-          photo_url: profile.photo || ''
-        });
-
-      if (error) {
-        showToast('❌ Error al guardar foto');
-        return;
-      }
+      const { error } = await supabaseClient.from('profiles').upsert({
+        id: currentUser.id,
+        name: profile.name || '',
+        goal: profile.goal || '',
+        weight: profile.weight || '',
+        height: profile.height || '',
+        age: profile.age || '',
+        split: profile.split || '',
+        note: profile.note || '',
+        photo_url: profile.photo || ''
+      });
+      if (error) { showToast('❌ Error al guardar foto'); return; }
     }
 
     saveProfileLocal(profile);
@@ -1165,15 +946,64 @@ async function handleProfilePhoto(event) {
   reader.readAsDataURL(file);
 }
 
-// =====================
-// SCREENS
-// =====================
+async function signUp() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  if (!email || !password) { showToast('⚠️ Pon correo y contraseña'); return; }
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
+  if (error) { showToast('❌ ' + error.message); return; }
+
+  currentUser = data.user || null;
+  await renderAuthStatus();
+  await renderProfile();
+  if (currentUser) await syncLocalSessionsToCloud();
+  renderHome();
+  renderHistory();
+  showToast('✅ Cuenta creada');
+}
+
+async function signIn() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  if (!email || !password) { showToast('⚠️ Pon correo y contraseña'); return; }
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) { showToast('❌ ' + error.message); return; }
+
+  currentUser = data.user || null;
+  await renderAuthStatus();
+  await renderProfile();
+  if (currentUser) await syncLocalSessionsToCloud();
+  renderHome();
+  renderHistory();
+  showToast('✅ Sesión iniciada');
+}
+
+async function signOut() {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) { showToast('❌ ' + error.message); return; }
+  currentUser = null;
+  cloudSessions = [];
+  localStorage.removeItem('gymlog_profile');
+  await renderAuthStatus();
+  await renderProfile();
+  renderHome();
+  renderHistory();
+  showToast('👋 Sesión cerrada');
+}
+
+async function renderAuthStatus() {
+  const { data } = await supabaseClient.auth.getUser();
+  currentUser = data.user || null;
+  const el = document.getElementById('authStatus');
+  if (!el) return;
+  el.textContent = currentUser ? 'Sesión activa: ' + currentUser.email : 'Sin sesión';
+}
+
 function showScreen(name) {
   const goingToSession = name === 'session';
 
   if (currentSession && !goingToSession) {
     const sessionScreenActive = document.getElementById('sessionScreen').classList.contains('active');
-
     if (sessionScreenActive) {
       if (!confirm('Hay una sesión en curso. ¿Salir sin guardar?')) return;
       currentSession = null;
@@ -1213,16 +1043,13 @@ function goBack() {
   showScreen('home');
 }
 
-// =====================
-// HOME
-// =====================
 function renderHome() {
   const grid = document.getElementById('routineGrid');
   const sessions = getSessions();
+
   grid.innerHTML = ROUTINES.map(r => {
     const last = sessions.find(s => s.routineId === r.id) || null;
     const lastText = last ? formatDate(last.date) : 'Sin sesiones';
-
     return `
       <div class="routine-card" onclick="viewRoutine('${r.id}')">
         <div class="routine-emoji">${r.emoji}</div>
@@ -1236,9 +1063,6 @@ function renderHome() {
   }).join('');
 }
 
-// =====================
-// SESSION
-// =====================
 function viewRoutine(routineId) {
   const routine = ROUTINES.find(r => r.id === routineId);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1259,7 +1083,6 @@ function viewRoutine(routineId) {
 
 function startSession(routineId) {
   const routine = ROUTINES.find(r => r.id === routineId);
-
   if (!confirm('¿Iniciar sesión de ' + routine.name + '?')) return;
 
   currentSession = {
@@ -1273,11 +1096,7 @@ function startSession(routineId) {
         note: ex.note || null,
         sets: Array.from({ length: ex.sets }, (_, i) => {
           const lastSet = lastEx?.sets?.[i];
-          return {
-            weight: lastSet?.weight || '',
-            reps: lastSet?.reps || '',
-            done: false
-          };
+          return { weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false };
         })
       };
     })
@@ -1298,31 +1117,14 @@ function renderExercises() {
   const list = document.getElementById('exerciseList');
   list.innerHTML = currentSession.exercises.map((ex, ei) => {
     const lastEx = getLastExerciseData(currentSession.routineId, ex.name);
-    const prevHtml = lastEx ? `
-      <div class="prev-info">
-        📊 Anterior: <span>${getSummary(lastEx.sets)}</span>
-      </div>
-    ` : '';
+    const prevHtml = lastEx ? `<div class="prev-info">📊 Anterior: <span>${getSummary(lastEx.sets)}</span></div>` : '';
 
     const setsHtml = ex.sets.map((set, si) => `
       <div class="set-row" id="setrow-${ei}-${si}">
         <div class="set-num">${si + 1}</div>
-        <input type="number" class="set-input ${set.done ? 'completed' : ''}"
-          id="weight-${ei}-${si}"
-          placeholder="${lastEx?.sets?.[si]?.weight || 'lbs'}"
-          value="${set.weight}"
-          onchange="updateSet(${ei},${si},'weight',this.value)"
-          inputmode="decimal">
-        <input type="number" class="set-input ${set.done ? 'completed' : ''}"
-          id="reps-${ei}-${si}"
-          placeholder="${lastEx?.sets?.[si]?.reps || 'reps'}"
-          value="${set.reps}"
-          onchange="updateSet(${ei},${si},'reps',this.value)"
-          inputmode="numeric">
-        <button class="set-check ${set.done ? 'done' : ''}"
-          onclick="toggleSet(${ei},${si})">
-          ${set.done ? '✓' : ''}
-        </button>
+        <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="weight-${ei}-${si}" placeholder="${lastEx?.sets?.[si]?.weight || 'lbs'}" value="${set.weight}" onchange="updateSet(${ei},${si},'weight',this.value)" inputmode="decimal">
+        <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="${lastEx?.sets?.[si]?.reps || 'reps'}" value="${set.reps}" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="numeric">
+        <button class="set-check ${set.done ? 'done' : ''}" onclick="toggleSet(${ei},${si})">${set.done ? '✓' : ''}</button>
       </div>
     `).join('');
 
@@ -1346,21 +1148,15 @@ function renderExercises() {
           <button class="add-set-btn" onclick="addSet(${ei})">+ Serie</button>
         </div>
         <div style="padding: 0 16px 12px;">
-          <textarea class="notes-input" rows="2" placeholder="Notas técnicas..."
-            onchange="updateNotes(${ei}, this.value)">${ex.notes || ''}</textarea>
+          <textarea class="notes-input" rows="2" placeholder="Notas técnicas..." onchange="updateNotes(${ei}, this.value)">${ex.notes || ''}</textarea>
         </div>
       </div>
     `;
   }).join('');
 }
 
-function updateSet(ei, si, field, value) {
-  currentSession.exercises[ei].sets[si][field] = value;
-}
-
-function updateNotes(ei, value) {
-  currentSession.exercises[ei].notes = value;
-}
+function updateSet(ei, si, field, value) { currentSession.exercises[ei].sets[si][field] = value; }
+function updateNotes(ei, value) { currentSession.exercises[ei].notes = value; }
 
 function toggleSet(ei, si) {
   const set = currentSession.exercises[ei].sets[si];
@@ -1375,16 +1171,21 @@ function toggleSet(ei, si) {
   }
 
   set.done = !set.done;
-
   wEl.className = `set-input ${set.done ? 'completed' : ''}`;
   rEl.className = `set-input ${set.done ? 'completed' : ''}`;
-
   const btn = document.querySelector(`#setrow-${ei}-${si} .set-check`);
   btn.className = `set-check ${set.done ? 'done' : ''}`;
   btn.textContent = set.done ? '✓' : '';
 
   if (set.done) {
-    const t = {'Elevacion Laterales (Mancuerna)':60,'Tirón a la Cara':60,'Elevación de Gemelos Sentado':60,'Elevación de Gemelos de Pie (Máquina)':60,'Extensión de Pierna':90,'Curl de Bíceps (Barra)':90,'Curl Martillo (Mancuerna)':90,'Aperturas (Máquina)':90,'Sentadilla Búlgara':90,'Curl de Pierna Sentado':90,'Fondo de Tríceps':90,'Tríceps con Polea':90,'Press de Hombros Sentado (Barra)':120,'Jalón al Pecho (Cable)':120,'Remo Sentado con Agarre en V (Cable)':120,'Jalón al Pecho - Agarre Cerrado (Cable)':120,'Press de Hombros (Mancuerna)':120,'Vuelos invertidos para deltoides posteriores (mancuerna)':120,'Sentadilla Hack (Máquina)':180,'Peso Muerto Rumano (Barra)':180,'Press de Piernas':150,'Press de Banca Inclinado (Mancuerna)':150,'Remo Inclinado (Barra)':150,'Press de Banca (Barra)':180};
+    const t = {
+      'Elevacion Laterales (Mancuerna)':60,'Tirón a la Cara':60,'Elevación de Gemelos Sentado':60,'Elevación de Gemelos de Pie (Máquina)':60,
+      'Extensión de Pierna':90,'Curl de Bíceps (Barra)':90,'Curl Martillo (Mancuerna)':90,'Aperturas (Máquina)':90,'Sentadilla Búlgara':90,
+      'Curl de Pierna Sentado':90,'Fondo de Tríceps':90,'Tríceps con Polea':90,'Press de Hombros Sentado (Barra)':120,'Jalón al Pecho (Cable)':120,
+      'Remo Sentado con Agarre en V (Cable)':120,'Jalón al Pecho - Agarre Cerrado (Cable)':120,'Press de Hombros (Mancuerna)':120,
+      'Vuelos invertidos para deltoides posteriores (mancuerna)':120,'Sentadilla Hack (Máquina)':180,'Peso Muerto Rumano (Barra)':180,
+      'Press de Piernas':150,'Press de Banca Inclinado (Mancuerna)':150,'Remo Inclinado (Barra)':150,'Press de Banca (Barra)':180
+    };
     const exName = currentSession.exercises[ei].name;
     startTimer(t[exName] || 120);
   }
@@ -1392,10 +1193,7 @@ function toggleSet(ei, si) {
 
 function replaceExercise(ei) {
   const allExercises = ROUTINES.flatMap(r => r.exercises);
-  const uniqueExercises = allExercises.filter(
-    (ex, index, arr) => arr.findIndex(e => e.name === ex.name) === index
-  );
-
+  const uniqueExercises = allExercises.filter((ex, index, arr) => arr.findIndex(e => e.name === ex.name) === index);
   const list = uniqueExercises.map((ex, i) => `${i + 1}. ${ex.name}`).join('\n');
   const choice = prompt('Elige número:\n' + list);
   const idx = parseInt(choice) - 1;
@@ -1411,11 +1209,7 @@ function replaceExercise(ei) {
       notes: '',
       sets: Array.from({ length: currentSetsCount }, (_, i) => {
         const lastSet = lastEx?.sets?.[i];
-        return {
-          weight: lastSet?.weight || '',
-          reps: lastSet?.reps || '',
-          done: false
-        };
+        return { weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false };
       })
     };
 
@@ -1436,9 +1230,7 @@ async function finishSession() {
     return;
   }
 
-  const doneSets = currentSession.exercises.reduce((acc, ex) =>
-    acc + ex.sets.filter(s => s.done).length, 0);
-
+  const doneSets = currentSession.exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.done).length, 0);
   if (doneSets === 0) {
     showToast('⚠️ Marca al menos una serie como completada');
     return;
@@ -1450,38 +1242,26 @@ async function finishSession() {
   currentSession = null;
   stopTimer();
   showToast('✅ Sesión guardada');
-
   const finishBtn = document.querySelector('.finish-btn');
   finishBtn.textContent = 'TERMINAR SESIÓN';
   finishBtn.onclick = () => finishSession();
-
   renderHome();
   renderHistory();
   setTimeout(() => { showScreen('home'); }, 1200);
 }
 
-// =====================
-// HISTORY
-// =====================
 function renderHistory() {
   const sessions = getSessions();
   const list = document.getElementById('historyList');
 
   if (sessions.length === 0) {
-    list.innerHTML = `
-      <div class="empty">
-        <div class="empty-icon">📋</div>
-        <div class="empty-text">Sin sesiones registradas.<br>Selecciona una rutina para empezar.</div>
-      </div>
-    `;
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin sesiones registradas.<br>Selecciona una rutina para empezar.</div></div>`;
     return;
   }
 
   list.innerHTML = sessions.map((s, i) => {
     const totalSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
-    const totalVol = s.exercises.reduce((acc, ex) =>
-      acc + ex.sets.filter(st => st.done).reduce((a, st) =>
-        a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
+    const totalVol = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
 
     return `
       <div class="history-card">
@@ -1495,9 +1275,7 @@ function renderHistory() {
           <div class="history-stat"><strong>${s.exercises.length}</strong> ejercicios</div>
         </div>
         <div style="margin-top:12px;display:flex;justify-content:flex-end;">
-          <button onclick="deleteSession(${i})" style="padding:8px 12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">
-            ELIMINAR
-          </button>
+          <button onclick="deleteSession(${i})" style="padding:8px 12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ELIMINAR</button>
         </div>
       </div>
     `;
@@ -1507,12 +1285,9 @@ function renderHistory() {
 async function deleteSession(index) {
   const sessions = getSessions();
   const session = sessions[index];
-
   if (!confirm('¿Eliminar esta sesión del historial?')) return;
 
-  const localSessions = getSessionsLocal().filter(
-    s => !(s.routineName === session.routineName && s.date === session.date)
-  );
+  const localSessions = getSessionsLocal().filter(s => !(s.routineName === session.routineName && s.date === session.date));
   setSessionsLocal(localSessions);
 
   if (currentUser) {
@@ -1529,9 +1304,7 @@ async function deleteSession(index) {
       return;
     }
 
-    cloudSessions = cloudSessions.filter(
-      s => !(s.routineName === session.routineName && s.date === session.date)
-    );
+    cloudSessions = cloudSessions.filter(s => !(s.routineName === session.routineName && s.date === session.date));
   }
 
   renderHome();
@@ -1548,9 +1321,7 @@ function showDetail(index) {
     <div class="session-date" style="margin-bottom:20px">${formatDateFull(new Date(s.date))}</div>
     ${s.exercises.map(ex => `
       <div class="exercise-card" style="margin-bottom:12px">
-        <div class="exercise-header">
-          <div class="exercise-name">${ex.name}</div>
-        </div>
+        <div class="exercise-header"><div class="exercise-name">${ex.name}</div></div>
         <div class="sets-table">
           ${ex.sets.filter(st => st.done).map((st, i) => `
             <div class="detail-set">
@@ -1572,38 +1343,25 @@ function showDetail(index) {
   document.getElementById('detailScreen').classList.add('active');
 }
 
-// =====================
-// TIMER
-// =====================
 function unlockTimerAudio() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) {
-      audioCtx = new AudioContextClass();
-    }
+    if (AudioContextClass) audioCtx = new AudioContextClass();
   }
-
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {});
-  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
 }
 
 function playTimerBeep() {
   if (!audioCtx) return;
-
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
-
   oscillator.type = 'sine';
   oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-
   gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime);
   gainNode.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.01);
   gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
-
   oscillator.connect(gainNode);
   gainNode.connect(audioCtx.destination);
-
   oscillator.start();
   oscillator.stop(audioCtx.currentTime + 0.26);
 }
@@ -1611,17 +1369,13 @@ function playTimerBeep() {
 function startTimer(seconds) {
   stopTimer();
   unlockTimerAudio();
-
   timerEndTime = Date.now() + (seconds * 1000);
-
   const el = document.getElementById('timerDisplay');
   el.classList.add('visible');
-
   updateTimerDisplay();
 
   timerInterval = setInterval(() => {
     const remainingMs = timerEndTime - Date.now();
-
     if (remainingMs <= 0) {
       stopTimer();
       playTimerBeep();
@@ -1636,26 +1390,19 @@ function stopTimer() {
   clearInterval(timerInterval);
   timerInterval = null;
   timerEndTime = null;
-
   const el = document.getElementById('timerDisplay');
   el.classList.remove('visible');
 }
 
 function updateTimerDisplay() {
   if (!timerEndTime) return;
-
   const remainingMs = Math.max(timerEndTime - Date.now(), 0);
   const totalSeconds = Math.ceil(remainingMs / 1000);
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
-
-  document.getElementById('timerDisplay').textContent =
-    `${m}:${s.toString().padStart(2, '0')}`;
+  document.getElementById('timerDisplay').textContent = `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-// =====================
-// HELPERS
-// =====================
 function getSummary(sets) {
   const done = sets.filter(s => s.done || s.weight);
   if (!done.length) return 'Sin datos';
@@ -1684,14 +1431,13 @@ function showToast(msg) {
 }
 
 function exportSessions() {
-  const sessions = getSessions().map(stripCloudMeta);
-
+  const sessions = getSessions();
   if (!sessions.length) {
     showToast('⚠️ No hay sesiones para exportar');
     return;
   }
 
-  const dataStr = JSON.stringify(sessions, null, 2);
+  const dataStr = JSON.stringify(sessions.map(stripCloudMeta), null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
@@ -1711,17 +1457,17 @@ function exportSessions() {
   showToast('✅ Sesiones exportadas');
 }
 
-// =====================
-// INIT
-// =====================
 async function initApp() {
   await renderAuthStatus();
   if (currentUser) {
-    await initializeCloudState();
+    await loadCloudSessions();
+    setSessionsLocal(dedupeSessions(cloudSessions));
+  } else {
+    setSessionsLocal(dedupeSessions(getSessionsLocal()));
   }
-  await renderProfile();
   renderHome();
   renderHistory();
+  renderProfile();
 }
 
 initApp();
