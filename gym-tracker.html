@@ -1794,85 +1794,44 @@ function startSession(routineId) {
   document.getElementById('sessionScreen').classList.add('active');
 }
 
-function renderExercises() {
-  const list = document.getElementById('exerciseList');
-  const totalSets = currentSession.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
-  const doneSets = currentSession.exercises.reduce((acc, ex) => acc + ex.sets.filter(set => set.done).length, 0);
-  const progress = totalSets ? Math.round((doneSets / totalSets) * 100) : 0;
-
-  const overviewHtml = `
-    <div class="session-overview">
-      <div class="session-overview-top">
-        <div>
-          <div class="session-overview-title">${currentSession.routineName}</div>
-          <div class="session-overview-sub">Avanza serie por serie y deja notas donde lo necesites.</div>
-        </div>
-        <div class="session-progress-ring">${progress}%</div>
-      </div>
-      <div class="session-stats-grid">
-        <div class="session-stat-card">
-          <div class="session-stat-label">Hechas</div>
-          <div class="session-stat-value">${doneSets}</div>
-        </div>
-        <div class="session-stat-card">
-          <div class="session-stat-label">Pendientes</div>
-          <div class="session-stat-value">${Math.max(totalSets - doneSets, 0)}</div>
-        </div>
-        <div class="session-stat-card">
-          <div class="session-stat-label">Ejercicios</div>
-          <div class="session-stat-value">${currentSession.exercises.length}</div>
+return `
+  <div class="exercise-card training-card">
+    <div class="exercise-header">
+      <div class="exercise-topline">
+        <div class="exercise-index">${ei + 1}</div>
+        <div class="exercise-title-block">
+          <div class="exercise-name">${ex.name}</div>
+          <div class="exercise-submeta">${ex.sets.length} series activas</div>
         </div>
       </div>
+      ${lastEx ? '<div class="prev-badge">ANTERIOR ↑</div>' : ''}
     </div>
-  `;
 
-  list.innerHTML = overviewHtml + currentSession.exercises.map((ex, ei) => {
-    const lastEx = getLastExerciseData(currentSession.routineId, ex.name);
-    const prevHtml = lastEx ? `<div class="prev-info">📊 Anterior: <span>${getSummary(lastEx.sets)}</span></div>` : '';
+    ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''}
 
-    const setsHtml = ex.sets.map((set, si) => `
-      <div class="set-row" id="setrow-${ei}-${si}">
-        <div class="set-num">${si + 1}</div>
-        <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="weight-${ei}-${si}" placeholder="${lastEx?.sets?.[si]?.weight || 'lbs'}" value="${set.weight}" onchange="updateSet(${ei},${si},'weight',this.value)" inputmode="decimal">
-        <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="${lastEx?.sets?.[si]?.reps || 'reps'}" value="${set.reps}" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="numeric">
-        <button class="set-check ${set.done ? 'done' : ''}" onclick="toggleSet(${ei},${si})">${set.done ? '✓' : ''}</button>
+    <div class="exercise-tools">
+      <div></div>
+      <button class="ghost-link" onclick="replaceExercise(${ei})">✏️ Cambiar ejercicio</button>
+    </div>
+
+    ${prevHtml}
+
+    <div class="sets-table">
+      <div class="sets-header">
+        <div></div>
+        <div style="text-align:center">PESO</div>
+        <div style="text-align:center">REPS</div>
+        <div></div>
       </div>
-    `).join('');
+      ${setsHtml}
+      <button class="add-set-btn" onclick="addSet(${ei})">+ Agregar serie</button>
+    </div>
 
-    return `
-      <div class="exercise-card training-card">
-        <div class="exercise-header">
-          <div class="exercise-topline">
-            <div class="exercise-index">${ei + 1}</div>
-            <div class="exercise-title-block">
-              <div class="exercise-name">${ex.name}</div>
-              <div class="exercise-submeta">${ex.sets.length} series activas ${lastEx ? '· con referencia anterior' : ''}</div>
-            </div>
-          </div>
-          ${lastEx ? '<div class="prev-badge">ANTERIOR ↑</div>' : ''}
-        </div>
-        ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''}
-        <div class="exercise-tools">
-  <div></div>
-  <div class="exercise-tools"><div></div><button class="ghost-link" onclick="replaceExercise(${ei})">✏️ Cambiar ejercicio</button></div>
-        ${prevHtml}
-        <div class="sets-table">
-          <div class="sets-header">
-            <div></div>
-            <div style="text-align:center">PESO</div>
-            <div style="text-align:center">REPS</div>
-            <div></div>
-          </div>
-          ${setsHtml}
-          <button class="add-set-btn" onclick="addSet(${ei})">+ Agregar serie</button>
-        </div>
-        <div class="notes-shell">
-          <textarea class="notes-input" rows="2" placeholder="Notas técnicas, sensación, tempo, RIR..." onchange="updateNotes(${ei}, this.value)">${ex.notes || ''}</textarea>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
+    <div class="notes-shell">
+      <textarea class="notes-input" rows="2" placeholder="Notas técnicas, sensación, tempo, RIR..." onchange="updateNotes(${ei}, this.value)">${ex.notes || ''}</textarea>
+    </div>
+  </div>
+`;
 
 function updateSet(ei, si, field, value) { currentSession.exercises[ei].sets[si][field] = value; }
 function updateNotes(ei, value) { currentSession.exercises[ei].notes = value; }
