@@ -1889,15 +1889,12 @@ function replaceExercise(ei) {
   if (!value) return;
 
   let selected = null;
-
   const idx = parseInt(value, 10);
+
   if (!isNaN(idx) && idx >= 1 && idx <= uniqueExercises.length) {
     selected = uniqueExercises[idx - 1];
   } else {
-    selected = {
-      name: value,
-      note: null
-    };
+    selected = { name: value, note: null };
   }
 
   const lastEx = getLastExerciseData(currentSession.routineId, selected.name);
