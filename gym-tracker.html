@@ -1850,7 +1850,13 @@ function renderExercises() {
           ${lastEx ? '<div class="prev-badge">ANTERIOR ↑</div>' : ''}
         </div>
         ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''}
-        <div class="exercise-tools"><div></div><button class="ghost-link" onclick="replaceExercise(${ei})">✏️ Cambiar ejercicio</button></div>
+        <div class="exercise-tools">
+  <div></div>
+  <select class="exercise-select" onchange="replaceExerciseFromSelect(${ei}, this.value)">
+    <option value="">✏️ Cambiar ejercicio</option>
+    ${getExerciseOptions(ex.name)}
+  </select>
+</div>
         ${prevHtml}
         <div class="sets-table">
           <div class="sets-header">
@@ -2126,6 +2132,45 @@ function startTimer(seconds) {
   }, 250);
 }
 
+function getExerciseOptions(currentExerciseName) {
+  const allExercises = ROUTINES.flatMap(r => r.exercises);
+  const uniqueExercises = allExercises.filter(
+    (ex, index, arr) => arr.findIndex(e => e.name === ex.name) === index
+  );
+
+  return uniqueExercises
+    .filter(ex => ex.name !== currentExerciseName)
+    .map(ex => `<option value="${ex.name.replace(/"/g, '&quot;')}">${ex.name}</option>`)
+    .join('');
+}
+
+function replaceExerciseFromSelect(ei, selectedName) {
+  if (!selectedName) return;
+
+  const allExercises = ROUTINES.flatMap(r => r.exercises);
+  const selected = allExercises.find(ex => ex.name === selectedName);
+  if (!selected) return;
+
+  const lastEx = getLastExerciseData(currentSession.routineId, selected.name);
+  const currentSetsCount = currentSession.exercises[ei].sets.length;
+
+  currentSession.exercises[ei] = {
+    name: selected.name,
+    note: selected.note || null,
+    notes: '',
+    sets: Array.from({ length: currentSetsCount }, (_, i) => {
+      const lastSet = lastEx?.sets?.[i];
+      return {
+        weight: lastSet?.weight || '',
+        reps: lastSet?.reps || '',
+        done: false
+      };
+    })
+  };
+
+  renderExercises();
+}
+  
 function stopTimer() {
   clearInterval(timerInterval);
   timerInterval = null;
