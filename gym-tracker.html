@@ -67,7 +67,7 @@
     top: 0;
     z-index: 100;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
   }
 
@@ -513,20 +513,23 @@
   }
 
   .rest-timer {
-    position: fixed;
-    top: 126px;
-    right: 16px;
-    background: linear-gradient(180deg, #8f5a2f 0%, #6a3d1c 100%);
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 21px;
-    letter-spacing: 1px;
-    z-index: 150;
+    position: static;
     display: none;
-    cursor: pointer;
-    box-shadow: 0 12px 24px rgba(0,0,0,0.26);
+    margin-top: -2px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    line-height: 0.95;
+    letter-spacing: 1.2px;
+    color: #a56dff;
+    background: none;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    cursor: default;
+    text-shadow: 0 0 18px rgba(165,109,255,0.28), 0 0 36px rgba(121,74,255,0.18);
+    z-index: 150;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .rest-timer.visible { display: block; }
@@ -1107,7 +1110,7 @@
     <div class="header-title">GYMLOG</div>
     <div class="header-sub">Alejandro • PPL Split</div>
   </div>
-  <div id="timerDisplay" class="rest-timer" onclick="stopTimer()">2:00</div>
+  <div id="timerDisplay" class="rest-timer">2:00</div>
 </div>
 
 <div class="nav">
