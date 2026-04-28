@@ -545,6 +545,256 @@
     transform: scale(0.985);
   }
 
+
+
+  #sessionScreen {
+    padding-top: 12px;
+    background:
+      radial-gradient(circle at top, rgba(201,164,76,0.06), transparent 26%),
+      linear-gradient(180deg, rgba(255,255,255,0.01) 0%, transparent 20%);
+  }
+
+  .session-header {
+    background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 16px 16px 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.22);
+  }
+
+  .session-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(201,164,76,0.12);
+    border: 1px solid rgba(201,164,76,0.16);
+    color: #e6c26b;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    margin-bottom: 12px;
+  }
+
+  .session-overview {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+      rgba(23, 10, 37, 0.92);
+    border: 1px solid var(--border-strong);
+    border-radius: 22px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 18px 42px rgba(0,0,0,0.28);
+  }
+
+  .session-overview-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .session-overview-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 1.4px;
+    color: var(--text);
+    line-height: 0.95;
+  }
+
+  .session-overview-sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 6px;
+  }
+
+  .session-progress-ring {
+    min-width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, rgba(201,164,76,0.22), rgba(201,164,76,0.08));
+    border: 1px solid rgba(201,164,76,0.18);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .session-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .session-stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 12px;
+  }
+
+  .session-stat-label {
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+
+  .session-stat-value {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .training-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .training-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, #dfbb63 0%, rgba(223,187,99,0.08) 100%);
+    opacity: 0.9;
+  }
+
+  .exercise-header {
+    padding: 16px 16px 12px 18px;
+  }
+
+  .exercise-topline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .exercise-index {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: rgba(201,164,76,0.12);
+    border: 1px solid rgba(201,164,76,0.16);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .exercise-title-block {
+    min-width: 0;
+  }
+
+  .exercise-name {
+    font-size: 15px;
+    letter-spacing: -0.2px;
+  }
+
+  .exercise-submeta {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .exercise-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 16px 0 18px;
+  }
+
+  .ghost-link {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .ghost-link:hover { color: var(--text); }
+
+  .sets-table {
+    padding: 14px 16px 14px 18px;
+  }
+
+  .sets-header {
+    margin-bottom: 10px;
+    color: #8f83a1;
+  }
+
+  .set-row {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 8px;
+    margin-bottom: 9px;
+  }
+
+  .set-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.045);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    margin: 0 auto;
+  }
+
+  .set-input {
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(15, 8, 24, 0.78);
+    border-color: rgba(255,255,255,0.05);
+  }
+
+  .set-check {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .add-set-btn {
+    border-style: solid;
+    border-color: rgba(201,164,76,0.14);
+    background: rgba(201,164,76,0.08);
+    color: #e5c16a;
+    height: 42px;
+    font-weight: 600;
+  }
+
+  .notes-shell {
+    padding: 0 16px 16px 18px;
+  }
+
+  .notes-input {
+    min-height: 72px;
+    border-radius: 14px;
+    background: rgba(15, 8, 24, 0.74);
+    border-color: rgba(255,255,255,0.05);
+  }
+
+  .session-preview-card {
+    padding: 16px 18px;
+  }
+
+  .session-preview-meta {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
   @media (max-width: 390px) {
     .nav-btn { font-size: 16px; }
     .header-title { font-size: 34px; }
@@ -1133,15 +1383,43 @@ function viewRoutine(routineId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('sessionScreen').classList.add('active');
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
-  document.getElementById('sessionDate').textContent = 'Toca INICIAR para comenzar';
-  document.getElementById('exerciseList').innerHTML = routine.exercises.map((ex) => `
-    <div class="exercise-card">
-      <div class="exercise-header">
-        <div class="exercise-name">${ex.name}</div>
-        <div style="color:var(--muted);font-size:12px">${ex.sets} series</div>
+  document.getElementById('sessionDate').innerHTML = '<span class="session-kicker">Lista para entrenar</span><div>Toca iniciar para comenzar</div>';
+  document.getElementById('exerciseList').innerHTML = `
+    <div class="session-overview">
+      <div class="session-overview-top">
+        <div>
+          <div class="session-overview-title">${routine.name}</div>
+          <div class="session-overview-sub">${routine.desc}</div>
+        </div>
+        <div class="session-progress-ring">${routine.exercises.length}</div>
+      </div>
+      <div class="session-stats-grid">
+        <div class="session-stat-card">
+          <div class="session-stat-label">Ejercicios</div>
+          <div class="session-stat-value">${routine.exercises.length}</div>
+        </div>
+        <div class="session-stat-card">
+          <div class="session-stat-label">Series</div>
+          <div class="session-stat-value">${routine.exercises.reduce((acc, ex) => acc + ex.sets, 0)}</div>
+        </div>
+        <div class="session-stat-card">
+          <div class="session-stat-label">Día</div>
+          <div class="session-stat-value" style="font-size:16px;">${routine.day}</div>
+        </div>
       </div>
     </div>
-  `).join('');
+    ${routine.exercises.map((ex, i) => `
+      <div class="exercise-card session-preview-card">
+        <div class="exercise-topline">
+          <div class="exercise-index">${i + 1}</div>
+          <div class="exercise-title-block">
+            <div class="exercise-name">${ex.name}</div>
+            <div class="session-preview-meta">${ex.sets} series ${ex.note ? '· ' + ex.note : ''}</div>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
   document.querySelector('.finish-btn').textContent = 'INICIAR SESIÓN';
   document.querySelector('.finish-btn').onclick = () => { startSession(routineId); };
 }
@@ -1168,7 +1446,7 @@ function startSession(routineId) {
   };
 
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
-  document.getElementById('sessionDate').textContent = formatDateFull(new Date());
+  document.getElementById('sessionDate').innerHTML = `<span class="session-kicker">Sesión en curso</span><div>${formatDateFull(new Date())}</div>`;
   renderExercises();
 
   document.querySelector('.finish-btn').textContent = 'TERMINAR SESIÓN';
@@ -1180,7 +1458,37 @@ function startSession(routineId) {
 
 function renderExercises() {
   const list = document.getElementById('exerciseList');
-  list.innerHTML = currentSession.exercises.map((ex, ei) => {
+  const totalSets = currentSession.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+  const doneSets = currentSession.exercises.reduce((acc, ex) => acc + ex.sets.filter(set => set.done).length, 0);
+  const progress = totalSets ? Math.round((doneSets / totalSets) * 100) : 0;
+
+  const overviewHtml = `
+    <div class="session-overview">
+      <div class="session-overview-top">
+        <div>
+          <div class="session-overview-title">${currentSession.routineName}</div>
+          <div class="session-overview-sub">Avanza serie por serie y deja notas donde lo necesites.</div>
+        </div>
+        <div class="session-progress-ring">${progress}%</div>
+      </div>
+      <div class="session-stats-grid">
+        <div class="session-stat-card">
+          <div class="session-stat-label">Hechas</div>
+          <div class="session-stat-value">${doneSets}</div>
+        </div>
+        <div class="session-stat-card">
+          <div class="session-stat-label">Pendientes</div>
+          <div class="session-stat-value">${Math.max(totalSets - doneSets, 0)}</div>
+        </div>
+        <div class="session-stat-card">
+          <div class="session-stat-label">Ejercicios</div>
+          <div class="session-stat-value">${currentSession.exercises.length}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  list.innerHTML = overviewHtml + currentSession.exercises.map((ex, ei) => {
     const lastEx = getLastExerciseData(currentSession.routineId, ex.name);
     const prevHtml = lastEx ? `<div class="prev-info">📊 Anterior: <span>${getSummary(lastEx.sets)}</span></div>` : '';
 
@@ -1194,26 +1502,32 @@ function renderExercises() {
     `).join('');
 
     return `
-      <div class="exercise-card">
+      <div class="exercise-card training-card">
         <div class="exercise-header">
-          <div class="exercise-name">${ex.name}</div>
+          <div class="exercise-topline">
+            <div class="exercise-index">${ei + 1}</div>
+            <div class="exercise-title-block">
+              <div class="exercise-name">${ex.name}</div>
+              <div class="exercise-submeta">${ex.sets.length} series activas ${lastEx ? '· con referencia anterior' : ''}</div>
+            </div>
+          </div>
           ${lastEx ? '<div class="prev-badge">ANTERIOR ↑</div>' : ''}
         </div>
         ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''}
-        <div style="text-align:right;padding:4px 16px"><button onclick="replaceExercise(${ei})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer">✏️ Cambiar ejercicio</button></div>
+        <div class="exercise-tools"><div></div><button class="ghost-link" onclick="replaceExercise(${ei})">✏️ Cambiar ejercicio</button></div>
         ${prevHtml}
         <div class="sets-table">
           <div class="sets-header">
             <div></div>
-            <div style="text-align:center">PESO (lbs)</div>
+            <div style="text-align:center">PESO</div>
             <div style="text-align:center">REPS</div>
             <div></div>
           </div>
           ${setsHtml}
-          <button class="add-set-btn" onclick="addSet(${ei})">+ Serie</button>
+          <button class="add-set-btn" onclick="addSet(${ei})">+ Agregar serie</button>
         </div>
-        <div style="padding: 0 16px 12px;">
-          <textarea class="notes-input" rows="2" placeholder="Notas técnicas..." onchange="updateNotes(${ei}, this.value)">${ex.notes || ''}</textarea>
+        <div class="notes-shell">
+          <textarea class="notes-input" rows="2" placeholder="Notas técnicas, sensación, tempo, RIR..." onchange="updateNotes(${ei}, this.value)">${ex.notes || ''}</textarea>
         </div>
       </div>
     `;
