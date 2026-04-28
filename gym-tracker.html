@@ -1871,10 +1871,9 @@ function renderExercises() {
         ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''}
         <div class="exercise-tools">
   <div></div>
-  <select class="exercise-select" onchange="replaceExerciseFromSelect(${ei}, this.value)">
-    <option value="">✏️ Cambiar ejercicio</option>
-    ${getExerciseOptions(ex.name)}
-  </select>
+  <div class="exercise-tools">
+  <div></div>
+  <button class="ghost-link" onclick="replaceExerciseSmart(${ei})">✏️ Cambiar ejercicio</button>
 </div>
         ${prevHtml}
         <div class="sets-table">
