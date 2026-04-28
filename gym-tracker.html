@@ -803,6 +803,301 @@
 
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+
+  .dashboard-hero,
+  .profile-shell,
+  .detail-shell {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%),
+      rgba(31, 14, 46, 0.86);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .dashboard-hero {
+    padding: 18px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dashboard-hero::after,
+  .profile-shell::after,
+  .detail-shell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(201,164,76,0.14), transparent 34%);
+    pointer-events: none;
+  }
+
+  .dashboard-hero-top,
+  .profile-head,
+  .detail-head {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(201, 164, 76, 0.12);
+    border: 1px solid rgba(201, 164, 76, 0.16);
+    padding: 5px 9px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  .hero-title,
+  .profile-name,
+  .detail-title {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1.3px;
+    line-height: 0.95;
+  }
+
+  .hero-title { font-size: 34px; }
+  .profile-name { font-size: 34px; color: var(--accent); }
+  .detail-title { font-size: 34px; color: var(--accent); }
+
+  .hero-sub,
+  .profile-sub,
+  .detail-sub {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 8px;
+    max-width: 260px;
+  }
+
+  .hero-badge,
+  .profile-badge,
+  .detail-badge {
+    min-width: 76px;
+    padding: 14px 12px;
+    border-radius: 18px;
+    text-align: center;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-badge-value,
+  .profile-badge-value,
+  .detail-badge-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--accent);
+    line-height: 0.9;
+  }
+
+  .hero-badge-label,
+  .profile-badge-label,
+  .detail-badge-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+
+  .hero-grid,
+  .profile-grid,
+  .history-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-stat,
+  .profile-stat,
+  .history-summary-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 13px;
+  }
+
+  .hero-stat-label,
+  .profile-stat-label,
+  .history-summary-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+    color: var(--muted);
+  }
+
+  .hero-stat-value,
+  .profile-stat-value,
+  .history-summary-value {
+    margin-top: 6px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .history-summary-grid {
+    margin-bottom: 14px;
+  }
+
+  .history-card {
+    padding: 16px;
+  }
+
+  .history-card + .history-card {
+    margin-top: 12px;
+  }
+
+  .history-date-badge {
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(201,164,76,0.10);
+    padding: 5px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(201,164,76,0.14);
+  }
+
+  .history-top {
+    gap: 10px;
+    align-items: center;
+  }
+
+  .history-name {
+    font-size: 15px;
+  }
+
+  .history-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .history-stat {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .history-stat strong {
+    display: block;
+    font-size: 18px;
+    margin-bottom: 3px;
+  }
+
+  .delete-btn,
+  .ghost-btn {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .delete-btn {
+    background: rgba(255,93,104,0.14);
+    color: #ffd8dc;
+    border-color: rgba(255,93,104,0.18);
+  }
+
+  .ghost-btn {
+    background: rgba(255,255,255,0.04);
+    color: var(--accent);
+  }
+
+  .delete-btn:active,
+  .ghost-btn:active {
+    transform: scale(0.98);
+  }
+
+  .profile-shell,
+  .detail-shell {
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-avatar {
+    width: 86px;
+    height: 86px;
+    border-radius: 24px;
+    border: 1px solid var(--border-strong);
+    background: rgba(255,255,255,0.05);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    color: var(--accent);
+  }
+
+  .profile-note,
+  .detail-notes {
+    margin-top: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .profile-note-title,
+  .detail-notes-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+
+  .profile-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .detail-shell {
+    margin-bottom: 18px;
+  }
+
+  .detail-exercise-card {
+    margin-bottom: 12px;
+    padding: 14px;
+  }
+
+  .detail-exercise-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -1166,32 +1461,37 @@ async function renderProfile() {
   }
 
   document.getElementById('profileContent').innerHTML = `
-    <div class="exercise-card" style="padding:20px;">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
-        <div style="width:72px;height:72px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent);border:1px solid var(--border);overflow:hidden;">
-          ${profile.photo ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">` : '👤'}
+    <div class="profile-shell">
+      <div class="profile-head">
+        <div style="display:flex;gap:14px;align-items:center;">
+          <div class="profile-avatar">${profile.photo ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">` : '👤'}</div>
+          <div>
+            <div class="eyebrow">Perfil</div>
+            <div class="profile-name">${profile.name || 'Sin nombre'}</div>
+            <div class="profile-sub">Objetivo actual: ${profile.goal || '--'}</div>
+          </div>
         </div>
-        <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--accent);line-height:1;">${profile.name || 'Sin nombre'}</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:4px;">Objetivo: ${profile.goal || '--'}</div>
+        <div class="profile-badge">
+          <div class="profile-badge-value">${profile.split || '--'}</div>
+          <div class="profile-badge-label">Split</div>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Peso</div><div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.weight || '--'}</div></div>
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Estatura</div><div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.height || '--'}</div></div>
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Edad</div><div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.age || '--'}</div></div>
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;">Split</div><div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px;">${profile.split || '--'}</div></div>
+      <div class="profile-grid">
+        <div class="profile-stat"><div class="profile-stat-label">Peso</div><div class="profile-stat-value">${profile.weight || '--'}</div></div>
+        <div class="profile-stat"><div class="profile-stat-label">Estatura</div><div class="profile-stat-value">${profile.height || '--'}</div></div>
+        <div class="profile-stat"><div class="profile-stat-label">Edad</div><div class="profile-stat-value">${profile.age || '--'}</div></div>
+        <div class="profile-stat"><div class="profile-stat-label">Modo</div><div class="profile-stat-value">Construcción</div></div>
       </div>
 
-      <div style="margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Nota</div>
-        <div style="font-size:14px;color:var(--text);line-height:1.5;">${profile.note || '--'}</div>
+      <div class="profile-note">
+        <div class="profile-note-title">Nota personal</div>
+        <div style="line-height:1.55;color:var(--text);font-size:14px;">${profile.note || 'Sin nota guardada todavía.'}</div>
       </div>
 
-      <div style="display:flex;gap:10px;margin-top:14px;">
-        <button onclick="editProfile()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">EDITAR PERFIL</button>
-        <button onclick="document.getElementById('profilePhotoInput').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">FOTO</button>
+      <div class="profile-actions">
+        <button onclick="editProfile()" class="ghost-btn">Editar perfil</button>
+        <button onclick="document.getElementById('profilePhotoInput').click()" class="ghost-btn">Cambiar foto</button>
       </div>
 
       <input id="profilePhotoInput" type="file" accept="image/*" style="display:none" onchange="handleProfilePhoto(event)">
@@ -1361,21 +1661,54 @@ function goBack() {
 function renderHome() {
   const grid = document.getElementById('routineGrid');
   const sessions = getSessions();
+  const totalSessions = sessions.length;
+  const completedSets = sessions.reduce((acc, s) => acc + s.exercises.reduce((sum, ex) => sum + ex.sets.filter(st => st.done).length, 0), 0);
+  const latest = sessions[0];
 
-  grid.innerHTML = ROUTINES.map(r => {
-    const last = sessions.find(s => s.routineId === r.id) || null;
-    const lastText = last ? formatDate(last.date) : 'Sin sesiones';
-    return `
-      <div class="routine-card" onclick="viewRoutine('${r.id}')">
-        <div class="routine-emoji">${r.emoji}</div>
-        <div class="routine-info">
-          <div class="routine-name">${r.name}</div>
-          <div class="routine-meta">${r.desc} · Última: ${lastText}</div>
+  grid.innerHTML = `
+    <div class="dashboard-hero">
+      <div class="dashboard-hero-top">
+        <div>
+          <div class="eyebrow">GymLog Premium</div>
+          <div class="hero-title">Tu progreso, más claro</div>
+          <div class="hero-sub">Consulta tu split, ubica tu última sesión y entra a entrenar sin ruido visual.</div>
         </div>
-        <div></div>
+        <div class="hero-badge">
+          <div class="hero-badge-value">${totalSessions}</div>
+          <div class="hero-badge-label">Sesiones</div>
+        </div>
       </div>
-    `;
-  }).join('');
+      <div class="hero-grid">
+        <div class="hero-stat">
+          <div class="hero-stat-label">Última sesión</div>
+          <div class="hero-stat-value">${latest ? formatDate(latest.date) : 'Sin registro'}</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">Series hechas</div>
+          <div class="hero-stat-value">${completedSets}</div>
+        </div>
+      </div>
+    </div>
+    ${ROUTINES.map(r => {
+      const last = sessions.find(s => s.routineId === r.id) || null;
+      const lastText = last ? formatDate(last.date) : 'Sin sesiones';
+      const totalSets = r.exercises.reduce((acc, ex) => acc + ex.sets, 0);
+      return `
+        <div class="routine-card" onclick="viewRoutine('${r.id}')">
+          <div class="routine-emoji">${r.emoji}</div>
+          <div class="routine-info">
+            <div class="routine-name">${r.name}</div>
+            <div class="routine-meta">${r.desc}</div>
+            <div class="routine-meta" style="margin-top:6px;color:var(--accent);">${totalSets} series · Última: ${lastText}</div>
+          </div>
+          <div class="hero-badge" style="min-width:62px;padding:10px 8px;">
+            <div class="hero-badge-value" style="font-size:24px;">${r.day.slice(0,3)}</div>
+            <div class="hero-badge-label">día</div>
+          </div>
+        </div>
+      `;
+    }).join('')}
+  `;
 }
 
 function viewRoutine(routineId) {
@@ -1638,27 +1971,40 @@ function renderHistory() {
     return;
   }
 
-  list.innerHTML = sessions.map((s, i) => {
-    const totalSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
-    const totalVol = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
+  const totalSets = sessions.reduce((acc, s) => acc + s.exercises.reduce((sum, ex) => sum + ex.sets.filter(st => st.done).length, 0), 0);
+  const totalVolume = sessions.reduce((acc, s) => acc + s.exercises.reduce((sum, ex) => sum + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0), 0);
 
-    return `
-      <div class="history-card">
-        <div class="history-top" onclick="showDetail(${i})" style="cursor:pointer;">
-          <div class="history-name">${s.routineName}</div>
-          <div class="history-date">${formatDate(s.date)}</div>
+  list.innerHTML = `
+    <div class="history-summary-grid">
+      <div class="history-summary-card"><div class="history-summary-label">Sesiones</div><div class="history-summary-value">${sessions.length}</div></div>
+      <div class="history-summary-card"><div class="history-summary-label">Series hechas</div><div class="history-summary-value">${totalSets}</div></div>
+      <div class="history-summary-card"><div class="history-summary-label">Volumen</div><div class="history-summary-value">${Math.round(totalVolume).toLocaleString()}</div></div>
+      <div class="history-summary-card"><div class="history-summary-label">Última</div><div class="history-summary-value">${formatDate(sessions[0].date)}</div></div>
+    </div>
+    ${sessions.map((s, i) => {
+      const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
+      const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
+      return `
+        <div class="history-card">
+          <div class="history-top" onclick="showDetail(${i})" style="cursor:pointer;">
+            <div>
+              <div class="history-name">${s.routineName}</div>
+              <div class="routine-meta" style="margin-top:4px;">${s.exercises.length} ejercicios registrados</div>
+            </div>
+            <div class="history-date-badge">${formatDate(s.date)}</div>
+          </div>
+          <div class="history-stats" onclick="showDetail(${i})" style="cursor:pointer;">
+            <div class="history-stat"><strong>${doneSets}</strong>series</div>
+            <div class="history-stat"><strong>${Math.round(volume).toLocaleString()}</strong>vol.</div>
+            <div class="history-stat"><strong>${s.exercises.length}</strong>ejercicios</div>
+          </div>
+          <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+            <button onclick="deleteSession(${i})" class="delete-btn">Eliminar</button>
+          </div>
         </div>
-        <div class="history-stats" onclick="showDetail(${i})" style="cursor:pointer;">
-          <div class="history-stat"><strong>${totalSets}</strong> series</div>
-          <div class="history-stat"><strong>${Math.round(totalVol).toLocaleString()}</strong> lbs vol.</div>
-          <div class="history-stat"><strong>${s.exercises.length}</strong> ejercicios</div>
-        </div>
-        <div style="margin-top:12px;display:flex;justify-content:flex-end;">
-          <button onclick="deleteSession(${i})" style="padding:8px 12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ELIMINAR</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('')}
+  `;
 }
 
 async function deleteSession(index) {
@@ -1694,14 +2040,26 @@ async function deleteSession(index) {
 function showDetail(index) {
   const sessions = getSessions();
   const s = sessions[index];
+  const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
 
   const content = `
-    <div class="session-title">${s.routineName.toUpperCase()}</div>
-    <div class="session-date" style="margin-bottom:20px">${formatDateFull(new Date(s.date))}</div>
+    <div class="detail-shell">
+      <div class="detail-head">
+        <div>
+          <div class="eyebrow">Detalle</div>
+          <div class="detail-title">${s.routineName}</div>
+          <div class="detail-sub">${formatDateFull(new Date(s.date))}</div>
+        </div>
+        <div class="detail-badge">
+          <div class="detail-badge-value">${doneSets}</div>
+          <div class="detail-badge-label">Series</div>
+        </div>
+      </div>
+    </div>
     ${s.exercises.map(ex => `
-      <div class="exercise-card" style="margin-bottom:12px">
-        <div class="exercise-header"><div class="exercise-name">${ex.name}</div></div>
-        <div class="sets-table">
+      <div class="exercise-card detail-exercise-card">
+        <div class="detail-exercise-title">${ex.name}</div>
+        <div class="sets-table" style="padding:0;">
           ${ex.sets.filter(st => st.done).map((st, i) => `
             <div class="detail-set">
               <div class="detail-set-num">${i + 1}</div>
@@ -1711,7 +2069,7 @@ function showDetail(index) {
               </div>
             </div>
           `).join('')}
-          ${ex.notes ? `<div style="font-size:12px;color:var(--muted);padding-top:8px">📝 ${ex.notes}</div>` : ''}
+          ${ex.notes ? `<div class="detail-notes"><div class="detail-notes-title">Notas</div><div style="font-size:13px;line-height:1.5;color:var(--text);">${ex.notes}</div></div>` : ''}
         </div>
       </div>
     `).join('')}
