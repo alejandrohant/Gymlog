@@ -10,35 +10,59 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-  --bg: #12051f;
-  --surface: #1a0b2b;
-  --surface2: #241238;
-  --border: #3a2750;
-  --accent: #a8862f;
-  --accent2: #8f5a2f;
-  --text: #f3eee6;
-  --muted: #9a8fa8;
-  --danger: #ff4444;
-  --success: #47ff8a;
-}
+    --bg: #12051f;
+    --bg2: #1a0b2b;
+    --surface: rgba(33, 17, 49, 0.88);
+    --surface-strong: rgba(40, 22, 60, 0.96);
+    --surface-soft: rgba(255,255,255,0.04);
+    --surface2: #241238;
+    --border: rgba(205, 180, 120, 0.12);
+    --border-strong: rgba(205, 180, 120, 0.22);
+    --accent: #c9a44c;
+    --accent2: #8f5a2f;
+    --accent-soft: rgba(201, 164, 76, 0.12);
+    --text: #f7f2ea;
+    --muted: #a89cb8;
+    --danger: #ff5d68;
+    --success: #47ff8a;
+    --shadow: 0 18px 48px rgba(0,0,0,0.34);
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+  }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    background:
+      radial-gradient(circle at top, rgba(201,164,76,0.08), transparent 22%),
+      linear-gradient(180deg, #0d0418 0%, #12051f 25%, #170826 100%);
+  }
 
   body {
     font-family: 'DM Sans', sans-serif;
-    background: #12051f;
     color: var(--text);
     min-height: 100dvh;
     max-width: 480px;
     margin: 0 auto;
     overflow: hidden;
+    background:
+      radial-gradient(circle at top left, rgba(201,164,76,0.08), transparent 28%),
+      radial-gradient(circle at top right, rgba(143,90,47,0.10), transparent 24%),
+      linear-gradient(180deg, #0d0418 0%, #12051f 20%, #18092b 100%);
   }
 
-  /* HEADER */
   .header {
-    background: #12051f;
+    background: rgba(18,5,31,0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
-    padding: 16px 20px;
+    padding: 18px 20px 14px;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -49,103 +73,152 @@
 
   .header-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 36px;
+    font-size: 38px;
     letter-spacing: 2px;
     color: var(--accent);
+    line-height: 0.95;
+    text-shadow: 0 6px 22px rgba(201,164,76,0.18);
   }
 
   .header-sub {
     font-size: 11px;
     color: var(--muted);
-    letter-spacing: 1px;
+    letter-spacing: 1.3px;
     text-transform: uppercase;
+    margin-top: 3px;
   }
 
-  /* NAV */
   .nav {
-    display: flex;
-    background: #12051f;
-    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 12px 16px 0;
+    padding: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 18px;
     position: sticky;
-    top: 73px;
+    top: 82px;
     z-index: 99;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 
   .nav-btn {
-    flex: 1;
-    padding: 12px 8px;
-    background: none;
+    flex: initial;
+    padding: 11px 6px;
+    background: transparent;
     border: none;
     color: var(--muted);
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
-    letter-spacing: 0.5px;
+    font-size: 17px;
+    letter-spacing: 0.9px;
     text-transform: uppercase;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    border-radius: 12px;
+    transition: all 0.18s ease;
   }
 
   .nav-btn.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+    color: #12051f;
+    background: linear-gradient(180deg, #d8b35a 0%, #b88d31 100%);
+    box-shadow: 0 10px 24px rgba(201,164,76,0.22);
   }
 
-  /* SCREENS */
-  .screen { display: none; padding: 16px 20px 100px; overflow-y: auto; } .screen.active { display: block; }
-  .screen.active { display: block; overflow-y: auto; height: calc(100vh - 120px); }
+  .screen {
+    display: none;
+    padding: 18px 18px 110px;
+    overflow-y: auto;
+  }
 
-  /* ROUTINE CARDS */
-  .routine-grid { display: flex; flex-direction: column; gap: 10px; }
+  .screen.active {
+    display: block;
+    overflow-y: auto;
+    height: calc(100vh - 132px);
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 19px;
+    letter-spacing: 2px;
+    color: #d1c5df;
+    margin-bottom: 14px;
+    margin-top: 6px;
+    margin-left: 4px;
+  }
+
+  .routine-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .routine-card,
+  .exercise-card,
+  .history-card {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%),
+      rgba(31, 14, 46, 0.86);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
 
   .routine-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 20px;
     padding: 16px;
     cursor: pointer;
-    transition: all 0.2s;
     display: flex;
     align-items: center;
     gap: 14px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    transition: transform 0.18s ease, border-color 0.18s ease;
   }
 
-  .routine-card:active { transform: scale(0.98); background: var(--surface2); }
+  .routine-card:active {
+    transform: scale(0.985);
+    border-color: var(--border-strong);
+  }
 
-  .routine-emoji { font-size: 36px; }
+  .routine-emoji {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    font-size: 28px;
+    background: linear-gradient(180deg, rgba(201,164,76,0.18), rgba(201,164,76,0.08));
+    border: 1px solid rgba(201,164,76,0.18);
+    flex-shrink: 0;
+  }
 
   .routine-info { flex: 1; }
 
   .routine-name {
-    font-weight: 600;
-    font-size: 18px;
-    margin-bottom: 3px;
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
   }
 
   .routine-meta {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--muted);
+    line-height: 1.35;
   }
 
-  .routine-arrow {
-    color: var(--muted);
-    font-size: 18px;
-  }
-
-  /* WORKOUT SESSION */
   .session-header {
     margin-bottom: 20px;
+    padding: 4px 4px 0;
   }
 
   .session-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
+    font-size: 34px;
     letter-spacing: 2px;
     color: var(--accent);
     margin-bottom: 4px;
+    line-height: 0.95;
   }
 
   .session-date {
@@ -165,48 +238,45 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     cursor: pointer;
-    padding: 0;
+    padding: 2px 2px 0;
     margin-bottom: 16px;
   }
 
-  /* EXERCISE CARD */
-  .exercise-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 20px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-    margin-bottom: 12px;
+  .exercise-card,
+  .history-card {
+    margin-bottom: 14px;
     overflow: hidden;
   }
 
   .exercise-header {
-    padding: 14px 16px;
+    padding: 15px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
 
   .exercise-name {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 14px;
+    line-height: 1.25;
   }
 
   .prev-badge {
-    font-size: 11px;
-    color: var(--accent);
-    background: rgba(184, 150, 59, 0.16);
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-weight: 500;
+    font-size: 10px;
+    color: #1b1000;
+    background: linear-gradient(180deg, #dfbb63 0%, #c39a43 100%);
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
   }
 
   .prev-info {
-    padding: 8px 16px;
-    background: rgba(184, 150, 59, 0.06);
-    border-bottom: 1px solid var(--border);
+    padding: 9px 16px;
+    background: var(--accent-soft);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
     font-size: 12px;
     color: var(--muted);
     display: flex;
@@ -214,147 +284,145 @@
     gap: 6px;
   }
 
-  .prev-info span { color: var(--accent); font-weight: 500; }
+  .prev-info span {
+    color: #e8c779;
+    font-weight: 600;
+  }
 
-  /* SETS TABLE */
-  .sets-table { padding: 12px 16px; }
+  .sets-table { padding: 14px 16px 16px; }
 
   .sets-header {
     display: grid;
-    grid-template-columns: 30px 1fr 1fr 36px;
+    grid-template-columns: 30px 1fr 1fr 38px;
     gap: 8px;
-    margin-bottom: 8px;
-    font-size: 11px;
+    margin-bottom: 10px;
+    font-size: 10px;
     color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.9px;
   }
 
   .set-row {
     display: grid;
-    grid-template-columns: 30px 1fr 1fr 36px;
+    grid-template-columns: 30px 1fr 1fr 38px;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 9px;
     align-items: center;
   }
 
   .set-num {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--muted);
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
   }
 
-  .set-input {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 10px;
+  .set-input,
+  .notes-input,
+  input[type="email"],
+  input[type="password"] {
+    background: rgba(10, 4, 18, 0.52);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 11px 12px;
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     width: 100%;
-    text-align: center;
     -webkit-appearance: none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
   }
 
-  .set-input:focus {
+  .set-input { text-align: center; }
+
+  .set-input:focus,
+  .notes-input:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: rgba(201,164,76,0.55);
+    box-shadow: 0 0 0 3px rgba(201,164,76,0.10);
   }
 
   .set-input.completed {
-    border-color: var(--success);
+    border-color: rgba(71,255,138,0.55);
     color: var(--success);
   }
 
   .set-check {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1.5px solid var(--border);
-    background: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.03);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 15px;
     transition: all 0.2s;
     color: var(--muted);
   }
 
   .set-check.done {
-    background: var(--success);
-    border-color: var(--success);
-    color: #000;
+    background: linear-gradient(180deg, #47ff8a 0%, #2fdb72 100%);
+    border-color: transparent;
+    color: #03130a;
+    box-shadow: 0 8px 18px rgba(71,255,138,0.20);
   }
 
   .add-set-btn {
     width: 100%;
-    padding: 10px;
-    background: none;
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-    color: var(--muted);
+    padding: 11px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(201,164,76,0.24);
+    border-radius: 14px;
+    color: #d8c089;
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     cursor: pointer;
-    margin-top: 4px;
-    transition: all 0.2s;
+    margin-top: 7px;
+    transition: all 0.18s ease;
   }
 
-  .add-set-btn:active { background: var(--surface2); }
-
-  /* FINISH BTN */
   .finish-btn {
     position: fixed;
-    bottom: 20px;
+    bottom: 18px;
     left: 50%;
     transform: translateX(-50%);
-    width: calc(100% - 40px);
-    max-width: 440px;
+    width: calc(100% - 34px);
+    max-width: 446px;
     padding: 16px;
-    background: var(--accent);
-    color: #000;
+    background: linear-gradient(180deg, #ddb965 0%, #bc9138 100%);
+    color: #140813;
     border: none;
-    border-radius: 12px;
+    border-radius: 18px;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
+    font-size: 22px;
     letter-spacing: 2px;
     cursor: pointer;
     z-index: 200;
-    transition: all 0.2s;
+    box-shadow: 0 18px 34px rgba(201,164,76,0.20);
   }
 
-  .finish-btn:active { transform: translateX(-50%) scale(0.98); }
+  .finish-btn:active { transform: translateX(-50%) scale(0.985); }
 
-  /* HISTORY */
   .history-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 20px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
     padding: 16px;
-    margin-bottom: 10px;
     cursor: pointer;
-    transition: all 0.2s;
   }
-
-  .history-card:active { background: var(--surface2); }
 
   .history-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   .history-name {
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: 700;
+    font-size: 15px;
     flex: 1;
     margin-right: 10px;
   }
@@ -368,82 +436,75 @@
 
   .history-stats {
     display: flex;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .history-stat {
     font-size: 12px;
     color: var(--muted);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 999px;
+    padding: 6px 10px;
   }
 
   .history-stat strong {
     color: var(--text);
-    font-weight: 600;
+    font-weight: 700;
   }
 
-  /* DETAIL VIEW */
   .detail-set {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
     font-size: 14px;
   }
 
   .detail-set-num {
     width: 24px;
     height: 24px;
-    background: var(--surface2);
-    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 11px;
     color: var(--muted);
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .detail-set-data { flex: 1; }
-  .detail-set-weight { font-weight: 600; }
+  .detail-set-weight { font-weight: 700; }
   .detail-set-reps { color: var(--muted); font-size: 12px; }
 
-  /* SECTION TITLE */
-  .section-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 12px;
-    margin-top: 8px;
-  }
-
-  /* EMPTY STATE */
   .empty {
     text-align: center;
-    padding: 60px 20px;
+    padding: 74px 20px;
     color: var(--muted);
   }
 
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .empty-text { font-size: 14px; line-height: 1.6; }
+  .empty-icon { font-size: 50px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; line-height: 1.7; }
 
-  /* TOAST */
   .toast {
     position: fixed;
-    bottom: 90px;
+    bottom: 96px;
     left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--success);
-    color: #000;
-    padding: 10px 20px;
-    border-radius: 20px;
+    background: linear-gradient(180deg, #47ff8a 0%, #2fdb72 100%);
+    color: #06170d;
+    padding: 10px 18px;
+    border-radius: 999px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     opacity: 0;
     transition: all 0.3s;
     z-index: 300;
     white-space: nowrap;
+    box-shadow: 0 14px 28px rgba(71,255,138,0.16);
   }
 
   .toast.show {
@@ -451,40 +512,44 @@
     transform: translateX(-50%) translateY(0);
   }
 
-  /* TIMER */
   .rest-timer {
     position: fixed;
-    top: 120px;
+    top: 126px;
     right: 16px;
-    background: var(--accent2);
+    background: linear-gradient(180deg, #8f5a2f 0%, #6a3d1c 100%);
     color: #fff;
     padding: 8px 14px;
-    border-radius: 20px;
+    border-radius: 999px;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
+    font-size: 21px;
     letter-spacing: 1px;
     z-index: 150;
     display: none;
     cursor: pointer;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.26);
   }
 
   .rest-timer.visible { display: block; }
 
-  /* NOTES */
   .notes-input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
     resize: none;
     margin-top: 8px;
+    min-height: 64px;
   }
 
-  .notes-input:focus { outline: none; border-color: var(--accent); }
+  button {
+    transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+  }
+
+  button:active {
+    transform: scale(0.985);
+  }
+
+  @media (max-width: 390px) {
+    .nav-btn { font-size: 16px; }
+    .header-title { font-size: 34px; }
+    .finish-btn { font-size: 20px; }
+  }
 
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
@@ -523,7 +588,7 @@
 </div>
 
 <div id="sessionScreen" class="screen">
-  <div style="display:flex;gap:10px;margin-bottom:16px"><button onclick="goBack()" style="flex:1;padding:12px;background:var(--surface2);border:none;border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">← VOLVER</button><button onclick="discardSession()" style="flex:1;padding:12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">✕ DESCARTAR</button></div>
+  <div style="display:flex;gap:10px;margin-bottom:18px"><button onclick="goBack()" style="flex:1;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,164,76,0.16);border-radius:16px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">← VOLVER</button><button onclick="discardSession()" style="flex:1;padding:13px;background:linear-gradient(180deg,#ff6670 0%,#e14a56 100%);border:none;border-radius:16px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">✕ DESCARTAR</button></div>
   <div class="session-header">
     <div class="session-title" id="sessionTitle"></div>
     <div class="session-date" id="sessionDate"></div>
@@ -950,17 +1015,13 @@ async function signUp() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value.trim();
   if (!email || !password) { showToast('⚠️ Pon correo y contraseña'); return; }
-
   const { data, error } = await supabaseClient.auth.signUp({ email, password });
   if (error) { showToast('❌ ' + error.message); return; }
 
   currentUser = data.user || null;
   await renderAuthStatus();
   await renderProfile();
-  if (currentUser) {
-    await loadCloudSessions();
-    setSessionsLocal(dedupeSessions(cloudSessions));
-  }
+  if (currentUser) await syncLocalSessionsToCloud();
   renderHome();
   renderHistory();
   showToast('✅ Cuenta creada');
@@ -970,17 +1031,13 @@ async function signIn() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value.trim();
   if (!email || !password) { showToast('⚠️ Pon correo y contraseña'); return; }
-
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) { showToast('❌ ' + error.message); return; }
 
   currentUser = data.user || null;
   await renderAuthStatus();
   await renderProfile();
-  if (currentUser) {
-    await loadCloudSessions();
-    setSessionsLocal(dedupeSessions(cloudSessions));
-  }
+  if (currentUser) await syncLocalSessionsToCloud();
   renderHome();
   renderHistory();
   showToast('✅ Sesión iniciada');
