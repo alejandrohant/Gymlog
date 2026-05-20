@@ -1891,7 +1891,7 @@ function renderExercises() {
         </div>
         <div class="session-stat-card">
           <div class="session-stat-label">Completadas</div>
-          <div class="session-stat-value">${currentSession.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0)}</div>
+          <div id="completedSetsCounter" class="session-stat-value">${currentSession.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0)}</div>
         </div>
       </div>
     </div>
@@ -1957,7 +1957,16 @@ function renderExercises() {
 
 function updateSet(ei, si, field, value) { currentSession.exercises[ei].sets[si][field] = value; }
 function updateNotes(ei, value) { currentSession.exercises[ei].notes = value; }
+function updateSessionCounters() {
+  if (!currentSession) return;
 
+  const completed = currentSession.exercises.reduce((acc, ex) => {
+    return acc + ex.sets.filter(st => st.done).length;
+  }, 0);
+
+  const completedEl = document.getElementById('completedSetsCounter');
+  if (completedEl) completedEl.textContent = completed;
+}
 function toggleSet(ei, si) {
   const set = currentSession.exercises[ei].sets[si];
   const wEl = document.getElementById(`weight-${ei}-${si}`);
@@ -1976,6 +1985,8 @@ function toggleSet(ei, si) {
   const btn = document.querySelector(`#setrow-${ei}-${si} .set-check`);
   btn.className = `set-check ${set.done ? 'done' : ''}`;
   btn.textContent = set.done ? '✓' : '';
+
+  updateSessionCounters();
 
   if (set.done) {
     const t = {
