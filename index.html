@@ -1181,32 +1181,7 @@
 
 <div id="authScreen" class="screen">
   <div class="section-title">CUENTA</div>
-
-  <div class="exercise-card" style="padding:20px;">
-    <input id="authEmail" type="email" placeholder="Correo"
-      style="width:100%;margin-bottom:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
-
-    <input id="authPassword" type="password" placeholder="Contraseña"
-      style="width:100%;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
-
-    <div style="display:flex;gap:10px;">
-      <button onclick="signUp()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-        CREAR CUENTA
-      </button>
-
-      <button onclick="signIn()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-        ENTRAR
-      </button>
-    </div>
-
-    <button onclick="signOut()" style="margin-top:10px;width:100%;padding:12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-      CERRAR SESIÓN
-    </button>
-
-    <div id="authStatus" style="margin-top:14px;font-size:13px;color:var(--muted);">
-      Sin sesión
-    </div>
-  </div>
+  <div id="authPanel"></div>
 </div>
   
 <div class="toast" id="toast"></div>
@@ -1633,12 +1608,89 @@ async function signOut() {
   showToast('👋 Sesión cerrada');
 }
 
+async function getAccountDisplayName() {
+  if (!currentUser) return '';
+
+  try {
+    const { data } = await supabaseClient
+      .from('profiles')
+      .select('name')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (data?.name) return data.name;
+  } catch (e) {
+    console.warn('getAccountDisplayName', e);
+  }
+
+  const localName = getProfileLocal()?.name;
+  if (localName) return localName;
+
+  return currentUser.email ? currentUser.email.split('@')[0] : 'Usuario';
+}
+
 async function renderAuthStatus() {
   const { data } = await supabaseClient.auth.getUser();
   currentUser = data.user || null;
-  const el = document.getElementById('authStatus');
-  if (!el) return;
-  el.textContent = currentUser ? 'Sesión activa: ' + currentUser.email : 'Sin sesión';
+
+  const panel = document.getElementById('authPanel');
+  if (!panel) return;
+
+  if (!currentUser) {
+    panel.innerHTML = `
+      <div class="exercise-card" style="padding:20px;">
+        <input id="authEmail" type="email" placeholder="Correo"
+          style="width:100%;margin-bottom:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
+
+        <input id="authPassword" type="password" placeholder="Contraseña"
+          style="width:100%;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
+
+        <div style="display:flex;gap:10px;">
+          <button onclick="signUp()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+            CREAR CUENTA
+          </button>
+
+          <button onclick="signIn()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+            ENTRAR
+          </button>
+        </div>
+
+        <div id="authStatus" style="margin-top:14px;font-size:13px;color:var(--muted);">
+          Sin sesión
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const displayName = await getAccountDisplayName();
+  const initial = (displayName || 'A').trim().charAt(0).toUpperCase();
+
+  panel.innerHTML = `
+    <div class="exercise-card" style="padding:20px;">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:18px;">
+        <div style="width:58px;height:58px;border-radius:18px;background:linear-gradient(180deg, rgba(201,164,76,0.22), rgba(201,164,76,0.08));border:1px solid rgba(201,164,76,0.18);display:grid;place-items:center;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;">
+          ${initial}
+        </div>
+        <div style="min-width:0;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1.4px;color:var(--accent);line-height:0.95;">
+            ${displayName}
+          </div>
+          <div style="margin-top:6px;font-size:13px;color:var(--muted);word-break:break-word;">
+            ${currentUser.email}
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:12px 14px;margin-bottom:14px;border-radius:14px;background:rgba(71,255,138,0.08);border:1px solid rgba(71,255,138,0.15);color:#86efac;font-size:13px;">
+        Sesión iniciada
+      </div>
+
+      <button onclick="signOut()" style="width:100%;padding:12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+        CERRAR SESIÓN
+      </button>
+    </div>
+  `;
 }
 
 function showScreen(name) {
