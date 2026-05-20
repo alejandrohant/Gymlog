@@ -1,0 +1,16 @@
+{
+  "name": "FORJA",
+  "short_name": "FORJA",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#12051f",
+  "theme_color": "#12051f",
+  "icons": [
+    {
+      "src": "forja-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
