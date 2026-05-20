@@ -7,9 +7,10 @@
 <meta name="theme-color" content="#12051f">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>FORJA — Bitácora de entrenamiento</title>
-<link rel="icon" type="image/png" sizes="512x512" href="forja-icon.png?v=10">
-<link rel="apple-touch-icon" sizes="180x180" href="forja-icon.png?v=10">
-<link rel="manifest" href="manifest.webmanifest?v=10">
+<!-- FORJA FIX: entrenamiento pantalla completa sin boton ocultar v2026-05-20 -->
+<link rel="icon" type="image/png" sizes="512x512" href="forja-icon.png?v=11">
+<link rel="apple-touch-icon" sizes="180x180" href="forja-icon.png?v=11">
+<link rel="manifest" href="manifest.webmanifest?v=11">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1367,13 +1368,14 @@ body.training-active #sessionScreen.screen.active {
   display: block !important;
   position: fixed !important;
   inset: 0 !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
   width: 100% !important;
   max-width: 480px !important;
   height: 100dvh !important;
-  padding: 0 0 100px !important;
-  margin: 0 !important;
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 92px) !important;
+  margin: 0 auto !important;
   z-index: 3000 !important;
   overflow-y: auto !important;
   overscroll-behavior-y: contain !important;
@@ -1387,9 +1389,9 @@ body.training-active .session-active-topbar {
   position: sticky !important;
   top: 0 !important;
   z-index: 3200 !important;
-  padding: calc(env(safe-area-inset-top, 0px) + 7px) 14px 8px !important;
+  padding: calc(env(safe-area-inset-top, 0px) + 7px) 14px 7px !important;
   background: rgba(18,5,31,0.97) !important;
-  border-bottom: 1px solid rgba(205,180,120,0.14) !important;
+  border-bottom: 1px solid rgba(205,180,120,0.10) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
 }
@@ -1398,32 +1400,13 @@ body.training-active .session-active-topbar {
   width: 46px;
   height: 5px;
   border-radius: 999px;
-  margin: 0 auto 8px;
+  margin: 0 auto;
   background: rgba(255,255,255,0.24);
 }
 
-.session-active-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
+.session-active-row,
 .session-top-btn {
-  border: 1px solid rgba(201,164,76,0.18);
-  background: rgba(255,255,255,0.045);
-  color: var(--accent);
-  border-radius: 12px;
-  padding: 9px 10px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 16px;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-
-.session-top-btn.danger {
-  border-color: rgba(255,93,104,0.22);
-  background: rgba(255,93,104,0.12);
-  color: #ffd8dc;
+  display: none !important;
 }
 
 body.training-active .session-legacy-actions {
@@ -1489,24 +1472,26 @@ body.training-active .prev-info {
 
 body.training-active .finish-btn {
   position: fixed !important;
-  left: 50% !important;
-  right: auto !important;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
-  transform: translateX(-50%) !important;
-  width: min(calc(100vw - 20px), 460px) !important;
-  max-width: 460px !important;
-  border-radius: 16px !important;
+  left: max(0px, calc((100vw - 480px) / 2)) !important;
+  right: max(0px, calc((100vw - 480px) / 2)) !important;
+  bottom: 0 !important;
+  transform: none !important;
+  width: auto !important;
+  max-width: none !important;
+  padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+  border-radius: 0 !important;
   z-index: 3300 !important;
+  box-shadow: 0 -10px 26px rgba(0,0,0,0.28) !important;
 }
 
 body.training-active .finish-btn:active {
-  transform: translateX(-50%) scale(0.985) !important;
+  transform: none !important;
 }
 
 body.training-active .timer-wrap {
   position: fixed !important;
-  top: calc(env(safe-area-inset-top, 0px) + 58px) !important;
-  right: 12px !important;
+  top: calc(env(safe-area-inset-top, 0px) + 34px) !important;
+  right: max(12px, calc((100vw - 480px) / 2 + 12px)) !important;
   z-index: 3400 !important;
 }
 
@@ -1562,11 +1547,7 @@ body.training-active .timer-wrap {
 
 <div id="sessionScreen" class="screen">
   <div class="session-active-topbar" id="sessionActiveTopbar">
-    <div class="session-drag-handle"></div>
-    <div class="session-active-row">
-      <button class="session-top-btn" onclick="hideActiveSession()">↓ OCULTAR</button>
-      <button class="session-top-btn danger" onclick="discardSession()">✕ DESCARTAR</button>
-    </div>
+    <div class="session-drag-handle" title="Desliza hacia abajo para ocultar"></div>
   </div>
   <div class="session-legacy-actions"><button onclick="goBack()" style="flex:1;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,164,76,0.16);border-radius:16px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">← VOLVER</button><button onclick="discardSession()" style="flex:1;padding:13px;background:linear-gradient(180deg,#ff6670 0%,#e14a56 100%);border:none;border-radius:16px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">✕ DESCARTAR</button></div>
   <div class="session-header">
