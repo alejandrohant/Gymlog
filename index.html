@@ -1305,12 +1305,27 @@
 
 <div class="header">
   <div style="display:flex;align-items:center;gap:12px;">
-    <img src="favicon.svg" alt="FORJA" style="width:42px;height:42px;border-radius:12px;">
+    <div style="width:54px;height:54px;border-radius:16px;background:#111;display:grid;place-items:center;border:1px solid rgba(201,164,76,0.45);box-shadow:0 10px 26px rgba(0,0,0,0.35);flex-shrink:0;">
+      <svg width="34" height="34" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-label="FORJA">
+        <defs>
+          <linearGradient id="forjaGoldHeader" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#F0D27A"/>
+            <stop offset="45%" stop-color="#C9A24A"/>
+            <stop offset="100%" stop-color="#9B7626"/>
+          </linearGradient>
+        </defs>
+        <path d="M128 122H198V390H128Z" fill="url(#forjaGoldHeader)"/>
+        <path d="M128 122H384L360 190H128Z" fill="url(#forjaGoldHeader)"/>
+        <path d="M128 224H330L306 292H128Z" fill="url(#forjaGoldHeader)"/>
+      </svg>
+    </div>
+
     <div>
       <div class="header-title">FORJA</div>
       <div class="header-sub">Alejandro • Cuerpo en construcción</div>
     </div>
   </div>
+
   <div class="timer-wrap">
     <div id="timerDisplay" class="rest-timer">2:00</div>
     <div id="timerControls" class="timer-controls">
