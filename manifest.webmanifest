@@ -1,5 +1,5 @@
 {
-  "name": "FORJA",
+  "name": "FORJA — Bitácora de entrenamiento",
   "short_name": "FORJA",
   "start_url": "./index.html",
   "display": "standalone",
@@ -7,7 +7,7 @@
   "theme_color": "#12051f",
   "icons": [
     {
-      "src": "forja-icon.png",
+      "src": "forja-icon.png?v=10",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
