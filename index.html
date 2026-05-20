@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#12051f">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>GymLog — Alejandro</title>
+<title>FORJA — Bitácora de entrenamiento</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1303,8 +1303,8 @@
 
 <div class="header">
   <div>
-    <div class="header-title">GYMLOG</div>
-    <div class="header-sub">Alejandro • Rutina PPL</div>
+    <div class="header-title">FORJA</div>
+    <div class="header-sub">Alejandro • Cuerpo en construcción</div>
   </div>
   <div class="timer-wrap">
     <div id="timerDisplay" class="rest-timer">2:00</div>
@@ -1456,7 +1456,8 @@ function escapeHtml(value) {
 
 function getRoutinesLocal() {
   try {
-    const saved = JSON.parse(localStorage.getItem('gymlog_routines') || 'null');
+    const savedRaw = localStorage.getItem('forja_routines') || localStorage.getItem('gymlog_routines');
+    const saved = JSON.parse(savedRaw || 'null');
     if (Array.isArray(saved) && saved.length) return saved;
   } catch (e) {
     console.warn('getRoutinesLocal', e);
@@ -1465,7 +1466,7 @@ function getRoutinesLocal() {
 }
 
 function saveRoutinesLocal() {
-  localStorage.setItem('gymlog_routines', JSON.stringify(ROUTINES));
+  localStorage.setItem('forja_routines', JSON.stringify(ROUTINES));
 }
 
 function resetRoutinesToDefault() {
@@ -1799,7 +1800,7 @@ function getDefaultProfile() {
     height: '170 cm',
     age: '',
     split: 'PPL',
-    note: 'Enfoque actual: progresar en fuerza y masa muscular con rutina PPL.',
+    note: 'Cuerpo en construcción: progresar en fuerza, masa muscular y técnica con disciplina.',
     photo: ''
   };
 }
@@ -1807,14 +1808,15 @@ function getDefaultProfile() {
 function getProfileLocal() {
   const defaultProfile = getDefaultProfile();
   try {
-    return JSON.parse(localStorage.getItem('gymlog_profile')) || defaultProfile;
+    const saved = localStorage.getItem('forja_profile') || localStorage.getItem('gymlog_profile');
+    return JSON.parse(saved) || defaultProfile;
   } catch {
     return defaultProfile;
   }
 }
 
 function saveProfileLocal(profile) {
-  localStorage.setItem('gymlog_profile', JSON.stringify(profile));
+  localStorage.setItem('forja_profile', JSON.stringify(profile));
 }
 
 async function renderProfile() {
@@ -2314,9 +2316,9 @@ function renderHome() {
     <div class="dashboard-hero">
       <div class="dashboard-hero-top">
         <div>
-          <div class="eyebrow">Resumen</div>
-          <div class="hero-title">${todayRoutine ? 'Hoy toca ' + escapeHtml(todayRoutine.name) : 'Estado actual'}</div>
-          <div class="hero-sub">${todayRoutine ? escapeHtml(todayRoutine.desc || 'Rutina programada para hoy.') : 'Resumen general de tus entrenamientos registrados.'}</div>
+          <div class="eyebrow">FORJA</div>
+          <div class="hero-title">${todayRoutine ? 'Hoy toca ' + escapeHtml(todayRoutine.name) : 'Cuerpo en construcción'}</div>
+          <div class="hero-sub">${todayRoutine ? escapeHtml(todayRoutine.desc || 'Rutina programada para hoy.') : 'Bitácora de entrenamiento, progreso y disciplina.'}</div>
         </div>
         <div class="hero-badge">
           <div class="hero-badge-value">${totalSessions}</div>
@@ -3086,11 +3088,11 @@ function formatDateForFile(iso) {
 }
 
 function safeFileName(text) {
-  return String(text || 'gymlog')
+  return String(text || 'forja')
     .toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'gymlog';
+    .replace(/^-+|-+$/g, '') || 'forja';
 }
 
 function getCompletedSets(exercise) {
@@ -3251,7 +3253,7 @@ async function copyTextToClipboard(text, successMessage, fallbackFilename) {
     showToast(successMessage || '✅ Copiado');
   } catch (error) {
     console.warn('copyTextToClipboard', error);
-    downloadTextFile(fallbackFilename || 'gymlog-entrenamiento.txt', text, 'text/plain;charset=utf-8;');
+    downloadTextFile(fallbackFilename || 'forja-entrenamiento.txt', text, 'text/plain;charset=utf-8;');
     showToast('⚠️ No se pudo copiar; descargué TXT');
   }
 }
@@ -3440,7 +3442,7 @@ function exportSessions() {
   const dd = String(today.getDate()).padStart(2, '0');
 
   a.href = url;
-  a.download = `gymlog-sesiones-${yyyy}-${mm}-${dd}.json`;
+  a.download = `forja-sesiones-${yyyy}-${mm}-${dd}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -3493,7 +3495,7 @@ function exportSessionsCsv() {
   const dd = String(today.getDate()).padStart(2, '0');
 
   a.href = url;
-  a.download = `gymlog-sesiones-${yyyy}-${mm}-${dd}.csv`;
+  a.download = `forja-sesiones-${yyyy}-${mm}-${dd}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
