@@ -1190,6 +1190,25 @@
     color: #ffd8dc;
   }
 
+
+  .session-actions,
+  .detail-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .session-actions .mini-btn,
+  .detail-actions .mini-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .mini-btn.full {
+    grid-column: 1 / -1;
+  }
+
   .timer-wrap {
     display: flex;
     flex-direction: column;
@@ -2842,8 +2861,12 @@ function renderHistory() {
             <div class="history-stat"><strong>${Math.round(volume).toLocaleString()}</strong>vol.</div>
             <div class="history-stat"><strong>${s.exercises.length}</strong>ejercicios</div>
           </div>
-          <div style="margin-top:12px;display:flex;justify-content:flex-end;">
-            <button onclick="deleteSession(${i})" class="delete-btn">Eliminar</button>
+          <div class="session-actions">
+            <button onclick="copySessionTxt(${i})" class="mini-btn">TXT</button>
+            <button onclick="exportSessionCsv(${i})" class="mini-btn">CSV</button>
+            <button onclick="copyAnalysisTxt(${i})" class="mini-btn primary">Para Chad</button>
+            <button onclick="shareSessionTxt(${i})" class="mini-btn">Compartir</button>
+            <button onclick="deleteSession(${i})" class="mini-btn danger full">Eliminar</button>
           </div>
         </div>
       `;
@@ -2898,6 +2921,12 @@ function showDetail(index) {
           <div class="detail-badge-value">${doneSets}</div>
           <div class="detail-badge-label">Series</div>
         </div>
+      </div>
+      <div class="detail-actions">
+        <button onclick="copySessionTxt(${index})" class="mini-btn">Copiar TXT</button>
+        <button onclick="exportSessionCsv(${index})" class="mini-btn">Exportar CSV</button>
+        <button onclick="copyAnalysisTxt(${index})" class="mini-btn primary">Copiar para Chad</button>
+        <button onclick="shareSessionTxt(${index})" class="mini-btn">Compartir</button>
       </div>
     </div>
     ${s.exercises.map(ex => `
@@ -3053,6 +3082,237 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+
+function formatDateForFile(iso) {
+  const d = new Date(iso);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function safeFileName(text) {
+  return String(text || 'gymlog')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'gymlog';
+}
+
+function getCompletedSets(exercise) {
+  return (exercise.sets || []).filter(st => st.done);
+}
+
+function getSessionTotals(session) {
+  const doneSets = session.exercises.reduce((acc, ex) => acc + getCompletedSets(ex).length, 0);
+  const totalReps = session.exercises.reduce((acc, ex) => {
+    return acc + getCompletedSets(ex).reduce((sum, st) => sum + (parseFloat(st.reps) || 0), 0);
+  }, 0);
+  const totalVolume = session.exercises.reduce((acc, ex) => {
+    return acc + getCompletedSets(ex).reduce((sum, st) => {
+      return sum + ((parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0));
+    }, 0);
+  }, 0);
+  return { doneSets, totalReps, totalVolume, exercises: session.exercises.length };
+}
+
+function formatExerciseTxt(exercise) {
+  const lines = [];
+  const done = getCompletedSets(exercise);
+  lines.push(exercise.name);
+
+  if (!done.length) {
+    lines.push('Sin series completadas.');
+  } else {
+    done.forEach((st, i) => {
+      const weight = st.weight || '--';
+      const reps = st.reps || '--';
+      lines.push(`Serie ${i + 1}: ${weight} lb x ${reps} reps`);
+    });
+  }
+
+  if (exercise.replaced && exercise.originalName) lines.push(`Sustituye a: ${exercise.originalName}`);
+  if (exercise.notes) lines.push(`Notas: ${exercise.notes}`);
+  return lines.join('\n');
+}
+
+function formatSessionTxt(session) {
+  const totals = getSessionTotals(session);
+  const lines = [];
+
+  lines.push(session.routineName.toUpperCase());
+  lines.push(formatDateFull(new Date(session.date)));
+  lines.push('');
+  lines.push(`Series completadas: ${totals.doneSets}`);
+  lines.push(`Repeticiones totales: ${totals.totalReps}`);
+  lines.push(`Volumen total: ${Math.round(totals.totalVolume).toLocaleString()} lb`);
+  lines.push('');
+
+  session.exercises.forEach((ex, i) => {
+    lines.push(`EJERCICIO ${i + 1}`);
+    lines.push(formatExerciseTxt(ex));
+    lines.push('');
+  });
+
+  return lines.join('\n').trim();
+}
+
+function formatSessionCsv(session) {
+  const rows = [['fecha','rutina','ejercicio','serie','peso_lb','repeticiones','volumen_lb','sustituye_a','notas']];
+
+  session.exercises.forEach(ex => {
+    getCompletedSets(ex).forEach((set, index) => {
+      const weight = parseFloat(set.weight) || 0;
+      const reps = parseFloat(set.reps) || 0;
+      rows.push([
+        formatDateForFile(session.date),
+        session.routineName,
+        ex.name,
+        index + 1,
+        set.weight || '',
+        set.reps || '',
+        weight * reps,
+        ex.replaced ? (ex.originalName || '') : '',
+        ex.notes || ''
+      ]);
+    });
+  });
+
+  return rows.map(row => row.map(csvEscape).join(',')).join('\n');
+}
+
+function formatCompactSession(session) {
+  const totals = getSessionTotals(session);
+  const lines = [];
+
+  lines.push(`${session.routineName} — ${formatDateFull(new Date(session.date))}`);
+  lines.push(`Resumen: ${totals.doneSets} series, ${totals.totalReps} reps, ${Math.round(totals.totalVolume).toLocaleString()} lb de volumen.`);
+  lines.push('');
+
+  session.exercises.forEach(ex => {
+    const done = getCompletedSets(ex);
+    const setsText = done.length
+      ? done.map(st => `${st.weight || '--'} lb x ${st.reps || '--'}`).join(' | ')
+      : 'sin series completadas';
+    lines.push(`${ex.name}: ${setsText}`);
+    if (ex.replaced && ex.originalName) lines.push(`Sustituye a: ${ex.originalName}`);
+    if (ex.notes) lines.push(`Notas: ${ex.notes}`);
+  });
+
+  return lines.join('\n');
+}
+
+function formatAnalysisTxt(session) {
+  const lines = [];
+
+  lines.push('ANALIZA MI ENTRENAMIENTO');
+  lines.push('');
+  lines.push(`Rutina: ${session.routineName}`);
+  lines.push(`Fecha: ${formatDateFull(new Date(session.date))}`);
+  lines.push('Objetivo: ganar músculo, progresar sin sacrificar técnica.');
+  lines.push('');
+  lines.push('ENTRENAMIENTO ACTUAL:');
+  lines.push(formatCompactSession(session));
+  lines.push('');
+  lines.push('Usa el historial que ya te he compartido en esta conversación. No incluyo sesión anterior para evitar duplicar datos.');
+  lines.push('');
+  lines.push('Dime exactamente:');
+  lines.push('1. dónde progresé');
+  lines.push('2. dónde bajé rendimiento');
+  lines.push('3. qué debo intentar la próxima vez');
+  lines.push('4. si debo subir, mantener o bajar peso en cada ejercicio');
+  lines.push('5. qué correcciones técnicas debo cuidar');
+
+  return lines.join('\n');
+}
+
+function downloadTextFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType || 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function copyTextToClipboard(text, successMessage, fallbackFilename) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (!ok) throw new Error('Copia bloqueada');
+    }
+    showToast(successMessage || '✅ Copiado');
+  } catch (error) {
+    console.warn('copyTextToClipboard', error);
+    downloadTextFile(fallbackFilename || 'gymlog-entrenamiento.txt', text, 'text/plain;charset=utf-8;');
+    showToast('⚠️ No se pudo copiar; descargué TXT');
+  }
+}
+
+function getSessionByIndex(index) {
+  const session = getSessions()[index];
+  if (!session) showToast('⚠️ No encontré esa sesión');
+  return session;
+}
+
+function copySessionTxt(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+  const filename = `${safeFileName(session.routineName)}-${formatDateForFile(session.date)}.txt`;
+  copyTextToClipboard(formatSessionTxt(session), '✅ Entrenamiento copiado', filename);
+}
+
+function copyAnalysisTxt(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+  const filename = `${safeFileName(session.routineName)}-${formatDateForFile(session.date)}-para-chad.txt`;
+  copyTextToClipboard(formatAnalysisTxt(session), '✅ Texto para Chad copiado', filename);
+}
+
+function exportSessionCsv(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+  const filename = `${safeFileName(session.routineName)}-${formatDateForFile(session.date)}.csv`;
+  downloadTextFile(filename, '\uFEFF' + formatSessionCsv(session), 'text/csv;charset=utf-8;');
+  showToast('✅ CSV descargado');
+}
+
+async function shareSessionTxt(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+  const text = formatSessionTxt(session);
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${session.routineName} — ${formatDateForFile(session.date)}`,
+        text
+      });
+      showToast('✅ Compartido');
+      return;
+    } catch (error) {
+      if (error && error.name === 'AbortError') return;
+      console.warn('shareSessionTxt', error);
+    }
+  }
+
+  const filename = `${safeFileName(session.routineName)}-${formatDateForFile(session.date)}.txt`;
+  copyTextToClipboard(text, '✅ Compartir no disponible; copié TXT', filename);
+}
+
 function exportSessions() {
   const sessions = getSessions();
   if (!sessions.length) {
@@ -3115,7 +3375,7 @@ function exportSessionsCsv() {
   });
 
   const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const today = new Date();
