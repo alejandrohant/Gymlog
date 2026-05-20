@@ -1333,6 +1333,220 @@
   color: rgba(168,156,184,0.92);
   white-space: nowrap;
 }
+
+
+/* === ENTRENAMIENTO ACTIVO: PANTALLA LIMPIA, SIN NAVEGACIÓN === */
+body.session-mode {
+  overflow: hidden;
+}
+
+body.session-mode .nav {
+  display: none;
+}
+
+body.session-mode .header {
+  height: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.session-mode .brand {
+  display: none;
+}
+
+body.session-mode .timer-wrap {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: 14px;
+  z-index: 1300;
+}
+
+body.session-mode #sessionScreen.screen.active {
+  position: fixed;
+  inset: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 100dvh;
+  padding: 0 0 104px;
+  z-index: 1000;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  background:
+    radial-gradient(circle at top, rgba(201,164,76,0.07), transparent 28%),
+    linear-gradient(180deg, #12051f 0%, #170826 100%);
+}
+
+.session-topbar {
+  display: none;
+}
+
+body.session-mode .session-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: block;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 10px;
+  background: rgba(18,5,31,0.94);
+  border-bottom: 1px solid rgba(205,180,120,0.12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.session-drag-handle {
+  width: 46px;
+  height: 5px;
+  border-radius: 999px;
+  margin: 0 auto 8px;
+  background: rgba(255,255,255,0.24);
+}
+
+.session-topbar-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.session-icon-btn,
+.session-discard-btn {
+  border: 1px solid rgba(205,180,120,0.16);
+  background: rgba(255,255,255,0.045);
+  color: var(--accent);
+  border-radius: 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.session-icon-btn {
+  width: 40px;
+  height: 36px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.session-discard-btn {
+  height: 36px;
+  padding: 0 12px;
+  color: #ffd8dc;
+  border-color: rgba(255,93,104,0.22);
+  background: rgba(255,93,104,0.13);
+  font-size: 15px;
+}
+
+.session-pull-hint {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.session-mode .session-header {
+  margin: 0;
+  padding: 14px 16px 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.session-mode .session-title {
+  font-size: 32px;
+  line-height: 0.95;
+}
+
+body.session-mode .session-date {
+  font-size: 11px;
+}
+
+body.session-mode .session-kicker {
+  padding: 0;
+  margin-bottom: 8px;
+  border: 0;
+  background: transparent;
+}
+
+body.session-mode .session-overview {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  box-shadow: none;
+  background: rgba(255,255,255,0.025);
+}
+
+body.session-mode .session-overview-top {
+  display: none;
+}
+
+body.session-mode .session-stats-grid {
+  gap: 0;
+}
+
+body.session-mode .session-stat-card {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: center;
+}
+
+body.session-mode .session-stat-card + .session-stat-card {
+  border-left: 1px solid rgba(255,255,255,0.06);
+}
+
+body.session-mode .session-stat-label {
+  font-size: 9px;
+  margin-bottom: 4px;
+}
+
+body.session-mode .session-stat-value {
+  font-size: 17px;
+}
+
+body.session-mode .exercise-card.training-card {
+  margin: 0 0 10px;
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body.session-mode .training-card::before {
+  width: 3px;
+}
+
+body.session-mode .analysis-box {
+  margin: 0;
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+}
+
+body.session-mode .finish-btn {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  width: calc(100% - 20px);
+  max-width: 460px;
+  border-radius: 16px;
+}
+
+@media (max-width: 390px) {
+  .session-pull-hint { font-size: 10px; }
+  .session-discard-btn { padding: 0 9px; }
+}
+
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -1384,7 +1598,14 @@
 </div>
 
 <div id="sessionScreen" class="screen">
-  <div style="display:flex;gap:10px;margin-bottom:18px"><button onclick="goBack()" style="flex:1;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,164,76,0.16);border-radius:16px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">← VOLVER</button><button onclick="discardSession()" style="flex:1;padding:13px;background:linear-gradient(180deg,#ff6670 0%,#e14a56 100%);border:none;border-radius:16px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">✕ DESCARTAR</button></div>
+  <div class="session-topbar">
+    <div class="session-drag-handle" aria-hidden="true"></div>
+    <div class="session-topbar-row">
+      <button class="session-icon-btn" onclick="goBack()" aria-label="Ocultar entrenamiento">↓</button>
+      <div class="session-pull-hint">Desliza hacia abajo para ocultar</div>
+      <button class="session-discard-btn" onclick="discardSession()">Descartar</button>
+    </div>
+  </div>
   <div class="session-header">
     <div class="session-title" id="sessionTitle"></div>
     <div class="session-date" id="sessionDate"></div>
@@ -1652,6 +1873,7 @@ function resumeSavedSession() {
   finishBtn.onclick = () => finishSession();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('sessionScreen').classList.add('active');
+  setSessionMode(true);
 }
 
 function discardSavedSession() {
@@ -1972,6 +2194,7 @@ async function editSavedSession(index) {
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('sessionScreen').classList.add('active');
+  setSessionMode(true);
 }
 
 function closeDateEditOverlay() {
@@ -2414,6 +2637,40 @@ async function getAccountDisplayName() {
   return currentUser.email ? currentUser.email.split('@')[0] : 'Usuario';
 }
 
+
+function setSessionMode(active) {
+  document.body.classList.toggle('session-mode', !!active);
+}
+
+let sessionSwipeStartY = 0;
+let sessionSwipeStartX = 0;
+let sessionSwipeStartedAtTop = false;
+
+function setupSessionSwipeToHide() {
+  const screen = document.getElementById('sessionScreen');
+  if (!screen || screen.dataset.swipeReady === '1') return;
+  screen.dataset.swipeReady = '1';
+
+  screen.addEventListener('touchstart', event => {
+    if (!document.body.classList.contains('session-mode') || !currentSession) return;
+    const touch = event.touches[0];
+    sessionSwipeStartY = touch.clientY;
+    sessionSwipeStartX = touch.clientX;
+    sessionSwipeStartedAtTop = screen.scrollTop <= 8;
+  }, { passive: true });
+
+  screen.addEventListener('touchend', event => {
+    if (!document.body.classList.contains('session-mode') || !currentSession) return;
+    const touch = event.changedTouches[0];
+    const deltaY = touch.clientY - sessionSwipeStartY;
+    const deltaX = Math.abs(touch.clientX - sessionSwipeStartX);
+
+    if (sessionSwipeStartedAtTop && deltaY > 85 && deltaX < 80) {
+      goBack();
+    }
+  }, { passive: true });
+}
+
 async function renderAuthStatus() {
   const { data } = await supabaseClient.auth.getUser();
   currentUser = data.user || null;
@@ -2479,10 +2736,14 @@ async function renderAuthStatus() {
 }
 
 function showScreen(name) {
+  setSessionMode(name === 'session' && !!currentSession);
+
   if (!currentUser && name !== 'auth') {
     name = 'auth';
     showToast('🔒 Inicia sesión primero');
   }
+
+  setSessionMode(name === 'session' && !!currentSession);
 
   const goingToSession = name === 'session';
 
@@ -2539,7 +2800,7 @@ function goBack() {
   if (currentSession) {
     saveCurrentDraft();
     stopTimer();
-    showToast('✅ Sesión guardada como borrador');
+    showToast('✅ Entrenamiento oculto y guardado');
   }
   showScreen('home');
 }
@@ -2644,6 +2905,7 @@ function viewRoutine(routineId) {
   if (!routine) { showToast('⚠️ Rutina no encontrada'); return; }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('sessionScreen').classList.add('active');
+  setSessionMode(false);
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').innerHTML = '<span class="session-kicker">Lista para entrenar</span><div>Toca iniciar para comenzar</div>';
   document.getElementById('exerciseList').innerHTML = `
@@ -2736,6 +2998,7 @@ function startSession(routineId) {
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('sessionScreen').classList.add('active');
+  setSessionMode(true);
 }
 
 
@@ -3244,6 +3507,7 @@ function showDetail(index) {
   document.getElementById('detailContent').innerHTML = content;
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('detailScreen').classList.add('active');
+  setSessionMode(false);
 }
 
 function unlockTimerAudio() {
@@ -3801,6 +4065,7 @@ function exportSessionsCsv() {
 }
 
 async function initApp() {
+  setupSessionSwipeToHide();
   await renderAuthStatus();
 
   if (currentUser) {
