@@ -2862,11 +2862,8 @@ function renderHistory() {
             <div class="history-stat"><strong>${s.exercises.length}</strong>ejercicios</div>
           </div>
           <div class="session-actions">
-            <button onclick="copySessionTxt(${i})" class="mini-btn">TXT</button>
-            <button onclick="exportSessionCsv(${i})" class="mini-btn">CSV</button>
-            <button onclick="copyAnalysisTxt(${i})" class="mini-btn primary">Para Chad</button>
-            <button onclick="shareSessionTxt(${i})" class="mini-btn">Compartir</button>
-            <button onclick="deleteSession(${i})" class="mini-btn danger full">Eliminar</button>
+            <button onclick="openShareMenu(${i})" class="mini-btn primary">Compartir</button>
+            <button onclick="deleteSession(${i})" class="mini-btn danger">Eliminar</button>
           </div>
         </div>
       `;
@@ -2923,10 +2920,7 @@ function showDetail(index) {
         </div>
       </div>
       <div class="detail-actions">
-        <button onclick="copySessionTxt(${index})" class="mini-btn">Copiar TXT</button>
-        <button onclick="exportSessionCsv(${index})" class="mini-btn">Exportar CSV</button>
-        <button onclick="copyAnalysisTxt(${index})" class="mini-btn primary">Copiar para Chad</button>
-        <button onclick="shareSessionTxt(${index})" class="mini-btn">Compartir</button>
+        <button onclick="openShareMenu(${index})" class="mini-btn primary full">Compartir</button>
       </div>
     </div>
     ${s.exercises.map(ex => `
@@ -3313,6 +3307,121 @@ async function shareSessionTxt(index) {
   copyTextToClipboard(text, '✅ Compartir no disponible; copié TXT', filename);
 }
 
+function closeShareMenu() {
+  const overlay = document.getElementById('shareMenuOverlay');
+  if (overlay) overlay.remove();
+}
+
+function openShareMenu(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+
+  closeShareMenu();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'shareMenuOverlay';
+  overlay.className = 'edit-overlay';
+
+  overlay.innerHTML = `
+    <div class="edit-overlay-card">
+      <div class="edit-title">Compartir entrenamiento</div>
+
+      <div style="font-size:13px;color:var(--muted);line-height:1.45;margin-bottom:14px;">
+        ${escapeHtml(session.routineName)} · ${formatDate(session.date)}
+      </div>
+
+      <div style="display:grid;gap:10px;">
+        <button class="mini-btn primary" style="width:100%;padding:13px;" onclick="handleShareMenuOption(${index}, 'chad')">
+          Para Chad
+        </button>
+
+        <button class="mini-btn" style="width:100%;padding:13px;" onclick="handleShareMenuOption(${index}, 'txt')">
+          TXT limpio
+        </button>
+
+        <button class="mini-btn" style="width:100%;padding:13px;" onclick="handleShareMenuOption(${index}, 'csv')">
+          CSV de esta sesión
+        </button>
+
+        <button class="mini-btn" style="width:100%;padding:13px;" onclick="handleShareMenuOption(${index}, 'redes')">
+          Redes sociales
+        </button>
+
+        <button class="mini-btn danger" style="width:100%;padding:13px;" onclick="closeShareMenu()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.onclick = event => {
+    if (event.target === overlay) closeShareMenu();
+  };
+}
+
+async function handleShareMenuOption(index, type) {
+  if (type === 'chad') {
+    copyAnalysisTxt(index);
+    closeShareMenu();
+    return;
+  }
+
+  if (type === 'txt') {
+    copySessionTxt(index);
+    closeShareMenu();
+    return;
+  }
+
+  if (type === 'csv') {
+    exportSessionCsv(index);
+    closeShareMenu();
+    return;
+  }
+
+  if (type === 'redes') {
+    await shareSessionSocialTxt(index);
+    closeShareMenu();
+  }
+}
+
+function formatSessionSocialTxt(session) {
+  const totals = getSessionTotals(session);
+
+  return [
+    `${session.routineName} terminado 💥`,
+    '',
+    `Series: ${totals.doneSets}`,
+    `Repeticiones: ${totals.totalReps}`,
+    `Volumen: ${Math.round(totals.totalVolume).toLocaleString()} lb`,
+    `Fecha: ${formatDateFull(new Date(session.date))}`
+  ].join('\n');
+}
+
+async function shareSessionSocialTxt(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+
+  const text = formatSessionSocialTxt(session);
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${session.routineName} — ${formatDateForFile(session.date)}`,
+        text
+      });
+      showToast('✅ Compartido');
+      return;
+    } catch (error) {
+      if (error && error.name === 'AbortError') return;
+      console.warn('shareSessionSocialTxt', error);
+    }
+  }
+
+  const filename = `${safeFileName(session.routineName)}-${formatDateForFile(session.date)}-redes.txt`;
+  copyTextToClipboard(text, '✅ Resumen para redes copiado', filename);
+}
 function exportSessions() {
   const sessions = getSessions();
   if (!sessions.length) {
