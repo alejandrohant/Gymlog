@@ -1125,6 +1125,159 @@
   min-height:72px;
   resize:none;
 }
+
+
+  .smart-card,
+  .draft-card,
+  .analysis-box,
+  .edit-overlay-card {
+    background: rgba(255,255,255,0.045);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .draft-card {
+    border-color: rgba(71,255,138,0.18);
+    background: rgba(71,255,138,0.07);
+  }
+
+  .smart-card-title,
+  .analysis-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 7px;
+    font-weight: 700;
+  }
+
+  .smart-card-text,
+  .analysis-text {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text);
+  }
+
+  .mini-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .mini-btn {
+    border: 1px solid rgba(201,164,76,0.18);
+    background: rgba(255,255,255,0.04);
+    color: var(--accent);
+    border-radius: 12px;
+    padding: 9px 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .mini-btn.primary {
+    background: linear-gradient(180deg, #ddb965 0%, #bc9138 100%);
+    color: #12051f;
+    border: none;
+  }
+
+  .mini-btn.danger {
+    border-color: rgba(255,93,104,0.24);
+    background: rgba(255,93,104,0.12);
+    color: #ffd8dc;
+  }
+
+  .timer-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .timer-controls {
+    display: none;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 170px;
+  }
+
+  .timer-controls.visible { display: flex; }
+
+  .timer-control-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(201,164,76,0.16);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 6px 7px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .edit-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0,0,0,0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+
+  .edit-overlay-card {
+    width: 100%;
+    max-width: 430px;
+    max-height: 88vh;
+    overflow: auto;
+    background: #241238;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+  }
+
+  .edit-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 12px 0 6px;
+  }
+
+  .form-input,
+  .form-textarea,
+  .form-select {
+    width: 100%;
+    background: #12051f;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+  }
+
+  .form-textarea {
+    min-height: 110px;
+    resize: vertical;
+  }
+
+  .routine-inline-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -1134,7 +1287,15 @@
     <div class="header-title">GYMLOG</div>
     <div class="header-sub">Alejandro • Rutina PPL</div>
   </div>
-  <div id="timerDisplay" class="rest-timer">2:00</div>
+  <div class="timer-wrap">
+    <div id="timerDisplay" class="rest-timer">2:00</div>
+    <div id="timerControls" class="timer-controls">
+      <button class="timer-control-btn" onclick="adjustTimer(-30)">-30</button>
+      <button class="timer-control-btn" onclick="adjustTimer(30)">+30</button>
+      <button id="timerPauseBtn" class="timer-control-btn" onclick="toggleTimerPause()">Pausar</button>
+      <button class="timer-control-btn" onclick="stopTimer()">Saltar</button>
+    </div>
+  </div>
 </div>
 
 <div class="nav">
@@ -1152,9 +1313,14 @@
 <div id="historyScreen" class="screen">
   <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;">
     <div class="section-title" style="margin:0;">SESIONES</div>
-    <button onclick="exportSessions()" style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer">
-      EXPORTAR
-    </button>
+    <div style="display:flex;gap:8px;">
+      <button onclick="exportSessions()" style="padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer">
+        JSON
+      </button>
+      <button onclick="exportSessionsCsv()" style="padding:10px 12px;background:var(--accent);border:none;border-radius:10px;color:#12051f;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer">
+        CSV
+      </button>
+    </div>
   </div>
   <div id="historyList"></div>
 </div>
@@ -1196,13 +1362,14 @@ let currentUser = null;
 let currentSession = null;
 let timerInterval = null;
 let timerEndTime = null;
+let timerPausedRemainingMs = null;
 let audioCtx = null;
 let cloudSessions = [];
 
 // =====================
 // DATA
 // =====================
-const ROUTINES = [
+const DEFAULT_ROUTINES = [
   { id: 'push_a', name: 'Push A', day: 'Martes', emoji: '💥', desc: 'Pecho Superior + Hombros', exercises: [
     { name: 'Press de Banca Inclinado (Mancuerna)', sets: 4 },
     { name: 'Press de Hombros Sentado (Barra)', sets: 3, note: 'Incluir 45 lbs de barra' },
@@ -1243,6 +1410,199 @@ const ROUTINES = [
     { name: 'Elevación de Gemelos de Pie (Máquina)', sets: 5 },
   ]},
 ];
+
+let ROUTINES = getRoutinesLocal();
+
+
+function cloneData(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function normalizeText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getRoutinesLocal() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('gymlog_routines') || 'null');
+    if (Array.isArray(saved) && saved.length) return saved;
+  } catch (e) {
+    console.warn('getRoutinesLocal', e);
+  }
+  return cloneData(DEFAULT_ROUTINES);
+}
+
+function saveRoutinesLocal() {
+  localStorage.setItem('gymlog_routines', JSON.stringify(ROUTINES));
+}
+
+function resetRoutinesToDefault() {
+  if (!confirm('¿Restaurar la rutina base? Se perderán los cambios hechos a las rutinas.')) return;
+  ROUTINES = cloneData(DEFAULT_ROUTINES);
+  saveRoutinesLocal();
+  renderHome();
+  showToast('✅ Rutina base restaurada');
+}
+
+function getTodayRoutine() {
+  const days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const today = days[new Date().getDay()];
+  return ROUTINES.find(r => normalizeText(r.day) === normalizeText(today)) || null;
+}
+
+function getRoutineById(routineId) {
+  return ROUTINES.find(r => r.id === routineId) || null;
+}
+
+function getValidSets(sets) {
+  return (sets || []).filter(s => {
+    const weight = parseFloat(s.weight);
+    const reps = parseFloat(s.reps);
+    return (s.done || s.weight || s.reps) && !Number.isNaN(weight) && !Number.isNaN(reps) && reps > 0;
+  });
+}
+
+function getTotalReps(sets) {
+  return getValidSets(sets).reduce((sum, s) => sum + (parseFloat(s.reps) || 0), 0);
+}
+
+function getVolume(sets) {
+  return getValidSets(sets).reduce((sum, s) => sum + ((parseFloat(s.weight) || 0) * (parseFloat(s.reps) || 0)), 0);
+}
+
+function getBestSet(sets) {
+  const valid = getValidSets(sets);
+  if (!valid.length) return null;
+  return valid.reduce((best, s) => {
+    const score = (parseFloat(s.weight) || 0) * (parseFloat(s.reps) || 0);
+    const bestScore = (parseFloat(best.weight) || 0) * (parseFloat(best.reps) || 0);
+    return score > bestScore ? s : best;
+  }, valid[0]);
+}
+
+function getExerciseInsight(lastEx, currentEx) {
+  if (!lastEx) {
+    return `
+      <div class="analysis-box">
+        <div class="analysis-title">Objetivo de hoy</div>
+        <div class="analysis-text">Primer registro de este ejercicio. Usa un peso controlable, deja 1–2 repeticiones en reserva y guarda datos limpios.</div>
+      </div>
+    `;
+  }
+
+  const lastSets = getValidSets(lastEx.sets);
+  if (!lastSets.length) {
+    return `
+      <div class="analysis-box">
+        <div class="analysis-title">Objetivo de hoy</div>
+        <div class="analysis-text">La sesión anterior no tiene series completas confiables. Registra peso y repeticiones reales antes de buscar subir carga.</div>
+      </div>
+    `;
+  }
+
+  const lastReps = getTotalReps(lastEx.sets);
+  const lastVolume = Math.round(getVolume(lastEx.sets));
+  const best = getBestSet(lastEx.sets);
+  const targetReps = lastReps + 1;
+  const bestText = best ? `${best.weight} lb × ${best.reps}` : 'sin mejor serie';
+
+  return `
+    <div class="analysis-box">
+      <div class="analysis-title">Objetivo de hoy</div>
+      <div class="analysis-text">
+        Anterior: ${lastSets.length} series, ${lastReps} repeticiones totales, ${lastVolume.toLocaleString()} lb de volumen. Mejor serie: ${bestText}.<br>
+        Hoy intenta mínimo ${targetReps} repeticiones totales con técnica limpia. Sube peso solo si completas todas las series sin perder control.
+      </div>
+    </div>
+  `;
+}
+
+const CURRENT_SESSION_KEY = 'gymlog_current_session';
+
+function getDraftOwnerId() {
+  return currentUser?.id || 'local';
+}
+
+function saveCurrentDraft() {
+  if (!currentSession) return;
+  try {
+    localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify({
+      owner: getDraftOwnerId(),
+      savedAt: new Date().toISOString(),
+      session: stripCloudMeta(currentSession)
+    }));
+  } catch (e) {
+    console.warn('saveCurrentDraft', e);
+  }
+}
+
+function getCurrentDraft() {
+  try {
+    const draft = JSON.parse(localStorage.getItem(CURRENT_SESSION_KEY) || 'null');
+    if (!draft?.session) return null;
+    if (draft.owner && draft.owner !== getDraftOwnerId()) return null;
+    return draft.session;
+  } catch (e) {
+    console.warn('getCurrentDraft', e);
+    return null;
+  }
+}
+
+function getDraftSavedAt() {
+  try {
+    const draft = JSON.parse(localStorage.getItem(CURRENT_SESSION_KEY) || 'null');
+    if (!draft?.savedAt) return '';
+    if (draft.owner && draft.owner !== getDraftOwnerId()) return '';
+    return draft.savedAt;
+  } catch {
+    return '';
+  }
+}
+
+function clearCurrentDraft() {
+  localStorage.removeItem(CURRENT_SESSION_KEY);
+}
+
+function resumeSavedSession() {
+  const draft = currentSession || getCurrentDraft();
+  if (!draft) {
+    showToast('⚠️ No hay sesión guardada');
+    return;
+  }
+  currentSession = draft;
+  document.getElementById('sessionTitle').textContent = currentSession.routineName.toUpperCase();
+  document.getElementById('sessionDate').innerHTML = `<span class="session-kicker">Sesión en curso</span><div>${formatDateFull(new Date(currentSession.date))}</div>`;
+  renderExercises();
+  const finishBtn = document.querySelector('.finish-btn');
+  finishBtn.textContent = 'TERMINAR SESIÓN';
+  finishBtn.onclick = () => finishSession();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('sessionScreen').classList.add('active');
+}
+
+function discardSavedSession() {
+  if (!confirm('¿Descartar la sesión guardada?')) return;
+  currentSession = null;
+  clearCurrentDraft();
+  stopTimer();
+  renderHome();
+  showToast('🗑️ Sesión descartada');
+}
+
+window.addEventListener('beforeunload', () => saveCurrentDraft());
 
 function stripCloudMeta(session) {
   if (!session) return session;
@@ -1475,7 +1835,7 @@ async function renderProfile() {
         </div>
         <div class="profile-badge">
           <div class="profile-badge-value">${profile.split || '--'}</div>
-          <div class="profile-badge-label">Split</div>
+          <div class="profile-badge-label">División</div>
         </div>
       </div>
 
@@ -1506,29 +1866,101 @@ async function editProfile() {
 
   if (currentUser) {
     const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
-    if (data) current = { name: data.name || '', goal: data.goal || '', weight: data.weight || '', height: data.height || '', age: data.age || '', split: data.split || '', note: data.note || '', photo: data.photo_url || '' };
+    if (data) current = {
+      name: data.name || '',
+      goal: data.goal || '',
+      weight: data.weight || '',
+      height: data.height || '',
+      age: data.age || '',
+      split: data.split || '',
+      note: data.note || '',
+      photo: data.photo_url || ''
+    };
   }
 
-  const name = prompt('Nombre:', current.name || ''); if (name === null) return;
-  const goal = prompt('Objetivo:', current.goal || ''); if (goal === null) return;
-  const weight = prompt('Peso:', current.weight || ''); if (weight === null) return;
-  const height = prompt('Estatura:', current.height || ''); if (height === null) return;
-  const age = prompt('Edad:', current.age || ''); if (age === null) return;
-  const split = prompt('Split:', current.split || ''); if (split === null) return;
-  const note = prompt('Nota:', current.note || ''); if (note === null) return;
+  const oldOverlay = document.getElementById('profileEditOverlay');
+  if (oldOverlay) oldOverlay.remove();
 
-  const updatedProfile = { name, goal, weight, height, age, split, note, photo: current.photo || '' };
+  const overlay = document.createElement('div');
+  overlay.id = 'profileEditOverlay';
+  overlay.className = 'edit-overlay';
+  overlay.innerHTML = `
+    <div class="edit-overlay-card">
+      <div class="edit-title">Editar perfil</div>
 
-  if (currentUser) {
-    const { error } = await supabaseClient.from('profiles').upsert({
-      id: currentUser.id, name, goal, weight, height, age, split, note, photo_url: updatedProfile.photo || ''
-    });
-    if (error) { showToast('❌ Error al guardar perfil'); return; }
-  }
+      <label class="form-label">Nombre</label>
+      <input id="profileNameInput" class="form-input" value="${escapeHtml(current.name || '')}">
 
-  saveProfileLocal(updatedProfile);
-  await renderProfile();
-  showToast('✅ Perfil guardado');
+      <label class="form-label">Objetivo</label>
+      <input id="profileGoalInput" class="form-input" value="${escapeHtml(current.goal || '')}">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="form-label">Peso</label>
+          <input id="profileWeightInput" class="form-input" value="${escapeHtml(current.weight || '')}">
+        </div>
+        <div>
+          <label class="form-label">Estatura</label>
+          <input id="profileHeightInput" class="form-input" value="${escapeHtml(current.height || '')}">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="form-label">Edad</label>
+          <input id="profileAgeInput" class="form-input" value="${escapeHtml(current.age || '')}">
+        </div>
+        <div>
+          <label class="form-label">División</label>
+          <input id="profileSplitInput" class="form-input" value="${escapeHtml(current.split || '')}">
+        </div>
+      </div>
+
+      <label class="form-label">Nota</label>
+      <textarea id="profileNoteInput" class="form-textarea">${escapeHtml(current.note || '')}</textarea>
+
+      <div class="mini-actions">
+        <button id="cancelProfileEdit" class="mini-btn">Cancelar</button>
+        <button id="saveProfileEdit" class="mini-btn primary">Guardar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+  document.getElementById('cancelProfileEdit').onclick = () => overlay.remove();
+  document.getElementById('saveProfileEdit').onclick = async () => {
+    const updatedProfile = {
+      name: document.getElementById('profileNameInput').value.trim(),
+      goal: document.getElementById('profileGoalInput').value.trim(),
+      weight: document.getElementById('profileWeightInput').value.trim(),
+      height: document.getElementById('profileHeightInput').value.trim(),
+      age: document.getElementById('profileAgeInput').value.trim(),
+      split: document.getElementById('profileSplitInput').value.trim(),
+      note: document.getElementById('profileNoteInput').value.trim(),
+      photo: current.photo || ''
+    };
+
+    if (currentUser) {
+      const { error } = await supabaseClient.from('profiles').upsert({
+        id: currentUser.id,
+        name: updatedProfile.name,
+        goal: updatedProfile.goal,
+        weight: updatedProfile.weight,
+        height: updatedProfile.height,
+        age: updatedProfile.age,
+        split: updatedProfile.split,
+        note: updatedProfile.note,
+        photo_url: updatedProfile.photo || ''
+      });
+      if (error) { showToast('❌ Error al guardar perfil'); return; }
+    }
+
+    saveProfileLocal(updatedProfile);
+    overlay.remove();
+    await renderProfile();
+    showToast('✅ Perfil guardado');
+  };
 }
 
 async function handleProfilePhoto(event) {
@@ -1561,6 +1993,93 @@ async function handleProfilePhoto(event) {
   };
 
   reader.readAsDataURL(file);
+}
+
+function editRoutine(routineId) {
+  const routine = getRoutineById(routineId);
+  if (!routine) return;
+
+  const oldOverlay = document.getElementById('routineEditOverlay');
+  if (oldOverlay) oldOverlay.remove();
+
+  const exercisesText = routine.exercises.map(ex => `${ex.name} | ${ex.sets}${ex.note ? ' | ' + ex.note : ''}`).join('\n');
+  const overlay = document.createElement('div');
+  overlay.id = 'routineEditOverlay';
+  overlay.className = 'edit-overlay';
+  overlay.innerHTML = `
+    <div class="edit-overlay-card">
+      <div class="edit-title">Editar rutina</div>
+
+      <label class="form-label">Nombre</label>
+      <input id="routineNameInput" class="form-input" value="${escapeHtml(routine.name)}">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="form-label">Día</label>
+          <select id="routineDayInput" class="form-select">
+            ${['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(day => `<option value="${day}" ${normalizeText(day) === normalizeText(routine.day) ? 'selected' : ''}>${day}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Icono</label>
+          <input id="routineEmojiInput" class="form-input" value="${escapeHtml(routine.emoji || '🏋️')}">
+        </div>
+      </div>
+
+      <label class="form-label">Descripción</label>
+      <input id="routineDescInput" class="form-input" value="${escapeHtml(routine.desc || '')}">
+
+      <label class="form-label">Ejercicios</label>
+      <textarea id="routineExercisesInput" class="form-textarea" style="min-height:220px;">${escapeHtml(exercisesText)}</textarea>
+      <div style="font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px;">
+        Usa una línea por ejercicio: Nombre | series | nota opcional
+      </div>
+
+      <div class="mini-actions">
+        <button id="cancelRoutineEdit" class="mini-btn">Cancelar</button>
+        <button id="resetRoutinesBtn" class="mini-btn danger">Restaurar base</button>
+        <button id="saveRoutineEdit" class="mini-btn primary">Guardar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+  document.getElementById('cancelRoutineEdit').onclick = () => overlay.remove();
+  document.getElementById('resetRoutinesBtn').onclick = () => {
+    overlay.remove();
+    resetRoutinesToDefault();
+  };
+  document.getElementById('saveRoutineEdit').onclick = () => {
+    const name = document.getElementById('routineNameInput').value.trim();
+    const day = document.getElementById('routineDayInput').value.trim();
+    const emoji = document.getElementById('routineEmojiInput').value.trim() || '🏋️';
+    const desc = document.getElementById('routineDescInput').value.trim();
+    const rawExercises = document.getElementById('routineExercisesInput').value.split('\n').map(line => line.trim()).filter(Boolean);
+
+    const exercises = rawExercises.map(line => {
+      const parts = line.split('|').map(part => part.trim());
+      const exName = parts[0] || '';
+      const sets = Math.max(1, parseInt(parts[1], 10) || 3);
+      const note = parts[2] || '';
+      return { name: exName, sets, ...(note ? { note } : {}) };
+    }).filter(ex => ex.name);
+
+    if (!name || !exercises.length) {
+      showToast('⚠️ Falta nombre o ejercicios');
+      return;
+    }
+
+    routine.name = name;
+    routine.day = day;
+    routine.emoji = emoji;
+    routine.desc = desc;
+    routine.exercises = exercises;
+    saveRoutinesLocal();
+    overlay.remove();
+    renderHome();
+    showToast('✅ Rutina guardada');
+  };
 }
 
 async function signUp() {
@@ -1697,12 +2216,8 @@ function showScreen(name) {
   const goingToSession = name === 'session';
 
   if (currentSession && !goingToSession) {
-    const sessionScreenActive = document.getElementById('sessionScreen').classList.contains('active');
-    if (sessionScreenActive) {
-      if (!confirm('Hay una sesión en curso. ¿Salir sin guardar?')) return;
-      currentSession = null;
-      stopTimer();
-    }
+    saveCurrentDraft();
+    stopTimer();
   }
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1723,6 +2238,7 @@ function showScreen(name) {
 function discardSession() {
   if (confirm('¿Descartar entrenamiento?')) {
     currentSession = null;
+    clearCurrentDraft();
     stopTimer();
     showScreen('home');
   }
@@ -1730,9 +2246,9 @@ function discardSession() {
 
 function goBack() {
   if (currentSession) {
-    if (!confirm('Hay una sesión en curso. ¿Salir sin guardar?')) return;
-    currentSession = null;
+    saveCurrentDraft();
     stopTimer();
+    showToast('✅ Sesión guardada como borrador');
   }
   showScreen('home');
 }
@@ -1743,14 +2259,45 @@ function renderHome() {
   const totalSessions = sessions.length;
   const completedSets = sessions.reduce((acc, s) => acc + s.exercises.reduce((sum, ex) => sum + ex.sets.filter(st => st.done).length, 0), 0);
   const latest = sessions[0];
+  const todayRoutine = getTodayRoutine();
+  const draft = currentSession || getCurrentDraft();
+  const draftSavedAt = getDraftSavedAt();
+
+  const draftCard = draft ? `
+    <div class="draft-card">
+      <div class="smart-card-title">Sesión guardada</div>
+      <div class="smart-card-text">
+        Tienes una sesión de ${escapeHtml(draft.routineName)} sin terminar${draftSavedAt ? `, guardada el ${formatDate(draftSavedAt)}` : ''}.
+      </div>
+      <div class="mini-actions">
+        <button class="mini-btn primary" onclick="resumeSavedSession()">Continuar</button>
+        <button class="mini-btn danger" onclick="discardSavedSession()">Descartar</button>
+      </div>
+    </div>
+  ` : '';
+
+  const todayCard = todayRoutine ? `
+    <div class="smart-card">
+      <div class="smart-card-title">Hoy toca</div>
+      <div class="smart-card-text"><strong>${escapeHtml(todayRoutine.name)}</strong> · ${escapeHtml(todayRoutine.desc || '')}</div>
+      <div class="mini-actions">
+        <button class="mini-btn primary" onclick="viewRoutine('${todayRoutine.id}')">Abrir rutina</button>
+      </div>
+    </div>
+  ` : `
+    <div class="smart-card">
+      <div class="smart-card-title">Hoy</div>
+      <div class="smart-card-text">No hay rutina programada para este día.</div>
+    </div>
+  `;
 
   grid.innerHTML = `
     <div class="dashboard-hero">
       <div class="dashboard-hero-top">
         <div>
           <div class="eyebrow">Resumen</div>
-          <div class="hero-title">Estado actual</div>
-          <div class="hero-sub">Resumen general de tus entrenamientos registrados.</div>
+          <div class="hero-title">${todayRoutine ? 'Hoy toca ' + escapeHtml(todayRoutine.name) : 'Estado actual'}</div>
+          <div class="hero-sub">${todayRoutine ? escapeHtml(todayRoutine.desc || 'Rutina programada para hoy.') : 'Resumen general de tus entrenamientos registrados.'}</div>
         </div>
         <div class="hero-badge">
           <div class="hero-badge-value">${totalSessions}</div>
@@ -1768,20 +2315,25 @@ function renderHome() {
         </div>
       </div>
     </div>
+    ${draftCard}
+    ${todayCard}
     ${ROUTINES.map(r => {
       const last = sessions.find(s => s.routineId === r.id) || null;
       const lastText = last ? formatDate(last.date) : 'Sin sesiones';
       const totalSets = r.exercises.reduce((acc, ex) => acc + ex.sets, 0);
       return `
         <div class="routine-card" onclick="viewRoutine('${r.id}')">
-          <div class="routine-emoji">${r.emoji}</div>
+          <div class="routine-emoji">${escapeHtml(r.emoji)}</div>
           <div class="routine-info">
-            <div class="routine-name">${r.name}</div>
-            <div class="routine-meta">${r.desc}</div>
+            <div class="routine-name">${escapeHtml(r.name)}</div>
+            <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
             <div class="routine-meta" style="margin-top:6px;color:var(--accent);">${totalSets} series · Última: ${lastText}</div>
+            <div class="routine-inline-actions">
+              <button class="mini-btn" onclick="event.stopPropagation(); editRoutine('${r.id}')">Editar</button>
+            </div>
           </div>
           <div class="hero-badge" style="min-width:62px;padding:10px 8px;">
-            <div class="hero-badge-value" style="font-size:24px;">${r.day.slice(0,3)}</div>
+            <div class="hero-badge-value" style="font-size:24px;">${escapeHtml((r.day || '').slice(0,3))}</div>
             <div class="hero-badge-label">día</div>
           </div>
         </div>
@@ -1791,7 +2343,8 @@ function renderHome() {
 }
 
 function viewRoutine(routineId) {
-  const routine = ROUTINES.find(r => r.id === routineId);
+  const routine = getRoutineById(routineId);
+  if (!routine) { showToast('⚠️ Rutina no encontrada'); return; }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('sessionScreen').classList.add('active');
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
@@ -1837,8 +2390,18 @@ function viewRoutine(routineId) {
 }
 
 function startSession(routineId) {
-  const routine = ROUTINES.find(r => r.id === routineId);
-  if (!confirm('¿Iniciar sesión de ' + routine.name + '?')) return;
+  const routine = getRoutineById(routineId);
+  if (!routine) { showToast('⚠️ Rutina no encontrada'); return; }
+
+  const existingDraft = currentSession || getCurrentDraft();
+  if (existingDraft) {
+    const replace = confirm('Ya hay una sesión guardada. ¿Reemplazarla por una nueva sesión de ' + routine.name + '?');
+    if (!replace) return;
+    clearCurrentDraft();
+    stopTimer();
+  } else if (!confirm('¿Iniciar sesión de ' + routine.name + '?')) {
+    return;
+  }
 
   currentSession = {
     routineId,
@@ -1848,7 +2411,9 @@ function startSession(routineId) {
       const lastEx = getLastExerciseData(routineId, ex.name);
       return {
         name: ex.name,
+        originalName: ex.name,
         note: ex.note || null,
+        replaced: false,
         sets: Array.from({ length: ex.sets }, (_, i) => {
           const lastSet = lastEx?.sets?.[i];
           return { weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false };
@@ -1857,6 +2422,7 @@ function startSession(routineId) {
     })
   };
 
+  saveCurrentDraft();
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').innerHTML = `<span class="session-kicker">Sesión en curso</span><div>${formatDateFull(new Date())}</div>`;
   renderExercises();
@@ -1902,6 +2468,8 @@ function renderExercises() {
           📊 Anterior: <span>${getSummary(lastEx.sets)}</span>
         </div>
       ` : '';
+      const insightHtml = getExerciseInsight(lastEx, ex);
+      const replacementHtml = ex.replaced && ex.originalName ? `<div class="prev-info">↔ Sustituye a: <span>${escapeHtml(ex.originalName)}</span></div>` : '';
 
       const setsHtml = ex.sets.map((set, si) => `
         <div class="set-row" id="setrow-${ei}-${si}">
@@ -1932,7 +2500,9 @@ function renderExercises() {
             <button class="ghost-link" onclick="replaceExercise(${ei})">✏️ Cambiar ejercicio</button>
           </div>
 
+          ${replacementHtml}
           ${prevHtml}
+          ${insightHtml}
 
           <div class="sets-table">
             <div class="sets-header">
@@ -1955,8 +2525,15 @@ function renderExercises() {
 }
 
 
-function updateSet(ei, si, field, value) { currentSession.exercises[ei].sets[si][field] = value; }
-function updateNotes(ei, value) { currentSession.exercises[ei].notes = value; }
+function updateSet(ei, si, field, value) {
+  currentSession.exercises[ei].sets[si][field] = value;
+  saveCurrentDraft();
+  updateSessionCounters();
+}
+function updateNotes(ei, value) {
+  currentSession.exercises[ei].notes = value;
+  saveCurrentDraft();
+}
 function updateSessionCounters() {
   if (!currentSession) return;
 
@@ -1966,6 +2543,7 @@ function updateSessionCounters() {
 
   const completedEl = document.getElementById('completedSetsCounter');
   if (completedEl) completedEl.textContent = completed;
+  saveCurrentDraft();
 }
 function toggleSet(ei, si) {
   const set = currentSession.exercises[ei].sets[si];
@@ -1987,6 +2565,7 @@ function toggleSet(ei, si) {
   btn.textContent = set.done ? '✓' : '';
 
   updateSessionCounters();
+  saveCurrentDraft();
 
   if (set.done) {
     const t = {
@@ -2164,24 +2743,29 @@ function replaceExercise(ei) {
     }
 
     const lastEx = getLastExerciseData(currentSession.routineId, selected.name);
-    const currentSetsCount = currentSession.exercises[ei].sets.length;
-    const previousNotes = currentSession.exercises[ei].notes || '';
+    const previousExercise = currentSession.exercises[ei];
+    const currentSetsCount = previousExercise.sets.length;
+    const previousNotes = previousExercise.notes || '';
+    const originalName = previousExercise.originalName || previousExercise.name;
 
     currentSession.exercises[ei] = {
       name: selected.name,
+      originalName,
+      replaced: selected.name !== originalName,
       note: selected.note || null,
       notes: previousNotes,
       sets: Array.from({ length: currentSetsCount }, (_, i) => {
         const lastSet = lastEx?.sets?.[i];
         return {
-          weight: lastSet?.weight || '',
-          reps: lastSet?.reps || '',
+          weight: lastSet?.weight || previousExercise.sets[i]?.weight || '',
+          reps: lastSet?.reps || previousExercise.sets[i]?.reps || '',
           done: false
         };
       })
     };
 
     overlay.remove();
+    saveCurrentDraft();
     renderExercises();
     showToast('✅ Ejercicio cambiado');
   };
@@ -2191,6 +2775,7 @@ function addSet(ei) {
   const ex = currentSession.exercises[ei];
   const lastSet = ex.sets[ex.sets.length - 1];
   ex.sets.push({ weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false });
+  saveCurrentDraft();
   renderExercises();
 }
 
@@ -2210,6 +2795,7 @@ async function finishSession() {
   if (ok === false) return;
 
   currentSession = null;
+  clearCurrentDraft();
   stopTimer();
   showToast('✅ Sesión guardada');
   const finishBtn = document.querySelector('.finish-btn');
@@ -2361,38 +2947,79 @@ function playTimerBeep() {
   oscillator.stop(audioCtx.currentTime + 0.26);
 }
 
+function handleTimerTick() {
+  if (!timerEndTime) return;
+  const remainingMs = timerEndTime - Date.now();
+  if (remainingMs <= 0) {
+    stopTimer();
+    playTimerBeep();
+    showToast('⏱ Descanso terminado — siguiente serie');
+  } else {
+    updateTimerDisplay();
+  }
+}
+
 function startTimer(seconds) {
   stopTimer();
   unlockTimerAudio();
+  timerPausedRemainingMs = null;
   timerEndTime = Date.now() + (seconds * 1000);
   const el = document.getElementById('timerDisplay');
+  const controls = document.getElementById('timerControls');
+  const pauseBtn = document.getElementById('timerPauseBtn');
+  if (pauseBtn) pauseBtn.textContent = 'Pausar';
   el.classList.add('visible');
+  if (controls) controls.classList.add('visible');
   updateTimerDisplay();
-
-  timerInterval = setInterval(() => {
-    const remainingMs = timerEndTime - Date.now();
-    if (remainingMs <= 0) {
-      stopTimer();
-      playTimerBeep();
-      showToast('⏱ Descanso terminado — ¡siguiente serie!');
-    } else {
-      updateTimerDisplay();
-    }
-  }, 250);
+  timerInterval = setInterval(handleTimerTick, 250);
 }
 
+function adjustTimer(seconds) {
+  if (!timerEndTime && timerPausedRemainingMs === null) return;
+  if (timerPausedRemainingMs !== null) {
+    timerPausedRemainingMs = Math.max(0, timerPausedRemainingMs + (seconds * 1000));
+  } else {
+    timerEndTime = Math.max(Date.now(), timerEndTime + (seconds * 1000));
+  }
+  updateTimerDisplay();
+}
+
+function toggleTimerPause() {
+  if (!timerEndTime && timerPausedRemainingMs === null) return;
+  const pauseBtn = document.getElementById('timerPauseBtn');
+
+  if (timerPausedRemainingMs !== null) {
+    timerEndTime = Date.now() + timerPausedRemainingMs;
+    timerPausedRemainingMs = null;
+    clearInterval(timerInterval);
+    timerInterval = setInterval(handleTimerTick, 250);
+    if (pauseBtn) pauseBtn.textContent = 'Pausar';
+  } else {
+    timerPausedRemainingMs = Math.max(timerEndTime - Date.now(), 0);
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerEndTime = null;
+    if (pauseBtn) pauseBtn.textContent = 'Seguir';
+  }
+
+  updateTimerDisplay();
+}
 
 function stopTimer() {
   clearInterval(timerInterval);
   timerInterval = null;
   timerEndTime = null;
+  timerPausedRemainingMs = null;
   const el = document.getElementById('timerDisplay');
-  el.classList.remove('visible');
+  const controls = document.getElementById('timerControls');
+  if (el) el.classList.remove('visible');
+  if (controls) controls.classList.remove('visible');
 }
 
 function updateTimerDisplay() {
-  if (!timerEndTime) return;
-  const remainingMs = Math.max(timerEndTime - Date.now(), 0);
+  const remainingMs = timerPausedRemainingMs !== null
+    ? timerPausedRemainingMs
+    : (timerEndTime ? Math.max(timerEndTime - Date.now(), 0) : 0);
   const totalSeconds = Math.ceil(remainingMs / 1000);
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
@@ -2451,6 +3078,58 @@ function exportSessions() {
 
   URL.revokeObjectURL(url);
   showToast('✅ Sesiones exportadas');
+}
+
+function csvEscape(value) {
+  const text = String(value ?? '');
+  return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+function exportSessionsCsv() {
+  const sessions = getSessions();
+  if (!sessions.length) {
+    showToast('⚠️ No hay sesiones para exportar');
+    return;
+  }
+
+  const rows = [['fecha','rutina','ejercicio','serie','peso_lb','repeticiones','volumen_lb','sustituye_a','notas']];
+  sessions.map(stripCloudMeta).forEach(session => {
+    session.exercises.forEach(ex => {
+      ex.sets.forEach((set, index) => {
+        if (!set.done && !set.weight && !set.reps) return;
+        const weight = parseFloat(set.weight) || 0;
+        const reps = parseFloat(set.reps) || 0;
+        rows.push([
+          session.date,
+          session.routineName,
+          ex.name,
+          index + 1,
+          set.weight || '',
+          set.reps || '',
+          weight * reps,
+          ex.replaced ? (ex.originalName || '') : '',
+          ex.notes || ''
+        ]);
+      });
+    });
+  });
+
+  const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+
+  a.href = url;
+  a.download = `gymlog-sesiones-${yyyy}-${mm}-${dd}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ CSV exportado');
 }
 
 async function initApp() {
