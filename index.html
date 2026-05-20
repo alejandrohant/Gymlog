@@ -2030,47 +2030,161 @@ function replaceExercise(ei) {
     (ex, index, arr) => arr.findIndex(e => e.name === ex.name) === index
   );
 
-  const disponibles = uniqueExercises
-    .map((ex, i) => `${i + 1}. ${ex.name}`)
-    .join('\n');
+  const oldOverlay = document.getElementById('exerciseChangeOverlay');
+  if (oldOverlay) oldOverlay.remove();
 
-  const input = prompt(
-    `Escribe el número del ejercicio o escribe uno nuevo manualmente:\n\n${disponibles}\n\nEjemplo:\n5\nó\nPress declinado en máquina`
-  );
+  const overlay = document.createElement('div');
+  overlay.id = 'exerciseChangeOverlay';
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  `;
 
-  if (input === null) return;
+  overlay.innerHTML = `
+    <div style="
+      width: 100%;
+      max-width: 430px;
+      background: #241238;
+      border: 1px solid rgba(205,180,120,0.22);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+      color: #f7f2ea;
+      font-family: 'DM Sans', sans-serif;
+    ">
+      <div style="
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 26px;
+        letter-spacing: 1.5px;
+        color: #c9a44c;
+        margin-bottom: 12px;
+      ">
+        Cambiar ejercicio
+      </div>
 
-  const value = input.trim();
-  if (!value) return;
+      <label style="font-size:12px;color:#a89cb8;text-transform:uppercase;letter-spacing:1px;">
+        Selecciona uno de la lista
+      </label>
 
-  let selected = null;
-  const idx = parseInt(value, 10);
+      <select id="exerciseSelect" style="
+        width:100%;
+        margin-top:8px;
+        margin-bottom:14px;
+        padding:13px 12px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,0.12);
+        background:#12051f;
+        color:#f7f2ea;
+        font-size:14px;
+        font-family:'DM Sans', sans-serif;
+      ">
+        ${uniqueExercises.map((ex, i) => `
+          <option value="${i}">${ex.name}</option>
+        `).join('')}
+      </select>
 
-  if (!isNaN(idx) && idx >= 1 && idx <= uniqueExercises.length) {
-    selected = uniqueExercises[idx - 1];
-  } else {
-    selected = { name: value, note: null };
-  }
+      <label style="font-size:12px;color:#a89cb8;text-transform:uppercase;letter-spacing:1px;">
+        O escribe uno nuevo
+      </label>
 
-  const lastEx = getLastExerciseData(currentSession.routineId, selected.name);
-  const currentSetsCount = currentSession.exercises[ei].sets.length;
-  const previousNotes = currentSession.exercises[ei].notes || '';
+      <input id="customExerciseInput" type="text" placeholder="Ejemplo: Press declinado en máquina" style="
+        width:100%;
+        margin-top:8px;
+        margin-bottom:16px;
+        padding:13px 12px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,0.12);
+        background:#12051f;
+        color:#f7f2ea;
+        font-size:14px;
+        font-family:'DM Sans', sans-serif;
+      ">
 
-  currentSession.exercises[ei] = {
-    name: selected.name,
-    note: selected.note || null,
-    notes: previousNotes,
-    sets: Array.from({ length: currentSetsCount }, (_, i) => {
-      const lastSet = lastEx?.sets?.[i];
-      return {
-        weight: lastSet?.weight || '',
-        reps: lastSet?.reps || '',
-        done: false
-      };
-    })
+      <div style="display:flex;gap:10px;">
+        <button id="cancelExerciseChange" style="
+          flex:1;
+          padding:13px;
+          border-radius:12px;
+          border:1px solid rgba(205,180,120,0.18);
+          background:rgba(255,255,255,0.04);
+          color:#c9a44c;
+          font-family:'Bebas Neue', sans-serif;
+          font-size:18px;
+          letter-spacing:1px;
+          cursor:pointer;
+        ">
+          Cancelar
+        </button>
+
+        <button id="applyExerciseChange" style="
+          flex:1;
+          padding:13px;
+          border-radius:12px;
+          border:none;
+          background:#c9a44c;
+          color:#12051f;
+          font-family:'Bebas Neue', sans-serif;
+          font-size:18px;
+          letter-spacing:1px;
+          cursor:pointer;
+        ">
+          Aplicar
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('cancelExerciseChange').onclick = () => {
+    overlay.remove();
   };
 
-  renderExercises();
+  overlay.onclick = (event) => {
+    if (event.target === overlay) overlay.remove();
+  };
+
+  document.getElementById('applyExerciseChange').onclick = () => {
+    const selectedIndex = parseInt(document.getElementById('exerciseSelect').value, 10);
+    const customName = document.getElementById('customExerciseInput').value.trim();
+
+    const selected = customName
+      ? { name: customName, note: null }
+      : uniqueExercises[selectedIndex];
+
+    if (!selected || !selected.name) {
+      showToast('⚠️ Selecciona o escribe un ejercicio');
+      return;
+    }
+
+    const lastEx = getLastExerciseData(currentSession.routineId, selected.name);
+    const currentSetsCount = currentSession.exercises[ei].sets.length;
+    const previousNotes = currentSession.exercises[ei].notes || '';
+
+    currentSession.exercises[ei] = {
+      name: selected.name,
+      note: selected.note || null,
+      notes: previousNotes,
+      sets: Array.from({ length: currentSetsCount }, (_, i) => {
+        const lastSet = lastEx?.sets?.[i];
+        return {
+          weight: lastSet?.weight || '',
+          reps: lastSet?.reps || '',
+          done: false
+        };
+      })
+    };
+
+    overlay.remove();
+    renderExercises();
+    showToast('✅ Ejercicio cambiado');
+  };
 }
 
 function addSet(ei) {
