@@ -1357,13 +1357,13 @@
 </div>
 
 <div class="nav">
-  <button class="nav-btn active" onclick="showScreen('home')">Rutinas</button>
+  <button class="nav-btn" onclick="showScreen('home')">Rutinas</button>
   <button class="nav-btn" onclick="showScreen('history')">Historial</button>
   <button class="nav-btn" onclick="showScreen('profile')">Perfil</button>
-  <button class="nav-btn" onclick="showScreen('auth')">Cuenta</button>
+  <button class="nav-btn active" onclick="showScreen('auth')">Cuenta</button>
 </div>
 
-<div id="homeScreen" class="screen active">
+<div id="homeScreen" class="screen">
   <div class="section-title">ESTA SEMANA</div>
   <div class="routine-grid" id="routineGrid"></div>
 </div>
@@ -1403,7 +1403,7 @@
   <div id="profileContent"></div>
 </div>
 
-<div id="authScreen" class="screen">
+<div id="authScreen" class="screen active">
   <div class="section-title">CUENTA</div>
   <div id="authPanel"></div>
 </div>
@@ -1423,6 +1423,7 @@ let timerEndTime = null;
 let timerPausedRemainingMs = null;
 let audioCtx = null;
 let cloudSessions = [];
+let editingSessionKey = null;
 
 // =====================
 // DATA
@@ -1636,6 +1637,7 @@ function clearCurrentDraft() {
 }
 
 function resumeSavedSession() {
+  editingSessionKey = null;
   const draft = currentSession || getCurrentDraft();
   if (!draft) {
     showToast('⚠️ No hay sesión guardada');
@@ -1784,11 +1786,15 @@ async function syncLocalSessionsToCloud() {
 }
 
 async function saveSession(session) {
+  if (!currentUser) {
+    showScreen('auth');
+    showToast('🔒 Inicia sesión primero');
+    return false;
+  }
+
   const cleanSession = stripCloudMeta(session);
   const localSessions = dedupeSessions([cleanSession, ...getSessionsLocal()]);
   setSessionsLocal(localSessions);
-
-  if (!currentUser) return true;
 
   const { data: existing, error: checkError } = await supabaseClient
     .from('sessions')
@@ -1804,7 +1810,28 @@ async function saveSession(session) {
     return false;
   }
 
-  if (!existing || existing.length === 0) {
+  if (existing && existing.length > 0) {
+    const existingId = existing[0].id;
+    const { error } = await supabaseClient
+      .from('sessions')
+      .update({
+        routine_id: cleanSession.routineId,
+        routine_name: cleanSession.routineName,
+        date: cleanSession.date,
+        data_json: cleanSession,
+      })
+      .eq('user_id', currentUser.id)
+      .eq('id', existingId);
+
+    if (error) {
+      console.error('saveSession update', error);
+      showToast('❌ ' + error.message);
+      return false;
+    }
+
+    cloudSessions = cloudSessions.filter(s => !(s.routineName === cleanSession.routineName && s.date === cleanSession.date));
+    cloudSessions.unshift({ ...cleanSession, _cloudId: existingId });
+  } else {
     const { data, error } = await supabaseClient
       .from('sessions')
       .insert({
@@ -1827,8 +1854,184 @@ async function saveSession(session) {
   }
 
   cloudSessions = dedupeSessions(cloudSessions);
-  setSessionsLocal(currentUser ? dedupeSessions(cloudSessions) : localSessions);
+  setSessionsLocal(dedupeSessions(cloudSessions));
   return true;
+}
+
+function makeSessionRef(session) {
+  return {
+    cloudId: session?._cloudId || null,
+    routineName: session?.routineName || '',
+    date: session?.date || ''
+  };
+}
+
+function sameSessionRef(session, ref) {
+  return session && ref && session.routineName === ref.routineName && session.date === ref.date;
+}
+
+async function updateSavedSession(originalRef, updatedSession) {
+  if (!currentUser) {
+    showScreen('auth');
+    showToast('🔒 Inicia sesión primero');
+    return false;
+  }
+
+  const cleanSession = stripCloudMeta(updatedSession);
+
+  let query = supabaseClient
+    .from('sessions')
+    .update({
+      routine_id: cleanSession.routineId,
+      routine_name: cleanSession.routineName,
+      date: cleanSession.date,
+      data_json: cleanSession,
+    })
+    .eq('user_id', currentUser.id);
+
+  if (originalRef?.cloudId) {
+    query = query.eq('id', originalRef.cloudId);
+  } else {
+    query = query.eq('routine_name', originalRef.routineName).eq('date', originalRef.date);
+  }
+
+  const { error } = await query;
+
+  if (error) {
+    console.error('updateSavedSession', error);
+    showToast('❌ ' + error.message);
+    return false;
+  }
+
+  const localSessions = getSessionsLocal().filter(s => !sameSessionRef(s, originalRef));
+  setSessionsLocal(dedupeSessions([cleanSession, ...localSessions]));
+
+  await loadCloudSessions();
+  setSessionsLocal(dedupeSessions(cloudSessions));
+  return true;
+}
+
+function toDateInputValue(iso) {
+  const d = new Date(iso);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function fromDateInputValue(value, originalIso) {
+  const parts = String(value || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return originalIso || new Date().toISOString();
+  const old = originalIso ? new Date(originalIso) : new Date();
+  const hour = Number.isNaN(old.getHours()) ? 12 : old.getHours();
+  const minute = Number.isNaN(old.getMinutes()) ? 0 : old.getMinutes();
+  const second = Number.isNaN(old.getSeconds()) ? 0 : old.getSeconds();
+  return new Date(parts[0], parts[1] - 1, parts[2], hour, minute, second).toISOString();
+}
+
+function getYesterdayInputValue() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return toDateInputValue(d.toISOString());
+}
+
+function setCurrentSessionDate(value) {
+  if (!currentSession || !value) return;
+  currentSession.date = fromDateInputValue(value, currentSession.date);
+  const label = document.getElementById('sessionDateLabel');
+  if (label) label.textContent = formatDateFull(new Date(currentSession.date));
+  if (!editingSessionKey) saveCurrentDraft();
+}
+
+async function editSavedSession(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+  if (!currentUser) {
+    showScreen('auth');
+    showToast('🔒 Inicia sesión primero');
+    return;
+  }
+
+  editingSessionKey = makeSessionRef(session);
+  currentSession = cloneData(stripCloudMeta(session));
+  currentSession._cloudId = session._cloudId || null;
+  clearCurrentDraft();
+  stopTimer();
+
+  document.getElementById('sessionTitle').textContent = currentSession.routineName.toUpperCase();
+  document.getElementById('sessionDate').innerHTML = `
+    <span class="session-kicker">Editando sesión guardada</span>
+    <div id="sessionDateLabel">${formatDateFull(new Date(currentSession.date))}</div>
+    <input type="date" class="form-input" style="margin-top:10px;" value="${toDateInputValue(currentSession.date)}" onchange="setCurrentSessionDate(this.value)">
+  `;
+
+  renderExercises();
+  const finishBtn = document.querySelector('.finish-btn');
+  finishBtn.textContent = 'GUARDAR CAMBIOS';
+  finishBtn.onclick = () => finishSession();
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('sessionScreen').classList.add('active');
+}
+
+function closeDateEditOverlay() {
+  const overlay = document.getElementById('dateEditOverlay');
+  if (overlay) overlay.remove();
+}
+
+function changeSavedSessionDate(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+  if (!currentUser) {
+    showScreen('auth');
+    showToast('🔒 Inicia sesión primero');
+    return;
+  }
+
+  closeDateEditOverlay();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'dateEditOverlay';
+  overlay.className = 'edit-overlay';
+  overlay.innerHTML = `
+    <div class="edit-overlay-card">
+      <div class="edit-title">Cambiar fecha</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.45;margin-bottom:14px;">
+        ${escapeHtml(session.routineName)} · ${formatDateFull(new Date(session.date))}
+      </div>
+
+      <label class="form-label">Fecha correcta</label>
+      <input id="sessionDateEditInput" type="date" class="form-input" value="${toDateInputValue(session.date)}">
+
+      <div class="mini-actions">
+        <button class="mini-btn" onclick="document.getElementById('sessionDateEditInput').value = getYesterdayInputValue();">Ayer</button>
+        <button class="mini-btn danger" onclick="closeDateEditOverlay()">Cancelar</button>
+        <button class="mini-btn primary" onclick="saveSessionDateChange(${index})">Guardar fecha</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.onclick = event => {
+    if (event.target === overlay) closeDateEditOverlay();
+  };
+}
+
+async function saveSessionDateChange(index) {
+  const session = getSessionByIndex(index);
+  const input = document.getElementById('sessionDateEditInput');
+  if (!session || !input || !input.value) return;
+
+  const updated = cloneData(stripCloudMeta(session));
+  updated.date = fromDateInputValue(input.value, session.date);
+
+  const ok = await updateSavedSession(makeSessionRef(session), updated);
+  if (!ok) return;
+
+  closeDateEditOverlay();
+  renderHome();
+  renderHistory();
+  showToast('✅ Fecha actualizada');
 }
 
 function getDefaultProfile() {
@@ -2152,10 +2355,11 @@ async function signUp() {
   currentUser = data.user || null;
   await renderAuthStatus();
   await renderProfile();
-  if (currentUser) { await loadCloudSessions(); setSessionsLocal(dedupeSessions(cloudSessions)); }
+  if (currentUser) await syncLocalSessionsToCloud();
   renderHome();
   renderHistory();
   showToast('✅ Cuenta creada');
+  if (currentUser) showScreen('home');
 }
 
 async function signIn() {
@@ -2168,10 +2372,11 @@ async function signIn() {
   currentUser = data.user || null;
   await renderAuthStatus();
   await renderProfile();
-  if (currentUser) { await loadCloudSessions(); setSessionsLocal(dedupeSessions(cloudSessions)); }
+  if (currentUser) await syncLocalSessionsToCloud();
   renderHome();
   renderHistory();
   showToast('✅ Sesión iniciada');
+  if (currentUser) showScreen('home');
 }
 
 async function signOut() {
@@ -2185,6 +2390,7 @@ async function signOut() {
   renderHome();
   renderHistory();
   showToast('👋 Sesión cerrada');
+  showScreen('auth');
 }
 
 async function getAccountDisplayName() {
@@ -2273,16 +2479,23 @@ async function renderAuthStatus() {
 }
 
 function showScreen(name) {
+  if (!currentUser && name !== 'auth') {
+    name = 'auth';
+    showToast('🔒 Inicia sesión primero');
+  }
+
   const goingToSession = name === 'session';
 
   if (currentSession && !goingToSession) {
-    saveCurrentDraft();
+    if (!editingSessionKey) saveCurrentDraft();
     stopTimer();
   }
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(name + 'Screen').classList.add('active');
+
+  const targetScreen = document.getElementById(name + 'Screen');
+  if (targetScreen) targetScreen.classList.add('active');
 
   const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
   if (navMap[name] !== undefined) {
@@ -2296,6 +2509,15 @@ function showScreen(name) {
 }
 
 function discardSession() {
+  if (editingSessionKey) {
+    currentSession = null;
+    editingSessionKey = null;
+    clearCurrentDraft();
+    stopTimer();
+    showScreen('history');
+    return;
+  }
+
   if (confirm('¿Descartar entrenamiento?')) {
     currentSession = null;
     clearCurrentDraft();
@@ -2305,6 +2527,15 @@ function discardSession() {
 }
 
 function goBack() {
+  if (editingSessionKey) {
+    currentSession = null;
+    editingSessionKey = null;
+    clearCurrentDraft();
+    stopTimer();
+    showScreen('history');
+    return;
+  }
+
   if (currentSession) {
     saveCurrentDraft();
     stopTimer();
@@ -2403,6 +2634,12 @@ function renderHome() {
 }
 
 function viewRoutine(routineId) {
+  if (!currentUser) {
+    showScreen('auth');
+    showToast('🔒 Inicia sesión primero');
+    return;
+  }
+
   const routine = getRoutineById(routineId);
   if (!routine) { showToast('⚠️ Rutina no encontrada'); return; }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -2450,6 +2687,13 @@ function viewRoutine(routineId) {
 }
 
 function startSession(routineId) {
+  if (!currentUser) {
+    showScreen('auth');
+    showToast('🔒 Inicia sesión primero');
+    return;
+  }
+
+  editingSessionKey = null;
   const routine = getRoutineById(routineId);
   if (!routine) { showToast('⚠️ Rutina no encontrada'); return; }
 
@@ -2840,6 +3084,12 @@ function addSet(ei) {
 }
 
 async function finishSession() {
+  if (!currentUser) {
+    showScreen('auth');
+    showToast('🔒 Inicia sesión primero');
+    return;
+  }
+
   if (!currentSession) {
     showToast('⚠️ No hay una sesión activa');
     return;
@@ -2851,19 +3101,23 @@ async function finishSession() {
     return;
   }
 
-  const ok = await saveSession(currentSession);
+  const wasEditing = !!editingSessionKey;
+  const ok = wasEditing
+    ? await updateSavedSession(editingSessionKey, currentSession)
+    : await saveSession(currentSession);
   if (ok === false) return;
 
   currentSession = null;
+  editingSessionKey = null;
   clearCurrentDraft();
   stopTimer();
-  showToast('✅ Sesión guardada');
+  showToast(wasEditing ? '✅ Cambios guardados' : '✅ Sesión guardada');
   const finishBtn = document.querySelector('.finish-btn');
   finishBtn.textContent = 'TERMINAR SESIÓN';
   finishBtn.onclick = () => finishSession();
   renderHome();
   renderHistory();
-  setTimeout(() => { showScreen('home'); }, 1200);
+  setTimeout(() => { showScreen(wasEditing ? 'history' : 'home'); }, 900);
 }
 
 function renderHistory() {
@@ -2903,6 +3157,8 @@ function renderHistory() {
             <div class="history-stat"><strong>${s.exercises.length}</strong>ejercicios</div>
           </div>
           <div class="session-actions">
+            <button onclick="editSavedSession(${i})" class="mini-btn">Editar</button>
+            <button onclick="changeSavedSessionDate(${i})" class="mini-btn">Fecha</button>
             <button onclick="openShareMenu(${i})" class="mini-btn primary">Compartir</button>
             <button onclick="deleteSession(${i})" class="mini-btn danger">Eliminar</button>
           </div>
@@ -2961,6 +3217,8 @@ function showDetail(index) {
         </div>
       </div>
       <div class="detail-actions">
+        <button onclick="editSavedSession(${index})" class="mini-btn">Editar</button>
+        <button onclick="changeSavedSessionDate(${index})" class="mini-btn">Fecha</button>
         <button onclick="openShareMenu(${index})" class="mini-btn primary full">Compartir</button>
       </div>
     </div>
@@ -3544,15 +3802,17 @@ function exportSessionsCsv() {
 
 async function initApp() {
   await renderAuthStatus();
+
   if (currentUser) {
-    await loadCloudSessions();
-    setSessionsLocal(dedupeSessions(cloudSessions));
+    await syncLocalSessionsToCloud();
   } else {
     setSessionsLocal(dedupeSessions(getSessionsLocal()));
   }
+
   renderHome();
   renderHistory();
-  renderProfile();
+  await renderProfile();
+  showScreen(currentUser ? 'home' : 'auth');
 }
 
 initApp();
