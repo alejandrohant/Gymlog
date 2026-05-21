@@ -3505,27 +3505,89 @@ function showDetail(index) {
   exitTrainingMode();
 }
 
+let forjaAudioReady = false;
+let forjaLastUnlockTry = 0;
+
 function unlockTimerAudio() {
-  if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) audioCtx = new AudioContextClass();
+  try {
+    const nowMs = Date.now();
+    if (forjaAudioReady && nowMs - forjaLastUnlockTry < 3000) return;
+    forjaLastUnlockTry = nowMs;
+
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) audioCtx = new AudioContextClass();
+    }
+
+    if (!audioCtx) return;
+
+    const finishUnlock = () => {
+      try {
+        /* Pulso casi silencioso: ayuda a iPhone a desbloquear Web Audio desde un toque real. */
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.00001, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.035);
+        forjaAudioReady = true;
+      } catch (e) {
+        console.warn('finishUnlock', e);
+      }
+    };
+
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(finishUnlock).catch(() => {});
+    } else if (audioCtx.state === 'running') {
+      finishUnlock();
+    }
+  } catch (e) {
+    console.warn('unlockTimerAudio', e);
   }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+}
+
+function forjaAlarmTone(freq, delay, duration, volume) {
+  if (!audioCtx || audioCtx.state !== 'running') return;
+
+  const startAt = audioCtx.currentTime + delay;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(freq, startAt);
+
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(startAt);
+  osc.stop(startAt + duration + 0.04);
 }
 
 function playTimerBeep() {
-  if (!audioCtx) return;
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-  oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-  gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.01);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  oscillator.start();
-  oscillator.stop(audioCtx.currentTime + 0.26);
+  unlockTimerAudio();
+
+  if (!audioCtx || audioCtx.state !== 'running') {
+    showToast('🔕 Toca la pantalla y sube el volumen');
+    return;
+  }
+
+  /* Alarma fuerte en dos ráfagas. */
+  forjaAlarmTone(880, 0.00, 0.22, 0.42);
+  forjaAlarmTone(1175, 0.28, 0.22, 0.42);
+  forjaAlarmTone(1568, 0.56, 0.38, 0.48);
+  forjaAlarmTone(880, 1.08, 0.22, 0.42);
+  forjaAlarmTone(1175, 1.36, 0.22, 0.42);
+  forjaAlarmTone(1568, 1.64, 0.48, 0.52);
+
+  if (navigator.vibrate) {
+    navigator.vibrate([300, 120, 300, 120, 500]);
+  }
 }
 
 function handleTimerTick() {
@@ -3549,11 +3611,15 @@ function startTimer(seconds) {
   const controls = document.getElementById('timerControls');
   const pauseBtn = document.getElementById('timerPauseBtn');
   if (pauseBtn) pauseBtn.textContent = 'Pausar';
-  el.classList.add('visible');
+  if (el) el.classList.add('visible');
   if (controls) controls.classList.add('visible');
   updateTimerDisplay();
   timerInterval = setInterval(handleTimerTick, 250);
 }
+
+['touchstart', 'pointerdown', 'click'].forEach(type => {
+  document.addEventListener(type, unlockTimerAudio, { passive: true });
+});
 
 function adjustTimer(seconds) {
   if (!timerEndTime && timerPausedRemainingMs === null) return;
