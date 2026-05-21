@@ -390,11 +390,12 @@
   }
 
   .finish-btn {
-    display: block;
-    position: static;
-    width: calc(100% - 32px);
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 34px);
     max-width: 446px;
-    margin: 16px auto 28px;
     padding: 16px;
     background: linear-gradient(180deg, #ddb965 0%, #bc9138 100%);
     color: #140813;
@@ -404,11 +405,11 @@
     font-size: 22px;
     letter-spacing: 2px;
     cursor: pointer;
-    z-index: 1;
+    z-index: 200;
     box-shadow: 0 18px 34px rgba(201,164,76,0.20);
   }
 
-  .finish-btn:active { transform: scale(0.985); }
+  .finish-btn:active { transform: translateX(-50%) scale(0.985); }
 
   .history-card {
     padding: 16px;
@@ -1334,7 +1335,9 @@
 }
 
 
-/* === FORJA: SESIÓN ACTIVA LIMPIA Y ESTABLE v4 === */
+/* === FORJA: ENTRENAMIENTO ACTIVO — VERSION ESTABLE 2026-05-20 === */
+
+/* Regla base: si la pantalla de sesión no está abierta, su botón no aparece */
 #sessionScreen:not(.active) .finish-btn {
   display: none !important;
 }
@@ -1343,12 +1346,8 @@
   display: block;
 }
 
-.session-active-topbar {
-  display: none;
-}
-
-.session-legacy-actions,
-body.training-active .session-legacy-actions {
+/* Antes de iniciar entrenamiento: NO mostrar Volver/Descartar */
+#sessionScreen .session-legacy-actions {
   display: none !important;
 }
 
@@ -1356,22 +1355,67 @@ body.training-active {
   overflow: hidden !important;
 }
 
-body.training-active .header,
+/* En entrenamiento se oculta navegación, no el temporizador */
 body.training-active .nav {
   display: none !important;
 }
 
+body.training-active .header {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 0 auto 0 !important;
+  width: 100% !important;
+  max-width: 480px !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: 3600 !important;
+  pointer-events: none !important;
+}
+
+body.training-active .brand {
+  display: none !important;
+}
+
+/* Temporizador visible durante entrenamiento cuando una serie activa el descanso */
+body.training-active .timer-wrap {
+  display: flex !important;
+  position: fixed !important;
+  top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
+  right: max(12px, calc((100vw - 480px) / 2 + 12px)) !important;
+  z-index: 3700 !important;
+  align-items: flex-end !important;
+  pointer-events: auto !important;
+}
+
+body.training-active .rest-timer.visible {
+  display: block !important;
+}
+
+body.training-active .timer-controls.visible {
+  display: flex !important;
+}
+
+/* Pantalla de entrenamiento completa, limpia y estable */
 body.training-active #sessionScreen.screen.active {
   display: block !important;
   position: fixed !important;
   inset: 0 !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  width: min(100vw, 480px) !important;
   max-width: 480px !important;
   height: 100dvh !important;
-  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 18px) !important;
-  margin: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 24px) !important;
   z-index: 3000 !important;
   overflow-y: auto !important;
   overscroll-behavior-y: contain !important;
@@ -1380,46 +1424,41 @@ body.training-active #sessionScreen.screen.active {
     linear-gradient(180deg, #12051f 0%, #170826 100%) !important;
 }
 
-body.training-active .session-active-topbar {
+/* Durante entrenamiento: mostrar solo DESCARTAR, pequeño, arriba */
+body.training-active #sessionScreen .session-legacy-actions {
   display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
   position: sticky !important;
-  top: 0 !important;
-  z-index: 3200 !important;
-  min-height: calc(env(safe-area-inset-top, 0px) + 38px) !important;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px !important;
-  background: rgba(18,5,31,0.97) !important;
-  border-bottom: 1px solid rgba(205,180,120,0.12) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+  z-index: 3500 !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 8px 12px 0 !important;
+  background: transparent !important;
+  pointer-events: auto !important;
 }
 
-.session-drag-handle {
-  width: 46px;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.24);
-}
-
-.session-discard-compact {
-  position: absolute;
-  right: 12px;
-  bottom: 7px;
-  border: 1px solid rgba(255,93,104,0.24);
-  background: rgba(255,93,104,0.10);
-  color: #ffd8dc;
-  border-radius: 999px;
-  padding: 7px 10px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 14px;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-
-.session-active-row,
-.session-top-btn {
+body.training-active #sessionScreen .session-legacy-actions button:first-child {
   display: none !important;
+}
+
+body.training-active #sessionScreen .session-legacy-actions button:last-child {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  padding: 8px 12px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 93, 104, 0.13) !important;
+  border: 1px solid rgba(255, 93, 104, 0.35) !important;
+  color: #ffd8dc !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.6px !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 body.training-active .session-header {
@@ -1479,34 +1518,36 @@ body.training-active .prev-info {
   border-radius: 0 !important;
 }
 
+/* Terminar sesión: al final real del entrenamiento, NO flotante */
 body.training-active .finish-btn {
   position: static !important;
-  display: block !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
   width: calc(100% - 32px) !important;
-  max-width: 446px !important;
-  margin: 20px auto calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
+  max-width: none !important;
+  margin: 24px 16px calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
   padding: 16px !important;
   border-radius: 18px !important;
-  transform: none !important;
-  z-index: 1 !important;
-  box-shadow: 0 18px 34px rgba(201,164,76,0.20) !important;
+  background: linear-gradient(180deg, #ddb965 0%, #bc9138 100%) !important;
+  color: #140813 !important;
+  box-shadow: 0 12px 28px rgba(201,164,76,0.18) !important;
+  z-index: auto !important;
 }
 
 body.training-active .finish-btn:active {
   transform: scale(0.985) !important;
 }
 
-body.training-active .timer-wrap {
-  position: fixed !important;
-  top: calc(env(safe-area-inset-top, 0px) + 52px) !important;
-  right: max(12px, calc((100vw - 480px) / 2 + 12px)) !important;
-  z-index: 3400 !important;
+body.training-active .finish-btn::before,
+body.training-active .finish-btn::after {
+  display: none !important;
 }
-
 
 </style>
 </head>
-<body style="background-color:#12051f" data-forja-build="2026-05-20-04">
+<body style="background-color:#12051f">
 
 <div class="header">
   <div class="brand">
@@ -1555,11 +1596,7 @@ body.training-active .timer-wrap {
 </div>
 
 <div id="sessionScreen" class="screen">
-  <div class="session-active-topbar" id="sessionActiveTopbar">
-    <div class="session-drag-handle" title="Desliza hacia abajo para ocultar"></div>
-    <button class="session-discard-compact" onclick="discardSession()">DESCARTAR</button>
-  </div>
-  <div class="session-legacy-actions" aria-hidden="true"></div>
+  <div class="session-legacy-actions"><button onclick="goBack()" style="flex:1;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,164,76,0.16);border-radius:16px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">← VOLVER</button><button onclick="discardSession()" style="flex:1;padding:13px;background:linear-gradient(180deg,#ff6670 0%,#e14a56 100%);border:none;border-radius:16px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">✕ DESCARTAR</button></div>
   <div class="session-header">
     <div class="session-title" id="sessionTitle"></div>
     <div class="session-date" id="sessionDate"></div>
@@ -1835,7 +1872,6 @@ function discardSavedSession() {
   currentSession = null;
   clearCurrentDraft();
   stopTimer();
-  exitTrainingMode();
   renderHome();
   showToast('🗑️ Sesión descartada');
 }
@@ -2592,37 +2628,13 @@ async function getAccountDisplayName() {
   return currentUser.email ? currentUser.email.split('@')[0] : 'Usuario';
 }
 
-
-
 function enterTrainingMode() {
   document.body.classList.add('training-active');
   setupTrainingSwipeToHide();
-  requestAnimationFrame(() => {
-    const screen = document.getElementById('sessionScreen');
-    if (screen) screen.scrollTop = 0;
-  });
 }
 
 function exitTrainingMode() {
   document.body.classList.remove('training-active');
-}
-
-function hideActiveSession() {
-  if (currentSession && !editingSessionKey) saveCurrentDraft();
-  stopTimer();
-  exitTrainingMode();
-
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-  const home = document.getElementById('homeScreen');
-  if (home) home.classList.add('active');
-
-  const firstNav = document.querySelectorAll('.nav-btn')[0];
-  if (firstNav) firstNav.classList.add('active');
-
-  renderHome();
-  showToast('✅ Sesión guardada como borrador');
 }
 
 let trainingSwipeStartY = 0;
@@ -2639,7 +2651,7 @@ function setupTrainingSwipeToHide() {
     const touch = event.touches[0];
     trainingSwipeStartY = touch.clientY;
     trainingSwipeStartX = touch.clientX;
-    trainingSwipeStartedAtTop = screen.scrollTop <= 4;
+    trainingSwipeStartedAtTop = screen.scrollTop <= 8;
   }, { passive: true });
 
   screen.addEventListener('touchend', event => {
@@ -2648,8 +2660,8 @@ function setupTrainingSwipeToHide() {
     const deltaY = touch.clientY - trainingSwipeStartY;
     const deltaX = Math.abs(touch.clientX - trainingSwipeStartX);
 
-    if (trainingSwipeStartedAtTop && deltaY > 95 && deltaX < 70) {
-      hideActiveSession();
+    if (trainingSwipeStartedAtTop && deltaY > 80 && deltaX < 90) {
+      goBack();
     }
   }, { passive: true });
 }
@@ -4064,6 +4076,3 @@ async function initApp() {
 
 initApp();
 </script>
-
-
-<!-- FORJA_DIFF_MARKER_training_controls_20260520_230325 -->
