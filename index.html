@@ -6141,469 +6141,6 @@ async function initApp() {
     };
   };
 })();
-/* === FORJA PATCH MOBILE 3: temporizador grande visible sin empalmar === */
-(function () {
-  function injectForjaBigTimerStyles() {
-    if (document.getElementById('forjaBigTimerStyles')) return;
-
-    const style = document.createElement('style');
-    style.id = 'forjaBigTimerStyles';
-    style.textContent = `
-      body.training-active #sessionScreen > .timer-wrap {
-        display: none !important;
-        position: sticky !important;
-        top: calc(env(safe-area-inset-top, 0px) + 52px) !important;
-        left: auto !important;
-        right: auto !important;
-        width: calc(100% - 24px) !important;
-        margin: 8px 12px 12px !important;
-        padding: 12px 12px !important;
-        z-index: 3480 !important;
-        background: rgba(18, 5, 31, 0.96) !important;
-        border: 1px solid rgba(201,164,76,0.24) !important;
-        border-radius: 18px !important;
-        box-shadow: 0 14px 30px rgba(0,0,0,0.30) !important;
-        pointer-events: auto !important;
-      }
-
-      body.training-active.timer-active #sessionScreen > .timer-wrap {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        align-items: center !important;
-        gap: 12px !important;
-      }
-
-      body.training-active.timer-active #sessionScreen > .timer-wrap .rest-timer.visible {
-        display: block !important;
-        font-size: 56px !important;
-        line-height: 0.9 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        color: #a56dff !important;
-        text-shadow:
-          0 0 18px rgba(165,109,255,0.42),
-          0 0 36px rgba(165,109,255,0.24) !important;
-        text-align: left !important;
-      }
-
-      body.training-active.timer-active #sessionScreen > .timer-wrap .timer-controls.visible {
-        display: grid !important;
-        grid-template-columns: repeat(2, 58px) !important;
-        gap: 7px !important;
-        justify-content: end !important;
-        max-width: none !important;
-      }
-
-      body.training-active.timer-active #sessionScreen > .timer-wrap .timer-control-btn {
-        width: 58px !important;
-        height: 36px !important;
-        padding: 0 !important;
-        border-radius: 12px !important;
-        background: rgba(255,255,255,0.06) !important;
-        border: 1px solid rgba(201,164,76,0.28) !important;
-        color: #d8b35a !important;
-        font-family: 'DM Sans', sans-serif !important;
-        font-size: 12px !important;
-        font-weight: 800 !important;
-        letter-spacing: 0 !important;
-      }
-
-      body.training-active #sessionScreen .session-legacy-actions {
-        z-index: 3600 !important;
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-
-  function moveTimerIntoSession() {
-    const timerWrap = document.querySelector('.timer-wrap');
-    const sessionScreen = document.getElementById('sessionScreen');
-    const actions = document.querySelector('#sessionScreen .session-legacy-actions');
-
-    if (!timerWrap || !sessionScreen || !actions) return;
-
-    if (timerWrap.parentElement !== sessionScreen) {
-      actions.insertAdjacentElement('afterend', timerWrap);
-    }
-
-    const timerVisible = document.getElementById('timerDisplay')?.classList.contains('visible');
-    if (timerVisible) document.body.classList.add('timer-active');
-  }
-
-  const previousEnterTrainingMode = window.enterTrainingMode;
-  window.enterTrainingMode = function () {
-    if (typeof previousEnterTrainingMode === 'function') {
-      previousEnterTrainingMode();
-    } else {
-      document.body.classList.add('training-active');
-    }
-
-    injectForjaBigTimerStyles();
-    moveTimerIntoSession();
-  };
-
-  const previousStartTimer = window.startTimer;
-  window.startTimer = function (seconds) {
-    injectForjaBigTimerStyles();
-    moveTimerIntoSession();
-
-    if (typeof previousStartTimer === 'function') {
-      previousStartTimer(seconds);
-    }
-
-    document.body.classList.add('timer-active');
-    moveTimerIntoSession();
-  };
-
-  const previousStopTimer = window.stopTimer;
-  window.stopTimer = function () {
-    if (typeof previousStopTimer === 'function') {
-      previousStopTimer();
-    }
-
-    document.body.classList.remove('timer-active');
-  };
-
-  injectForjaBigTimerStyles();
-})();
-
-/* === FORJA FIX FINAL 2026-05-22: entrenamiento móvil estable === */
-(function () {
-  function injectForjaFinalFixStyles() {
-    if (document.getElementById('forjaFinalFixStyles0522')) return;
-
-    const style = document.createElement('style');
-    style.id = 'forjaFinalFixStyles0522';
-    style.textContent = `
-      /* No minimizar por gesto. Solo con flecha. */
-      body.training-active #sessionScreen {
-        touch-action: pan-y !important;
-      }
-
-      /* Acciones superiores en entrenamiento */
-      body.training-active #sessionScreen .session-legacy-actions {
-        display: flex !important;
-        position: sticky !important;
-        top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
-        z-index: 4200 !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 10px !important;
-        margin: 0 !important;
-        padding: 8px 12px 0 !important;
-        background: transparent !important;
-        pointer-events: auto !important;
-      }
-
-      body.training-active #sessionScreen .session-legacy-actions button:first-child {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex: 0 0 auto !important;
-        width: 40px !important;
-        height: 36px !important;
-        padding: 0 !important;
-        border-radius: 999px !important;
-        background: rgba(201,164,76,0.14) !important;
-        border: 1px solid rgba(201,164,76,0.34) !important;
-        color: #e5c16a !important;
-        font-family: 'DM Sans', sans-serif !important;
-        font-size: 26px !important;
-        font-weight: 900 !important;
-        line-height: 1 !important;
-        letter-spacing: 0 !important;
-        box-shadow: 0 8px 18px rgba(0,0,0,0.18) !important;
-        transform: none !important;
-      }
-
-      body.training-active #sessionScreen .session-legacy-actions button:last-child {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex: 0 0 auto !important;
-        width: auto !important;
-        min-height: 36px !important;
-        padding: 9px 14px !important;
-        border-radius: 999px !important;
-        background: linear-gradient(180deg, #ff5d68 0%, #c91f32 100%) !important;
-        border: 1px solid rgba(255,93,104,0.60) !important;
-        color: #ffffff !important;
-        font-family: 'DM Sans', sans-serif !important;
-        font-size: 11px !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.8px !important;
-        line-height: 1 !important;
-        box-shadow: 0 8px 18px rgba(255,93,104,0.18) !important;
-        transform: none !important;
-      }
-
-      /* Temporizador dentro de la sesión: grande, visible y sin empalmar */
-      body.training-active #sessionScreen > .timer-wrap {
-        display: none !important;
-        position: sticky !important;
-        top: calc(env(safe-area-inset-top, 0px) + 54px) !important;
-        left: auto !important;
-        right: auto !important;
-        width: calc(100% - 24px) !important;
-        max-width: none !important;
-        margin: 10px 12px 12px !important;
-        padding: 13px 12px !important;
-        z-index: 4100 !important;
-        background: rgba(18, 5, 31, 0.97) !important;
-        border: 1px solid rgba(201,164,76,0.30) !important;
-        border-radius: 18px !important;
-        box-shadow: 0 14px 30px rgba(0,0,0,0.34) !important;
-        pointer-events: auto !important;
-        transform: none !important;
-      }
-
-      body.training-active.timer-active #sessionScreen > .timer-wrap {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        align-items: center !important;
-        gap: 12px !important;
-      }
-
-      body.training-active.timer-active #sessionScreen > .timer-wrap .rest-timer.visible {
-        display: block !important;
-        font-size: 58px !important;
-        line-height: 0.9 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        color: #a56dff !important;
-        text-align: left !important;
-        white-space: nowrap !important;
-        text-shadow:
-          0 0 18px rgba(165,109,255,0.42),
-          0 0 36px rgba(165,109,255,0.24) !important;
-      }
-
-      body.training-active.timer-active #sessionScreen > .timer-wrap .timer-controls.visible {
-        display: grid !important;
-        grid-template-columns: repeat(2, 58px) !important;
-        gap: 7px !important;
-        justify-content: end !important;
-        max-width: none !important;
-      }
-
-      body.training-active.timer-active #sessionScreen > .timer-wrap .timer-control-btn {
-        width: 58px !important;
-        height: 36px !important;
-        padding: 0 !important;
-        border-radius: 12px !important;
-        background: rgba(255,255,255,0.065) !important;
-        border: 1px solid rgba(201,164,76,0.32) !important;
-        color: #e5c16a !important;
-        font-family: 'DM Sans', sans-serif !important;
-        font-size: 12px !important;
-        font-weight: 900 !important;
-        letter-spacing: 0 !important;
-      }
-
-      /* Si minimizas con temporizador activo, se queda visible en inicio. */
-      body.timer-active:not(.training-active) > .timer-wrap {
-        display: grid !important;
-        position: fixed !important;
-        top: calc(env(safe-area-inset-top, 0px) + 132px) !important;
-        left: 50% !important;
-        right: auto !important;
-        transform: translateX(-50%) !important;
-        width: calc(100% - 24px) !important;
-        max-width: 456px !important;
-        margin: 0 !important;
-        padding: 13px 12px !important;
-        z-index: 5000 !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        align-items: center !important;
-        gap: 12px !important;
-        background: rgba(18, 5, 31, 0.97) !important;
-        border: 1px solid rgba(201,164,76,0.30) !important;
-        border-radius: 18px !important;
-        box-shadow: 0 14px 30px rgba(0,0,0,0.34) !important;
-        pointer-events: auto !important;
-      }
-
-      body.timer-active:not(.training-active) > .timer-wrap .rest-timer.visible {
-        display: block !important;
-        font-size: 54px !important;
-        line-height: 0.9 !important;
-        color: #a56dff !important;
-        white-space: nowrap !important;
-      }
-
-      body.timer-active:not(.training-active) > .timer-wrap .timer-controls.visible {
-        display: grid !important;
-        grid-template-columns: repeat(2, 58px) !important;
-        gap: 7px !important;
-      }
-
-      body.timer-active:not(.training-active) > .timer-wrap .timer-control-btn {
-        width: 58px !important;
-        height: 36px !important;
-        padding: 0 !important;
-        border-radius: 12px !important;
-        background: rgba(255,255,255,0.065) !important;
-        border: 1px solid rgba(201,164,76,0.32) !important;
-        color: #e5c16a !important;
-        font-family: 'DM Sans', sans-serif !important;
-        font-size: 12px !important;
-        font-weight: 900 !important;
-      }
-
-      @media (max-width: 390px) {
-        body.training-active.timer-active #sessionScreen > .timer-wrap .rest-timer.visible,
-        body.timer-active:not(.training-active) > .timer-wrap .rest-timer.visible {
-          font-size: 50px !important;
-        }
-
-        body.training-active.timer-active #sessionScreen > .timer-wrap .timer-controls.visible,
-        body.timer-active:not(.training-active) > .timer-wrap .timer-controls.visible {
-          grid-template-columns: repeat(2, 54px) !important;
-        }
-
-        body.training-active.timer-active #sessionScreen > .timer-wrap .timer-control-btn,
-        body.timer-active:not(.training-active) > .timer-wrap .timer-control-btn {
-          width: 54px !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-
-  function getTimerWrap() {
-    return document.querySelector('.timer-wrap');
-  }
-
-  function moveTimerIntoSessionFinal() {
-    const timerWrap = getTimerWrap();
-    const sessionScreen = document.getElementById('sessionScreen');
-    const actions = document.querySelector('#sessionScreen .session-legacy-actions');
-    if (!timerWrap || !sessionScreen || !actions) return;
-
-    if (timerWrap.parentElement !== sessionScreen) {
-      actions.insertAdjacentElement('afterend', timerWrap);
-    }
-  }
-
-  function moveTimerToBodyFinal() {
-    const timerWrap = getTimerWrap();
-    if (timerWrap && timerWrap.parentElement !== document.body) {
-      document.body.appendChild(timerWrap);
-    }
-  }
-
-  function prepareTrainingActionsFinal() {
-    const actions = document.querySelector('#sessionScreen .session-legacy-actions');
-    if (!actions) return;
-
-    const buttons = actions.querySelectorAll('button');
-
-    if (buttons[0]) {
-      buttons[0].textContent = '⌄';
-      buttons[0].setAttribute('aria-label', 'Minimizar entrenamiento');
-      buttons[0].onclick = window.minimizeSession;
-    }
-
-    if (buttons[1]) {
-      buttons[1].textContent = 'DESCARTAR';
-      buttons[1].setAttribute('aria-label', 'Descartar entrenamiento');
-      buttons[1].onclick = window.discardSession;
-    }
-  }
-
-  /* El gesto hacia abajo queda cancelado definitivamente. */
-  window.setupTrainingSwipeToHide = function () {
-    return;
-  };
-
-  window.minimizeSession = function () {
-    if (!currentSession) {
-      showScreen('home');
-      return;
-    }
-
-    if (!editingSessionKey) saveCurrentDraft();
-
-    document.body.classList.remove('training-active');
-    moveTimerToBodyFinal();
-
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-    const home = document.getElementById('homeScreen');
-    if (home) home.classList.add('active');
-
-    const firstNav = document.querySelectorAll('.nav-btn')[0];
-    if (firstNav) firstNav.classList.add('active');
-
-    renderHome();
-    showToast('✅ Entrenamiento minimizado');
-  };
-
-  const previousEnterTrainingModeFinal = window.enterTrainingMode;
-  window.enterTrainingMode = function () {
-    if (typeof previousEnterTrainingModeFinal === 'function') {
-      previousEnterTrainingModeFinal();
-    } else {
-      document.body.classList.add('training-active');
-    }
-
-    injectForjaFinalFixStyles();
-    document.body.classList.add('training-active');
-    moveTimerIntoSessionFinal();
-    prepareTrainingActionsFinal();
-  };
-
-  const previousExitTrainingModeFinal = window.exitTrainingMode;
-  window.exitTrainingMode = function () {
-    if (typeof previousExitTrainingModeFinal === 'function') {
-      previousExitTrainingModeFinal();
-    } else {
-      document.body.classList.remove('training-active');
-    }
-    document.body.classList.remove('training-active');
-  };
-
-  const previousStartTimerFinal = window.startTimer;
-  window.startTimer = function (seconds) {
-    injectForjaFinalFixStyles();
-    moveTimerIntoSessionFinal();
-
-    if (typeof previousStartTimerFinal === 'function') {
-      previousStartTimerFinal(seconds);
-    }
-
-    document.body.classList.add('timer-active');
-    if (document.body.classList.contains('training-active')) {
-      moveTimerIntoSessionFinal();
-    } else {
-      moveTimerToBodyFinal();
-    }
-  };
-
-  const previousStopTimerFinal = window.stopTimer;
-  window.stopTimer = function () {
-    if (typeof previousStopTimerFinal === 'function') {
-      previousStopTimerFinal();
-    }
-
-    document.body.classList.remove('timer-active');
-
-    if (!document.body.classList.contains('training-active')) {
-      const header = document.querySelector('.header');
-      const timerWrap = getTimerWrap();
-      if (header && timerWrap && timerWrap.parentElement === document.body) {
-        header.appendChild(timerWrap);
-      }
-    }
-  };
-
-  injectForjaFinalFixStyles();
-})();
-
-
 /* === FORJA FINAL: render limpio estable === */
 (function(){
   function routineEmojiBySession(s){
@@ -7821,518 +7358,6 @@ body::before{
 
 
 
-<!-- === FORJA FIX: entrenamiento activo, temporizador y descartar === -->
-<style id="forja-training-timer-discard-fix-0522">
-  /* Pantalla de entrenamiento: el contenido empieza debajo de la hora/isla dinámica. */
-  body.training-active #sessionScreen.screen.active {
-    position: fixed !important;
-    inset: 0 !important;
-    width: min(100vw, 480px) !important;
-    max-width: 480px !important;
-    height: 100dvh !important;
-    margin: 0 auto !important;
-    padding: calc(env(safe-area-inset-top, 0px) + 74px) 16px calc(env(safe-area-inset-bottom, 0px) + 26px) !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    background:
-      radial-gradient(circle at 50% -10%, rgba(94, 42, 139, .24), transparent 34%),
-      radial-gradient(circle at 10% 4%, rgba(217, 183, 100, .055), transparent 26%),
-      linear-gradient(180deg, #08010f 0%, #12051f 48%, #050008 100%) !important;
-  }
-
-  /* Header global oculto durante entrenamiento; no debe empujar ni invadir la hora. */
-  body.training-active .header {
-    display: block !important;
-    position: fixed !important;
-    inset: 0 0 auto 0 !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 auto !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    pointer-events: none !important;
-    z-index: 1 !important;
-  }
-
-  body.training-active .header .brand {
-    display: none !important;
-  }
-
-  /* Botón descartar fijo, arriba a la derecha, sin empalmar con la hora. */
-  body.training-active #sessionScreen .session-legacy-actions {
-    display: flex !important;
-    position: fixed !important;
-    top: calc(env(safe-area-inset-top, 0px) + 18px) !important;
-    right: max(16px, calc((100vw - 480px) / 2 + 16px)) !important;
-    left: auto !important;
-    width: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    z-index: 9200 !important;
-    background: transparent !important;
-    pointer-events: auto !important;
-  }
-
-  body.training-active #sessionScreen .session-legacy-actions button:first-child {
-    display: none !important;
-  }
-
-  body.training-active #sessionScreen .session-legacy-actions button:last-child {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: auto !important;
-    min-width: 112px !important;
-    height: 42px !important;
-    padding: 0 18px !important;
-    border-radius: 999px !important;
-    background: rgba(255, 79, 98, .105) !important;
-    border: 1px solid rgba(255, 79, 98, .48) !important;
-    color: #ff4f62 !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 900 !important;
-    letter-spacing: .12em !important;
-    line-height: 1 !important;
-    text-transform: uppercase !important;
-    box-shadow: 0 10px 26px rgba(255, 79, 98, .14), inset 0 1px 0 rgba(255,255,255,.09) !important;
-  }
-
-  /* Título de sesión vuelve a vivir dentro del flujo normal, no debajo del status bar. */
-  body.training-active .session-header {
-    display: block !important;
-    position: relative !important;
-    top: auto !important;
-    margin: 0 0 18px !important;
-    padding: 22px 20px 20px !important;
-    border-radius: 28px !important;
-    border: 1px solid rgba(226, 194, 125, .18) !important;
-    background:
-      linear-gradient(145deg, rgba(255,244,212,.07), rgba(255,255,255,.018) 42%, rgba(0,0,0,.13)),
-      rgba(28,10,45,.60) !important;
-    box-shadow: 0 20px 44px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.12) !important;
-    backdrop-filter: blur(28px) saturate(1.24) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(1.24) !important;
-  }
-
-  body.training-active .session-title {
-    color: #d9b764 !important;
-    font-size: 40px !important;
-    line-height: .92 !important;
-    letter-spacing: .12em !important;
-    margin: 0 0 12px !important;
-  }
-
-  body.training-active .session-date,
-  body.training-active .session-date div {
-    color: rgba(205, 193, 216, .70) !important;
-    font-size: 13px !important;
-    line-height: 1.35 !important;
-    letter-spacing: .13em !important;
-  }
-
-  body.training-active .session-kicker {
-    display: block !important;
-    width: fit-content !important;
-    margin: 0 0 10px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: #d9b764 !important;
-    font-size: 12px !important;
-    font-weight: 900 !important;
-    letter-spacing: .15em !important;
-  }
-
-  /* El temporizador NO flota arriba: solo aparece dentro del ejercicio activo. */
-  body.training-active .header > .timer-wrap,
-  body.training-active #sessionScreen > .timer-wrap,
-  body.training-active .session-legacy-actions + .timer-wrap {
-    display: none !important;
-  }
-
-  body.training-active .forja-inline-timer-slot {
-    display: none !important;
-    padding: 0 22px 18px !important;
-  }
-
-  body.training-active.timer-active .forja-inline-timer-slot:has(.timer-wrap) {
-    display: block !important;
-  }
-
-  body.training-active.timer-active .exercise-card .timer-wrap {
-    display: grid !important;
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 15px 16px !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    align-items: center !important;
-    gap: 14px !important;
-    background: rgba(8, 2, 16, .48) !important;
-    border: 1px solid rgba(226, 194, 125, .18) !important;
-    border-radius: 22px !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 14px 30px rgba(0,0,0,.24) !important;
-    pointer-events: auto !important;
-  }
-
-  body.training-active.timer-active .exercise-card .rest-timer.visible {
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    font-size: 58px !important;
-    line-height: .90 !important;
-    color: #a56dff !important;
-    text-align: left !important;
-    white-space: nowrap !important;
-    text-shadow: 0 0 18px rgba(165,109,255,.42), 0 0 34px rgba(165,109,255,.22) !important;
-  }
-
-  body.training-active.timer-active .exercise-card .timer-controls.visible {
-    display: grid !important;
-    grid-template-columns: repeat(2, 58px) !important;
-    gap: 8px !important;
-    justify-content: end !important;
-    max-width: none !important;
-  }
-
-  body.training-active.timer-active .exercise-card .timer-control-btn {
-    width: 58px !important;
-    height: 38px !important;
-    padding: 0 !important;
-    border-radius: 13px !important;
-    background: rgba(255,255,255,.06) !important;
-    border: 1px solid rgba(226,194,125,.28) !important;
-    color: #e5c16a !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 900 !important;
-  }
-
-  /* Ejercicios: sin rectángulos fantasmas ni vacíos superiores. */
-  body.training-active .exercise-card.training-card {
-    margin: 0 0 18px !important;
-    border-radius: 30px !important;
-    overflow: hidden !important;
-  }
-
-  body.training-active .exercise-header {
-    padding: 24px 22px 16px !important;
-  }
-
-  body.training-active .exercise-tools {
-    padding: 0 22px 16px !important;
-  }
-
-  @media (max-width: 390px) {
-    body.training-active #sessionScreen.screen.active {
-      padding-left: 14px !important;
-      padding-right: 14px !important;
-      padding-top: calc(env(safe-area-inset-top, 0px) + 70px) !important;
-    }
-
-    body.training-active #sessionScreen .session-legacy-actions {
-      right: max(14px, calc((100vw - 480px) / 2 + 14px)) !important;
-    }
-
-    body.training-active .session-title {
-      font-size: 36px !important;
-    }
-
-    body.training-active.timer-active .exercise-card .rest-timer.visible {
-      font-size: 50px !important;
-    }
-
-    body.training-active.timer-active .exercise-card .timer-controls.visible {
-      grid-template-columns: repeat(2, 52px) !important;
-    }
-
-    body.training-active.timer-active .exercise-card .timer-control-btn {
-      width: 52px !important;
-    }
-  }
-</style>
-<script id="forja-training-timer-discard-fix-js-0522">
-(function(){
-  const timerOriginalParent = document.querySelector('.timer-wrap')?.parentElement || null;
-
-  function getTimerWrap(){ return document.querySelector('.timer-wrap'); }
-
-  function ensureTimerSlot(exerciseIndex){
-    const cards = document.querySelectorAll('#exerciseList .exercise-card.training-card');
-    const card = cards && cards[exerciseIndex] ? cards[exerciseIndex] : cards[0];
-    if (!card) return null;
-
-    let slot = card.querySelector(':scope > .forja-inline-timer-slot');
-    if (!slot) {
-      slot = document.createElement('div');
-      slot.className = 'forja-inline-timer-slot';
-      const tools = card.querySelector('.exercise-tools');
-      if (tools) tools.insertAdjacentElement('afterend', slot);
-      else card.insertBefore(slot, card.firstChild);
-    }
-    return slot;
-  }
-
-  function mountTimerInExercise(exerciseIndex){
-    const timerWrap = getTimerWrap();
-    const slot = ensureTimerSlot(Number.isInteger(exerciseIndex) ? exerciseIndex : 0);
-    if (!timerWrap || !slot) return;
-    if (timerWrap.parentElement !== slot) slot.appendChild(timerWrap);
-  }
-
-  function restoreTimerHome(){
-    const timerWrap = getTimerWrap();
-    if (!timerWrap || !timerOriginalParent) return;
-    if (timerWrap.parentElement !== timerOriginalParent) timerOriginalParent.appendChild(timerWrap);
-  }
-
-  const oldEnter = window.enterTrainingMode;
-  window.enterTrainingMode = function(){
-    if (typeof oldEnter === 'function') oldEnter();
-    else document.body.classList.add('training-active');
-    if (document.body.classList.contains('timer-active')) mountTimerInExercise(window.__forjaActiveTimerExercise || 0);
-  };
-
-  const oldExit = window.exitTrainingMode;
-  window.exitTrainingMode = function(){
-    if (typeof oldExit === 'function') oldExit();
-    else document.body.classList.remove('training-active');
-    restoreTimerHome();
-  };
-
-  const oldToggleSet = window.toggleSet;
-  window.toggleSet = function(ei, si){
-    const beforeDone = !!(window.currentSession && currentSession.exercises?.[ei]?.sets?.[si]?.done);
-    const result = oldToggleSet.apply(this, arguments);
-    const afterDone = !!(window.currentSession && currentSession.exercises?.[ei]?.sets?.[si]?.done);
-    if (!beforeDone && afterDone) {
-      window.__forjaActiveTimerExercise = ei;
-      document.body.classList.add('timer-active');
-      setTimeout(function(){ mountTimerInExercise(ei); }, 0);
-    }
-    return result;
-  };
-
-  const oldStartTimer = window.startTimer;
-  window.startTimer = function(seconds){
-    const result = oldStartTimer.apply(this, arguments);
-    document.body.classList.add('timer-active');
-    setTimeout(function(){ mountTimerInExercise(window.__forjaActiveTimerExercise || 0); }, 0);
-    return result;
-  };
-
-  const oldStopTimer = window.stopTimer;
-  window.stopTimer = function(){
-    const result = oldStopTimer.apply(this, arguments);
-    document.body.classList.remove('timer-active');
-    return result;
-  };
-})();
-</script>
-
-
-
-<!-- === FORJA FIX FINAL: TEMPORIZADOR VISIBLE EN EJERCICIO ACTIVO === -->
-<style id="forja-timer-visible-final-fix">
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    padding: 0 22px 18px !important;
-  }
-
-  body.training-active.timer-active .forja-inline-timer-slot.forja-timer-mounted .timer-wrap,
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-wrap {
-    display: grid !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: none !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 96px !important;
-    margin: 0 !important;
-    padding: 16px !important;
-    grid-template-columns: minmax(118px, 1fr) auto !important;
-    align-items: center !important;
-    gap: 14px !important;
-    border-radius: 24px !important;
-    border: 1px solid rgba(226,194,125,.22) !important;
-    background:
-      linear-gradient(145deg, rgba(255,244,212,.070), rgba(255,255,255,.018) 42%, rgba(0,0,0,.12)),
-      rgba(8,2,16,.58) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 16px 32px rgba(0,0,0,.26) !important;
-    pointer-events: auto !important;
-    z-index: 5 !important;
-  }
-
-  body.training-active.timer-active .forja-inline-timer-slot.forja-timer-mounted #timerDisplay,
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerDisplay,
-  body.training-active.timer-active .forja-inline-timer-slot.forja-timer-mounted .rest-timer.visible {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    width: auto !important;
-    min-width: 118px !important;
-    height: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    color: #a970ff !important;
-    font-family: 'Bebas Neue', sans-serif !important;
-    font-size: 62px !important;
-    line-height: .88 !important;
-    letter-spacing: .02em !important;
-    text-align: left !important;
-    white-space: nowrap !important;
-    text-shadow: 0 0 22px rgba(169,112,255,.46), 0 0 38px rgba(169,112,255,.24) !important;
-  }
-
-  body.training-active.timer-active .forja-inline-timer-slot.forja-timer-mounted #timerControls,
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerControls.visible {
-    display: grid !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    grid-template-columns: repeat(2, 58px) !important;
-    gap: 8px !important;
-    justify-content: end !important;
-    max-width: none !important;
-  }
-
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-control-btn {
-    width: 58px !important;
-    height: 38px !important;
-    padding: 0 !important;
-    border-radius: 14px !important;
-    color: #f0d78a !important;
-    font-size: 13px !important;
-    font-weight: 900 !important;
-    background: rgba(255,244,212,.058) !important;
-    border: 1px solid rgba(226,194,125,.24) !important;
-    box-shadow: inset 0 1px 0 rgba(255,245,214,.10) !important;
-  }
-
-  body.training-active #sessionScreen > .timer-wrap,
-  body.training-active .header > .timer-wrap,
-  body.training-active .session-legacy-actions + .timer-wrap {
-    display: none !important;
-  }
-
-  @media (max-width:390px){
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted{padding-left:18px!important;padding-right:18px!important;}
-    body.training-active.timer-active .forja-inline-timer-slot.forja-timer-mounted #timerDisplay,
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerDisplay{font-size:54px!important;min-width:104px!important;}
-    body.training-active.timer-active .forja-inline-timer-slot.forja-timer-mounted #timerControls,
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerControls.visible{grid-template-columns:repeat(2,52px)!important;}
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-control-btn{width:52px!important;}
-  }
-</style>
-<script id="forja-timer-visible-final-js">
-(function(){
-  function getTimerWrap(){ return document.querySelector('.timer-wrap'); }
-  function getSessionCards(){ return document.querySelectorAll('#exerciseList .exercise-card.training-card'); }
-
-  function getActiveExerciseIndex(){
-    if (Number.isInteger(window.__forjaActiveTimerExercise)) return window.__forjaActiveTimerExercise;
-    return 0;
-  }
-
-  function ensureSlot(index){
-    const cards = getSessionCards();
-    const card = cards[index] || cards[0];
-    if (!card) return null;
-
-    let slot = card.querySelector(':scope > .forja-inline-timer-slot');
-    if (!slot) {
-      slot = document.createElement('div');
-      slot.className = 'forja-inline-timer-slot forja-timer-mounted';
-      const tools = card.querySelector('.exercise-tools');
-      if (tools) tools.insertAdjacentElement('afterend', slot);
-      else card.insertBefore(slot, card.firstChild);
-    }
-    slot.classList.add('forja-timer-mounted');
-    return slot;
-  }
-
-  function forceTimerVisible(){
-    const display = document.getElementById('timerDisplay');
-    const controls = document.getElementById('timerControls');
-    if (display) {
-      display.classList.add('visible');
-      if (!display.textContent || display.textContent.trim() === '') display.textContent = '2:00';
-    }
-    if (controls) controls.classList.add('visible');
-    document.body.classList.add('timer-active');
-    if (typeof updateTimerDisplay === 'function') {
-      try { updateTimerDisplay(); } catch(e) {}
-    }
-  }
-
-  function mountTimer(index){
-    const timerWrap = getTimerWrap();
-    const slot = ensureSlot(Number.isInteger(index) ? index : getActiveExerciseIndex());
-    if (!timerWrap || !slot) return;
-    if (timerWrap.parentElement !== slot) slot.appendChild(timerWrap);
-    forceTimerVisible();
-  }
-
-  const previousToggleSet = window.toggleSet;
-  window.toggleSet = function(ei, si){
-    window.__forjaActiveTimerExercise = ei;
-    const result = previousToggleSet.apply(this, arguments);
-    setTimeout(function(){
-      const set = currentSession && currentSession.exercises && currentSession.exercises[ei] && currentSession.exercises[ei].sets && currentSession.exercises[ei].sets[si];
-      if (set && set.done) mountTimer(ei);
-    }, 30);
-    return result;
-  };
-
-  const previousStartTimer = window.startTimer;
-  window.startTimer = function(seconds){
-    const idx = getActiveExerciseIndex();
-    const result = previousStartTimer.apply(this, arguments);
-    setTimeout(function(){ mountTimer(idx); }, 30);
-    return result;
-  };
-
-  const previousStopTimer = window.stopTimer;
-  window.stopTimer = function(){
-    const result = previousStopTimer.apply(this, arguments);
-    document.body.classList.remove('timer-active');
-    const display = document.getElementById('timerDisplay');
-    const controls = document.getElementById('timerControls');
-    if (display) display.classList.remove('visible');
-    if (controls) controls.classList.remove('visible');
-    return result;
-  };
-
-  const previousRenderExercises = window.renderExercises;
-  window.renderExercises = function(){
-    const result = previousRenderExercises.apply(this, arguments);
-    if (document.body.classList.contains('timer-active')) {
-      setTimeout(function(){ mountTimer(getActiveExerciseIndex()); }, 30);
-    }
-    return result;
-  };
-})();
-</script>
-
-
-
 <!-- === FORJA FIX: BARRA INFERIOR PEGADA AL FONDO REAL DEL IPHONE === -->
 <style id="forja-bottom-nav-real-bottom-fix">
   html, body {
@@ -8467,9 +7492,10 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
 
 
 
-<!-- === FORJA AJUSTE VISUAL REAL 2026-05-22: barra inferior y entrenamiento activo === -->
+
+<!-- === FORJA AJUSTE VISUAL REAL 2026-05-22: barra inferior conservada === -->
 <style id="forja-ajuste-visual-real-0522">
-  /* Barra inferior: baja, pero sin quedar mordida por el borde del iPhone. */
+  /* Barra inferior conservada del archivo cargado. */
   body:not(.training-active) .nav,
   .nav {
     display: grid !important;
@@ -8512,238 +7538,582 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
     overscroll-behavior-y: contain !important;
   }
 
-  /* Si hay entrenamiento minimizado, no debe aparecer una tarjeta gigante de temporizador encima del inicio. */
-  body.timer-active:not(.training-active) > .timer-wrap {
-    display: none !important;
-  }
-
-  /* Entrenamiento activo: sin hueco enorme arriba, pero protegido de la hora/isla dinámica. */
-  body.training-active {
-    overflow: hidden !important;
-    background: #07010d !important;
-  }
-
-  body.training-active .header,
-  body.training-active .nav {
-    display: none !important;
-  }
-
-  body.training-active #sessionScreen.screen.active {
-    display: block !important;
-    position: fixed !important;
-    inset: 0 !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    width: min(100vw, 480px) !important;
-    max-width: 480px !important;
-    height: 100dvh !important;
-    margin: 0 !important;
-    padding: 76px 0 18px !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior-y: contain !important;
-    z-index: 3000 !important;
-    background:
-      radial-gradient(circle at 50% -12%, rgba(96,42,143,.28), transparent 34%),
-      linear-gradient(180deg, #07010d 0%, #12051e 48%, #050009 100%) !important;
-    scroll-padding-top: 82px !important;
-  }
-
-  body.training-active #sessionScreen.screen.active::before {
-    content: "" !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: min(100vw, 480px) !important;
-    height: 72px !important;
-    z-index: 9100 !important;
-    pointer-events: none !important;
-    background:
-      linear-gradient(180deg, rgba(7,1,13,.98) 0%, rgba(7,1,13,.82) 62%, rgba(7,1,13,0) 100%) !important;
-  }
-
-  body.training-active #sessionScreen .session-legacy-actions {
-    display: flex !important;
-    position: fixed !important;
-    top: 56px !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    width: min(calc(100vw - 32px), 448px) !important;
-    height: 42px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    z-index: 9300 !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    gap: 10px !important;
-    background: transparent !important;
-    pointer-events: none !important;
-  }
-
-  body.training-active #sessionScreen .session-legacy-actions button {
-    pointer-events: auto !important;
-  }
-
-  body.training-active #sessionScreen .session-legacy-actions button:first-child {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 42px !important;
-    height: 38px !important;
-    min-width: 42px !important;
-    padding: 0 !important;
-    border-radius: 999px !important;
-    background: rgba(201,164,76,0.14) !important;
-    border: 1px solid rgba(201,164,76,0.34) !important;
-    color: #e5c16a !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 25px !important;
-    font-weight: 900 !important;
-    line-height: 1 !important;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.18) !important;
-  }
-
-  body.training-active #sessionScreen .session-legacy-actions button:last-child {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 38px !important;
-    padding: 10px 16px !important;
-    border-radius: 999px !important;
-    background: rgba(255, 79, 98, .12) !important;
-    border: 1px solid rgba(255, 79, 98, .50) !important;
-    color: #ff6b78 !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 900 !important;
-    letter-spacing: .8px !important;
-    line-height: 1 !important;
-    box-shadow: 0 8px 18px rgba(255,93,104,0.15) !important;
-  }
-
-  body.training-active .session-header {
-    margin: 0 18px 16px !important;
-    padding: 18px 20px 18px !important;
-    border-radius: 28px !important;
-    border: 1px solid rgba(226,194,125,.18) !important;
-    background:
-      linear-gradient(145deg,rgba(255,244,212,.070) 0%,rgba(255,255,255,.020) 42%,rgba(0,0,0,.13) 100%),
-      rgba(28,10,45,.60) !important;
-    box-shadow: 0 18px 42px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,245,214,.13) !important;
-    overflow: hidden !important;
-  }
-
-  body.training-active .session-title {
-    font-size: 42px !important;
-    line-height: .90 !important;
-    letter-spacing: .13em !important;
-  }
-
-  body.training-active .session-date {
-    font-size: 13px !important;
-    letter-spacing: .14em !important;
-  }
-
-  body.training-active .session-kicker {
-    display: block !important;
-    margin: 8px 0 10px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: #d9b764 !important;
-    font-size: 13px !important;
-    letter-spacing: .15em !important;
-  }
-
-  body.training-active .session-overview {
-    display: none !important;
-  }
-
-  body.training-active .exercise-card.training-card {
-    margin: 0 18px 18px !important;
-    border-radius: 30px !important;
-    border-left: 1px solid rgba(226,194,125,.18) !important;
-    border-right: 1px solid rgba(226,194,125,.18) !important;
-    overflow: hidden !important;
-  }
-
-  /* Temporizador dentro del ejercicio: visible, pero no pegado al status bar. */
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted {
-    margin: 14px 22px 18px !important;
-    padding: 15px 18px !important;
-  }
-
-  body.training-active #sessionScreen > .timer-wrap,
-  body.training-active .header > .timer-wrap,
-  body.training-active .session-legacy-actions + .timer-wrap {
-    display: none !important;
-  }
-
-  body.training-active .finish-btn {
-    position: static !important;
-    width: calc(100% - 36px) !important;
-    max-width: none !important;
-    margin: 24px 18px 28px !important;
-    transform: none !important;
-  }
-
   @media (max-width: 390px) {
     body:not(.training-active) .nav {
       bottom: 10px !important;
       width: calc(100% - 28px) !important;
     }
-    body.training-active #sessionScreen.screen.active {
-      padding-top: 74px !important;
+  }
+</style>
+
+<!-- === FORJA REPARACIÓN REAL 2026-05-22: entrenamiento y temporizador, SIN tocar barra inferior === -->
+<style id="forja-reparacion-real-timer-session-0522">
+  body.training-active{
+    overflow:hidden !important;
+    background:#07010d !important;
+  }
+
+  body.training-active::before{
+    content:"" !important;
+    position:fixed !important;
+    top:0 !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    width:min(100vw,480px) !important;
+    height:calc(env(safe-area-inset-top,0px) + 20px) !important;
+    background:#07010d !important;
+    z-index:9800 !important;
+    pointer-events:none !important;
+  }
+
+  body.training-active .header,
+  body.training-active .nav{
+    display:none !important;
+  }
+
+  body.training-active #sessionScreen.screen.active{
+    display:block !important;
+    position:fixed !important;
+    inset:0 !important;
+    left:50% !important;
+    right:auto !important;
+    transform:translateX(-50%) !important;
+    width:min(100vw,480px) !important;
+    max-width:480px !important;
+    height:100dvh !important;
+    margin:0 !important;
+    padding:calc(env(safe-area-inset-top,0px) + 72px) 0 calc(env(safe-area-inset-bottom,0px) + 24px) !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior-y:contain !important;
+    scroll-padding-top:calc(env(safe-area-inset-top,0px) + 86px) !important;
+    z-index:3000 !important;
+    background:
+      radial-gradient(circle at 50% -12%, rgba(96,42,143,.22), transparent 34%),
+      linear-gradient(180deg,#07010d 0%,#12051e 48%,#050009 100%) !important;
+  }
+
+  body.training-active #sessionScreen.screen.active::before{
+    display:none !important;
+  }
+
+  body.training-active #sessionScreen .session-legacy-actions{
+    display:flex !important;
+    position:fixed !important;
+    top:calc(env(safe-area-inset-top,0px) + 18px) !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    width:min(calc(100vw - 32px),448px) !important;
+    height:42px !important;
+    margin:0 !important;
+    padding:0 !important;
+    z-index:9900 !important;
+    justify-content:space-between !important;
+    align-items:center !important;
+    gap:10px !important;
+    background:transparent !important;
+    pointer-events:none !important;
+  }
+
+  body.training-active #sessionScreen .session-legacy-actions button{
+    pointer-events:auto !important;
+  }
+
+  body.training-active #sessionScreen .session-legacy-actions button:first-child{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:42px !important;
+    height:38px !important;
+    min-width:42px !important;
+    padding:0 !important;
+    border-radius:999px !important;
+    background:rgba(201,164,76,.14) !important;
+    border:1px solid rgba(201,164,76,.34) !important;
+    color:#e5c16a !important;
+    font-family:'DM Sans',sans-serif !important;
+    font-size:25px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+    box-shadow:0 8px 18px rgba(0,0,0,.18) !important;
+  }
+
+  body.training-active #sessionScreen .session-legacy-actions button:last-child{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    min-height:38px !important;
+    padding:10px 16px !important;
+    border-radius:999px !important;
+    background:rgba(255,79,98,.12) !important;
+    border:1px solid rgba(255,79,98,.50) !important;
+    color:#ff6b78 !important;
+    font-family:'DM Sans',sans-serif !important;
+    font-size:11px !important;
+    font-weight:900 !important;
+    letter-spacing:.8px !important;
+    line-height:1 !important;
+    box-shadow:0 8px 18px rgba(255,93,104,.15) !important;
+  }
+
+  body.training-active .session-header{
+    margin:0 18px 16px !important;
+    padding:18px 20px 18px !important;
+    border-radius:28px !important;
+    border:1px solid rgba(226,194,125,.18) !important;
+    background:
+      linear-gradient(145deg,rgba(255,244,212,.070) 0%,rgba(255,255,255,.020) 42%,rgba(0,0,0,.13) 100%),
+      rgba(28,10,45,.60) !important;
+    box-shadow:0 18px 42px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,245,214,.13) !important;
+    overflow:hidden !important;
+  }
+
+  body.training-active .session-title{
+    color:#d9b764 !important;
+    font-size:42px !important;
+    line-height:.90 !important;
+    letter-spacing:.13em !important;
+  }
+
+  body.training-active .session-date,
+  body.training-active .session-date div{
+    color:rgba(205,193,216,.70) !important;
+    font-size:13px !important;
+    line-height:1.35 !important;
+    letter-spacing:.13em !important;
+  }
+
+  body.training-active .session-kicker{
+    display:block !important;
+    margin:8px 0 10px !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    color:#d9b764 !important;
+    font-size:13px !important;
+    letter-spacing:.15em !important;
+  }
+
+  body.training-active .session-overview{
+    display:none !important;
+  }
+
+  body.training-active .exercise-card.training-card{
+    margin:0 18px 18px !important;
+    border-radius:30px !important;
+    border-left:1px solid rgba(226,194,125,.18) !important;
+    border-right:1px solid rgba(226,194,125,.18) !important;
+    overflow:hidden !important;
+  }
+
+  .forja-inline-timer-slot,
+  .forja-inline-timer-slot.forja-timer-mounted,
+  body.training-active .forja-inline-timer-slot,
+  body.training-active .forja-inline-timer-slot.forja-timer-mounted{
+    display:none !important;
+    visibility:hidden !important;
+    opacity:0 !important;
+    height:0 !important;
+    min-height:0 !important;
+    max-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    overflow:hidden !important;
+  }
+
+  body > .timer-wrap{
+    display:none !important;
+  }
+
+  body.training-active.timer-active > .timer-wrap{
+    display:grid !important;
+    position:fixed !important;
+    left:50% !important;
+    right:auto !important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 18px) !important;
+    top:auto !important;
+    transform:translateX(-50%) !important;
+    width:min(calc(100vw - 32px),448px) !important;
+    max-width:448px !important;
+    min-height:72px !important;
+    margin:0 !important;
+    padding:10px 12px !important;
+    grid-template-columns:minmax(92px,1fr) auto !important;
+    align-items:center !important;
+    gap:10px !important;
+    z-index:9950 !important;
+    border-radius:24px !important;
+    border:1px solid rgba(226,194,125,.24) !important;
+    background:rgba(12,3,22,.96) !important;
+    box-shadow:0 16px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.10) !important;
+    pointer-events:auto !important;
+    -webkit-backdrop-filter:blur(18px) saturate(1.15) !important;
+    backdrop-filter:blur(18px) saturate(1.15) !important;
+  }
+
+  body.training-active.timer-active > .timer-wrap #timerDisplay,
+  body.training-active.timer-active > .timer-wrap .rest-timer.visible{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    margin:0 !important;
+    padding:0 !important;
+    color:#a970ff !important;
+    font-family:'Bebas Neue',sans-serif !important;
+    font-size:52px !important;
+    line-height:.9 !important;
+    letter-spacing:.02em !important;
+    text-align:left !important;
+    white-space:nowrap !important;
+    text-shadow:0 0 18px rgba(169,112,255,.46),0 0 34px rgba(169,112,255,.24) !important;
+  }
+
+  body.training-active.timer-active > .timer-wrap #timerControls,
+  body.training-active.timer-active > .timer-wrap .timer-controls.visible{
+    display:grid !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    grid-template-columns:repeat(2,54px) !important;
+    gap:7px !important;
+    justify-content:end !important;
+    max-width:none !important;
+  }
+
+  body.training-active.timer-active > .timer-wrap .timer-control-btn{
+    width:54px !important;
+    height:34px !important;
+    padding:0 !important;
+    border-radius:13px !important;
+    color:#f0d78a !important;
+    font-family:'DM Sans',sans-serif !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+    background:rgba(255,244,212,.058) !important;
+    border:1px solid rgba(226,194,125,.24) !important;
+    box-shadow:inset 0 1px 0 rgba(255,245,214,.10) !important;
+  }
+
+  body.training-active .finish-btn{
+    position:static !important;
+    width:calc(100% - 36px) !important;
+    max-width:none !important;
+    margin:24px 18px 28px !important;
+    transform:none !important;
+  }
+
+  @media (max-width:390px){
+    body.training-active #sessionScreen.screen.active{
+      padding-top:calc(env(safe-area-inset-top,0px) + 72px) !important;
     }
-    body.training-active #sessionScreen .session-legacy-actions {
-      top: 54px !important;
-      width: min(calc(100vw - 28px), 452px) !important;
+    body.training-active #sessionScreen .session-legacy-actions{
+      width:min(calc(100vw - 28px),452px) !important;
+    }
+    body.training-active.timer-active > .timer-wrap{
+      width:min(calc(100vw - 28px),452px) !important;
+      min-height:68px !important;
+      padding:9px 10px !important;
+      grid-template-columns:minmax(86px,1fr) auto !important;
+    }
+    body.training-active.timer-active > .timer-wrap #timerDisplay,
+    body.training-active.timer-active > .timer-wrap .rest-timer.visible{
+      font-size:48px !important;
+    }
+    body.training-active.timer-active > .timer-wrap #timerControls,
+    body.training-active.timer-active > .timer-wrap .timer-controls.visible{
+      grid-template-columns:repeat(2,50px) !important;
+      gap:6px !important;
+    }
+    body.training-active.timer-active > .timer-wrap .timer-control-btn{
+      width:50px !important;
+      height:32px !important;
+      font-size:11px !important;
     }
   }
 </style>
 
-<script id="forja-ajuste-visual-real-0522-js">
+<script id="forja-reparacion-real-timer-session-0522-js">
 (function(){
+  const TIMER_KEY = 'forja_rest_timer_state_v2';
+  let forjaTimerInterval = null;
+  let forjaTimerState = { active:false, endAt:null, pausedMs:null };
+
+  function parseStored(value){ try { return JSON.parse(value); } catch(e){ return null; } }
+  function getTimerWrap(){ return document.querySelector('.timer-wrap'); }
+  function getDisplay(){ return document.getElementById('timerDisplay'); }
+  function getControls(){ return document.getElementById('timerControls'); }
+  function getPauseBtn(){ return document.getElementById('timerPauseBtn'); }
+
+  function keepTimerOnBody(){
+    const wrap = getTimerWrap();
+    if (wrap && wrap.parentElement !== document.body) document.body.appendChild(wrap);
+  }
+
+  function cleanupTimerSlots(){
+    document.querySelectorAll('.forja-inline-timer-slot').forEach(function(slot){
+      const wrap = slot.querySelector('.timer-wrap');
+      if (wrap) document.body.appendChild(wrap);
+      slot.remove();
+    });
+  }
+
+  function saveTimerState(){
+    if (!forjaTimerState.active) localStorage.removeItem(TIMER_KEY);
+    else localStorage.setItem(TIMER_KEY, JSON.stringify(forjaTimerState));
+  }
+
+  function loadTimerState(){
+    const stored = parseStored(localStorage.getItem(TIMER_KEY));
+    if (stored && stored.active) {
+      forjaTimerState = {
+        active:true,
+        endAt: typeof stored.endAt === 'number' ? stored.endAt : null,
+        pausedMs: typeof stored.pausedMs === 'number' ? stored.pausedMs : null
+      };
+    }
+  }
+
+  function remainingMs(){
+    if (!forjaTimerState.active) return 0;
+    if (forjaTimerState.pausedMs !== null) return Math.max(0, forjaTimerState.pausedMs || 0);
+    if (!forjaTimerState.endAt) return 0;
+    return Math.max(0, forjaTimerState.endAt - Date.now());
+  }
+
+  function renderTimer(){
+    keepTimerOnBody();
+    cleanupTimerSlots();
+    const display = getDisplay();
+    const controls = getControls();
+    const pauseBtn = getPauseBtn();
+    const ms = remainingMs();
+
+    if (!forjaTimerState.active || ms <= 0) {
+      document.body.classList.remove('timer-active');
+      if (display) display.classList.remove('visible');
+      if (controls) controls.classList.remove('visible');
+      if (pauseBtn) pauseBtn.textContent = 'Pausar';
+      return;
+    }
+
+    const totalSeconds = Math.ceil(ms / 1000);
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    if (display) {
+      display.textContent = m + ':' + String(s).padStart(2,'0');
+      display.classList.add('visible');
+    }
+    if (controls) controls.classList.add('visible');
+    if (pauseBtn) pauseBtn.textContent = forjaTimerState.pausedMs !== null ? 'Seguir' : 'Pausar';
+    document.body.classList.add('timer-active');
+  }
+
+  function finishTimerIfNeeded(){
+    if (!forjaTimerState.active || forjaTimerState.pausedMs !== null) return false;
+    if (forjaTimerState.endAt && Date.now() >= forjaTimerState.endAt) {
+      forjaTimerState = { active:false, endAt:null, pausedMs:null };
+      saveTimerState();
+      renderTimer();
+      try { if (typeof playTimerBeep === 'function') playTimerBeep(); } catch(e) {}
+      try { if (typeof showToast === 'function') showToast('⏱ Descanso terminado — siguiente serie'); } catch(e) {}
+      return true;
+    }
+    return false;
+  }
+
+  function tickTimer(){
+    if (finishTimerIfNeeded()) return;
+    renderTimer();
+  }
+
+  function restartInterval(){
+    clearInterval(forjaTimerInterval);
+    forjaTimerInterval = null;
+    if (forjaTimerState.active && forjaTimerState.pausedMs === null) {
+      forjaTimerInterval = setInterval(tickTimer, 250);
+    }
+  }
+
+  window.startTimer = function(seconds){
+    const duration = Math.max(1, Number(seconds) || 120);
+    try { if (typeof unlockTimerAudio === 'function') unlockTimerAudio(); } catch(e) {}
+    forjaTimerState = { active:true, endAt:Date.now() + duration * 1000, pausedMs:null };
+    saveTimerState();
+    renderTimer();
+    restartInterval();
+  };
+
+  window.stopTimer = function(){
+    clearInterval(forjaTimerInterval);
+    forjaTimerInterval = null;
+    forjaTimerState = { active:false, endAt:null, pausedMs:null };
+    saveTimerState();
+    renderTimer();
+  };
+
+  window.adjustTimer = function(seconds){
+    if (!forjaTimerState.active) return;
+    const delta = (Number(seconds) || 0) * 1000;
+    if (forjaTimerState.pausedMs !== null) {
+      forjaTimerState.pausedMs = Math.max(1000, forjaTimerState.pausedMs + delta);
+    } else {
+      forjaTimerState.endAt = Math.max(Date.now() + 1000, (forjaTimerState.endAt || Date.now()) + delta);
+    }
+    saveTimerState();
+    renderTimer();
+    restartInterval();
+  };
+
+  window.toggleTimerPause = function(){
+    if (!forjaTimerState.active) return;
+    if (forjaTimerState.pausedMs !== null) {
+      forjaTimerState.endAt = Date.now() + forjaTimerState.pausedMs;
+      forjaTimerState.pausedMs = null;
+    } else {
+      forjaTimerState.pausedMs = remainingMs();
+      forjaTimerState.endAt = null;
+    }
+    saveTimerState();
+    renderTimer();
+    restartInterval();
+  };
+
+  window.toggleSet = function(ei, si){
+    if (!currentSession || !currentSession.exercises || !currentSession.exercises[ei] || !currentSession.exercises[ei].sets[si]) return;
+    const set = currentSession.exercises[ei].sets[si];
+    const wEl = document.getElementById('weight-' + ei + '-' + si);
+    const rEl = document.getElementById('reps-' + ei + '-' + si);
+    if (!wEl || !rEl) return;
+
+    if (!set.done) {
+      set.weight = wEl.value || wEl.placeholder;
+      set.reps = rEl.value || rEl.placeholder;
+      wEl.value = set.weight;
+      rEl.value = set.reps;
+    }
+
+    set.done = !set.done;
+    wEl.className = 'set-input ' + (set.done ? 'completed' : '');
+    rEl.className = 'set-input ' + (set.done ? 'completed' : '');
+
+    const btn = document.querySelector('#setrow-' + ei + '-' + si + ' .set-check');
+    if (btn) {
+      btn.className = 'set-check ' + (set.done ? 'done' : '');
+      btn.textContent = set.done ? '✓' : '';
+    }
+
+    if (typeof updateSessionCounters === 'function') updateSessionCounters();
+    if (typeof saveCurrentDraft === 'function') saveCurrentDraft();
+
+    if (set.done) {
+      const t = {
+        'Elevacion Laterales (Mancuerna)': 75,
+        'Tirón a la Cara': 75,
+        'Elevación de Gemelos Sentado': 75,
+        'Elevación de Gemelos de Pie (Máquina)': 75,
+        'Extensión de Pierna': 90,
+        'Curl de Bíceps (Barra)': 90,
+        'Curl Martillo (Mancuerna)': 90,
+        'Aperturas (Máquina)': 90,
+        'Fondo de Tríceps': 90,
+        'Tríceps con Polea': 90,
+        'Vuelos invertidos para deltoides posteriores (mancuerna)': 90,
+        'Sentadilla Búlgara': 120,
+        'Curl de Pierna Sentado': 120,
+        'Jalón al Pecho (Cable)': 120,
+        'Jalón al Pecho - Agarre Cerrado (Cable)': 120,
+        'Remo Sentado con Agarre en V (Cable)': 120,
+        'Press de Hombros Sentado (Barra)': 120,
+        'Press de Hombros (Mancuerna)': 120,
+        'Press de Banca Inclinado (Mancuerna)': 150,
+        'Remo Inclinado (Barra)': 150,
+        'Press de Piernas': 150,
+        'Sentadilla Hack (Máquina)': 180,
+        'Peso Muerto Rumano (Barra)': 180,
+        'Press de Banca (Barra)': 180
+      };
+      const exName = currentSession.exercises[ei].name;
+      window.startTimer(t[exName] || 120);
+    }
+  };
+
   window.setupTrainingSwipeToHide = function(){ return; };
 
   window.minimizeSession = function(){
     if (!currentSession) { showScreen('home'); return; }
-    if (!editingSessionKey) saveCurrentDraft();
+    if (!editingSessionKey && typeof saveCurrentDraft === 'function') saveCurrentDraft();
     document.body.classList.remove('training-active');
+    cleanupTimerSlots();
+    keepTimerOnBody();
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
     document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
-    var home = document.getElementById('homeScreen');
+    const home = document.getElementById('homeScreen');
     if (home) home.classList.add('active');
-    var firstNav = document.querySelectorAll('.nav-btn')[0];
+    const firstNav = document.querySelectorAll('.nav-btn')[0];
     if (firstNav) firstNav.classList.add('active');
-    renderHome();
-    showToast('✅ Entrenamiento oculto');
+    if (typeof renderHome === 'function') renderHome();
+    if (typeof showToast === 'function') showToast('✅ Entrenamiento oculto');
+    renderTimer();
   };
 
-  var previousEnterTrainingMode = window.enterTrainingMode;
+  const previousEnterTrainingMode = window.enterTrainingMode;
   window.enterTrainingMode = function(){
     if (typeof previousEnterTrainingMode === 'function') previousEnterTrainingMode();
     else document.body.classList.add('training-active');
     document.body.classList.add('training-active');
-    var actions = document.querySelector('#sessionScreen .session-legacy-actions');
-    if (!actions) return;
-    var buttons = actions.querySelectorAll('button');
-    if (buttons[0]) {
-      buttons[0].textContent = '⌄';
-      buttons[0].setAttribute('aria-label','Ocultar entrenamiento');
-      buttons[0].onclick = window.minimizeSession;
+    cleanupTimerSlots();
+    keepTimerOnBody();
+    const actions = document.querySelector('#sessionScreen .session-legacy-actions');
+    if (actions) {
+      const buttons = actions.querySelectorAll('button');
+      if (buttons[0]) {
+        buttons[0].textContent = '⌄';
+        buttons[0].setAttribute('aria-label','Ocultar entrenamiento');
+        buttons[0].onclick = window.minimizeSession;
+      }
+      if (buttons[1]) {
+        buttons[1].textContent = 'DESCARTAR';
+        buttons[1].setAttribute('aria-label','Descartar entrenamiento');
+        buttons[1].onclick = window.discardSession;
+      }
     }
-    if (buttons[1]) {
-      buttons[1].textContent = 'DESCARTAR';
-      buttons[1].setAttribute('aria-label','Descartar entrenamiento');
-      buttons[1].onclick = window.discardSession;
-    }
+    renderTimer();
   };
+
+  const previousExitTrainingMode = window.exitTrainingMode;
+  window.exitTrainingMode = function(){
+    if (typeof previousExitTrainingMode === 'function') previousExitTrainingMode();
+    else document.body.classList.remove('training-active');
+    document.body.classList.remove('training-active');
+    cleanupTimerSlots();
+    keepTimerOnBody();
+    renderTimer();
+  };
+
+  const previousRenderExercises = window.renderExercises;
+  if (typeof previousRenderExercises === 'function') {
+    window.renderExercises = function(){
+      const result = previousRenderExercises.apply(this, arguments);
+      setTimeout(function(){ cleanupTimerSlots(); keepTimerOnBody(); renderTimer(); }, 0);
+      return result;
+    };
+  }
+
+  ['visibilitychange','focus','pageshow','touchstart','pointerdown'].forEach(function(evt){
+    window.addEventListener(evt, function(){
+      loadTimerState();
+      tickTimer();
+      restartInterval();
+      try { if (typeof unlockTimerAudio === 'function') unlockTimerAudio(); } catch(e) {}
+    }, { passive:true });
+  });
+
+  loadTimerState();
+  cleanupTimerSlots();
+  keepTimerOnBody();
+  renderTimer();
+  restartInterval();
 })();
 </script>
-
 </body>
 </html>
