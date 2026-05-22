@@ -8329,5 +8329,49 @@ body::before{
 })();
 </script>
 
+
+
+<!-- === FORJA FIX: BARRA INFERIOR PEGADA AL FONDO REAL DEL IPHONE === -->
+<style id="forja-bottom-nav-real-bottom-fix">
+  html, body {
+    background-color: #07010d !important;
+  }
+
+  .nav {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 4px !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 28px) !important;
+    max-width: 452px !important;
+    margin: 0 !important;
+    z-index: 9000 !important;
+  }
+
+  .screen {
+    padding-bottom: 108px !important;
+  }
+
+  .screen.active {
+    height: calc(100dvh - var(--forja-header-space, 170px)) !important;
+  }
+
+  body.training-active .nav {
+    display: none !important;
+  }
+
+  @supports (padding: env(safe-area-inset-bottom)) {
+    .nav {
+      bottom: max(4px, calc(env(safe-area-inset-bottom, 0px) - 32px)) !important;
+    }
+
+    .screen {
+      padding-bottom: calc(108px + max(0px, calc(env(safe-area-inset-bottom, 0px) - 32px))) !important;
+    }
+  }
+</style>
+
 </body>
 </html>
