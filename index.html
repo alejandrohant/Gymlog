@@ -4140,5 +4140,349 @@ async function initApp() {
   showScreen(currentUser ? 'home' : 'auth');
 }
 
+/* === FORJA PATCH MOBILE: lista amplia + minimizar con flecha === */
+(function () {
+  const EXERCISE_LIBRARY = [
+    { name: 'Press de Banca Inclinado (Mancuerna)' },
+    { name: 'Press de Banca Inclinado (Barra)' },
+    { name: 'Press de Banca (Barra)' },
+    { name: 'Press de Banca (Mancuerna)' },
+    { name: 'Press de Pecho en Máquina' },
+    { name: 'Press Declinado en Máquina' },
+    { name: 'Aperturas (Máquina)' },
+    { name: 'Aperturas con Mancuerna' },
+    { name: 'Cruce de Poleas' },
+    { name: 'Fondos de Tríceps' },
+
+    { name: 'Press de Hombros Sentado (Barra)' },
+    { name: 'Press de Hombros (Mancuerna)' },
+    { name: 'Press de Hombros en Máquina' },
+    { name: 'Elevacion Laterales (Mancuerna)' },
+    { name: 'Elevación Lateral en Cable' },
+    { name: 'Elevación Frontal' },
+    { name: 'Vuelos Invertidos en Máquina' },
+    { name: 'Vuelos invertidos para deltoides posteriores (mancuerna)' },
+    { name: 'Tirón a la Cara' },
+    { name: 'Encogimientos para Trapecio' },
+
+    { name: 'Jalón al Pecho (Cable)' },
+    { name: 'Jalón al Pecho - Agarre Cerrado (Cable)' },
+    { name: 'Dominadas Asistidas' },
+    { name: 'Remo Inclinado (Barra)' },
+    { name: 'Remo Sentado con Agarre en V (Cable)' },
+    { name: 'Remo con Mancuerna' },
+    { name: 'Remo en Máquina' },
+    { name: 'Pullover en Polea' },
+
+    { name: 'Curl de Bíceps (Barra)' },
+    { name: 'Curl de Bíceps (Mancuerna)' },
+    { name: 'Curl Martillo (Mancuerna)' },
+    { name: 'Curl Predicador' },
+    { name: 'Curl en Polea' },
+
+    { name: 'Tríceps con Polea' },
+    { name: 'Extensión de Tríceps por Encima de la Cabeza' },
+    { name: 'Extensión de Tríceps con Mancuerna' },
+    { name: 'Press Cerrado' },
+    { name: 'Fondo de Tríceps' },
+
+    { name: 'Sentadilla Hack (Máquina)' },
+    { name: 'Press de Piernas' },
+    { name: 'Sentadilla Búlgara' },
+    { name: 'Extensión de Pierna' },
+    { name: 'Peso Muerto Rumano (Barra)' },
+    { name: 'Peso Muerto Rumano (Mancuerna)' },
+    { name: 'Curl de Pierna Sentado' },
+    { name: 'Curl de Pierna Acostado' },
+    { name: 'Hip Thrust' },
+    { name: 'Zancadas Caminando' },
+    { name: 'Sentadilla Goblet' },
+    { name: 'Elevación de Gemelos Sentado' },
+    { name: 'Elevación de Gemelos de Pie (Máquina)' },
+    { name: 'Elevación de Gemelos en Prensa' },
+
+    { name: 'Plancha' },
+    { name: 'Crunch en Máquina' },
+    { name: 'Elevación de Piernas' },
+    { name: 'Crunch en Polea' }
+  ];
+
+  function injectForjaMobileStyles() {
+    if (document.getElementById('forjaMobilePatchStyles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'forjaMobilePatchStyles';
+    style.textContent = `
+      body.training-active #sessionScreen .session-legacy-actions {
+        display: flex !important;
+        position: sticky !important;
+        top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+        z-index: 3500 !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 8px 12px 0 !important;
+        background: transparent !important;
+        pointer-events: auto !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions button:first-child {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        width: 38px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        border-radius: 999px !important;
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(201,164,76,0.22) !important;
+        color: #c9a44c !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 24px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions button:last-child {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
+        padding: 8px 12px !important;
+        border-radius: 999px !important;
+        background: rgba(255, 93, 104, 0.13) !important;
+        border: 1px solid rgba(255, 93, 104, 0.35) !important;
+        color: #ffd8dc !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.6px !important;
+        line-height: 1 !important;
+        box-shadow: none !important;
+        transform: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  window.minimizeSession = function () {
+    if (!currentSession) {
+      showScreen('home');
+      return;
+    }
+
+    if (!editingSessionKey) saveCurrentDraft();
+
+    exitTrainingMode();
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+    const home = document.getElementById('homeScreen');
+    if (home) home.classList.add('active');
+
+    const firstNav = document.querySelectorAll('.nav-btn')[0];
+    if (firstNav) firstNav.classList.add('active');
+
+    renderHome();
+    showToast('✅ Entrenamiento minimizado');
+  };
+
+  window.setupTrainingSwipeToHide = function () {
+    return;
+  };
+
+  window.enterTrainingMode = function () {
+    document.body.classList.add('training-active');
+    injectForjaMobileStyles();
+
+    const actions = document.querySelector('#sessionScreen .session-legacy-actions');
+    if (actions) {
+      const buttons = actions.querySelectorAll('button');
+      if (buttons[0]) {
+        buttons[0].textContent = '⌄';
+        buttons[0].onclick = window.minimizeSession;
+      }
+    }
+  };
+
+  window.replaceExercise = function (ei) {
+    const allExercises = [
+      ...EXERCISE_LIBRARY,
+      ...ROUTINES.flatMap(r => r.exercises)
+    ];
+
+    const uniqueExercises = allExercises.filter(
+      (ex, index, arr) => arr.findIndex(e => e.name === ex.name) === index
+    );
+
+    const oldOverlay = document.getElementById('exerciseChangeOverlay');
+    if (oldOverlay) oldOverlay.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'exerciseChangeOverlay';
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    `;
+
+    overlay.innerHTML = `
+      <div style="
+        width: 100%;
+        max-width: 430px;
+        background: #241238;
+        border: 1px solid rgba(205,180,120,0.22);
+        border-radius: 22px;
+        padding: 18px;
+        box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+        color: #f7f2ea;
+        font-family: 'DM Sans', sans-serif;
+      ">
+        <div style="
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 26px;
+          letter-spacing: 1.5px;
+          color: #c9a44c;
+          margin-bottom: 12px;
+        ">
+          Cambiar ejercicio
+        </div>
+
+        <label style="font-size:12px;color:#a89cb8;text-transform:uppercase;letter-spacing:1px;">
+          Selecciona uno de la lista
+        </label>
+
+        <select id="exerciseSelect" style="
+          width:100%;
+          margin-top:8px;
+          margin-bottom:14px;
+          padding:13px 12px;
+          border-radius:12px;
+          border:1px solid rgba(255,255,255,0.12);
+          background:#12051f;
+          color:#f7f2ea;
+          font-size:14px;
+          font-family:'DM Sans', sans-serif;
+        ">
+          ${uniqueExercises.map((ex, i) => `
+            <option value="${i}">${ex.name}</option>
+          `).join('')}
+        </select>
+
+        <label style="font-size:12px;color:#a89cb8;text-transform:uppercase;letter-spacing:1px;">
+          O escribe uno nuevo
+        </label>
+
+        <input id="customExerciseInput" type="text" placeholder="Ejemplo: Press declinado en máquina" style="
+          width:100%;
+          margin-top:8px;
+          margin-bottom:16px;
+          padding:13px 12px;
+          border-radius:12px;
+          border:1px solid rgba(255,255,255,0.12);
+          background:#12051f;
+          color:#f7f2ea;
+          font-size:14px;
+          font-family:'DM Sans', sans-serif;
+        ">
+
+        <div style="display:flex;gap:10px;">
+          <button id="cancelExerciseChange" style="
+            flex:1;
+            padding:13px;
+            border-radius:12px;
+            border:1px solid rgba(205,180,120,0.18);
+            background:rgba(255,255,255,0.04);
+            color:#c9a44c;
+            font-family:'Bebas Neue', sans-serif;
+            font-size:18px;
+            letter-spacing:1px;
+            cursor:pointer;
+          ">
+            Cancelar
+          </button>
+
+          <button id="applyExerciseChange" style="
+            flex:1;
+            padding:13px;
+            border-radius:12px;
+            border:none;
+            background:#c9a44c;
+            color:#12051f;
+            font-family:'Bebas Neue', sans-serif;
+            font-size:18px;
+            letter-spacing:1px;
+            cursor:pointer;
+          ">
+            Aplicar
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('cancelExerciseChange').onclick = () => {
+      overlay.remove();
+    };
+
+    overlay.onclick = (event) => {
+      if (event.target === overlay) overlay.remove();
+    };
+
+    document.getElementById('applyExerciseChange').onclick = () => {
+      const selectedIndex = parseInt(document.getElementById('exerciseSelect').value, 10);
+      const customName = document.getElementById('customExerciseInput').value.trim();
+
+      const selected = customName
+        ? { name: customName, note: null }
+        : uniqueExercises[selectedIndex];
+
+      if (!selected || !selected.name) {
+        showToast('⚠️ Selecciona o escribe un ejercicio');
+        return;
+      }
+
+      const lastEx = getLastExerciseData(currentSession.routineId, selected.name);
+      const previousExercise = currentSession.exercises[ei];
+      const currentSetsCount = previousExercise.sets.length;
+      const previousNotes = previousExercise.notes || '';
+      const originalName = previousExercise.originalName || previousExercise.name;
+
+      currentSession.exercises[ei] = {
+        name: selected.name,
+        originalName,
+        replaced: selected.name !== originalName,
+        note: selected.note || null,
+        notes: previousNotes,
+        sets: Array.from({ length: currentSetsCount }, (_, i) => {
+          const lastSet = lastEx?.sets?.[i];
+          return {
+            weight: lastSet?.weight || previousExercise.sets[i]?.weight || '',
+            reps: lastSet?.reps || previousExercise.sets[i]?.reps || '',
+            done: false
+          };
+        })
+      };
+
+      overlay.remove();
+      saveCurrentDraft();
+      renderExercises();
+      showToast('✅ Ejercicio cambiado');
+    };
+  };
+})();
 initApp();
 </script>
