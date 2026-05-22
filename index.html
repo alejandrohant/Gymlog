@@ -3156,26 +3156,27 @@ body.training-active #sessionScreen.screen.active{
 </div>
 
 <div class="nav">
-  <button class="nav-btn" onclick="showScreen('home')">Rutinas</button>
-  <button class="nav-btn" onclick="showScreen('history')">Historial</button>
-  <button class="nav-btn" onclick="showScreen('profile')">Perfil</button>
-  <button class="nav-btn active" onclick="showScreen('auth')">Cuenta</button>
+  <button class="nav-btn" onclick="showScreen('home')" aria-label="Rutinas" title="Rutinas">🏋️</button>
+  <button class="nav-btn" onclick="showScreen('history')" aria-label="Historial" title="Historial">📊</button>
+  <button class="nav-btn" onclick="showScreen('profile')" aria-label="Perfil" title="Perfil">👤</button>
+  <button class="nav-btn active" onclick="showScreen('auth')" aria-label="Cuenta" title="Cuenta">🔐</button>
 </div>
 
 <div id="homeScreen" class="screen">
-  <div class="section-title">ESTA SEMANA</div>
+  <div class="section-title">HOY TOCA</div>
   <div class="routine-grid" id="routineGrid"></div>
 </div>
 
 <div id="historyScreen" class="screen">
   <div class="history-toolbar history-toolbar-clean">
     <div class="section-title" style="margin:0;">SESIONES</div>
+    <button class="history-share-all-btn" onclick="openExportMenu()" aria-label="Exportar historial" title="Exportar historial">⤴</button>
   </div>
   <div id="historyList"></div>
 </div>
 
 <div id="sessionScreen" class="screen">
-  <div class="session-legacy-actions"><button onclick="goBack()" style="flex:1;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,164,76,0.16);border-radius:16px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">← VOLVER</button><button onclick="discardSession()" style="flex:1;padding:13px;background:linear-gradient(180deg,#ff6670 0%,#e14a56 100%);border:none;border-radius:16px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">✕ DESCARTAR</button></div>
+  <div class="session-legacy-actions"><button onclick="minimizeSession()" aria-label="Ocultar entrenamiento" title="Ocultar entrenamiento" style="flex:0 0 auto;width:38px;height:34px;padding:0;background:rgba(255,255,255,0.06);border:1px solid rgba(201,164,76,0.22);border-radius:999px;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;line-height:1;cursor:pointer">⌄</button><button onclick="discardSession()" style="flex:0 0 auto;padding:8px 12px;background:rgba(255,93,104,0.13);border:1px solid rgba(255,93,104,0.35);border-radius:999px;color:#ffd8dc;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.6px;cursor:pointer">✕ DESCARTAR</button></div>
   <div class="session-header">
     <div class="session-title" id="sessionTitle"></div>
     <div class="session-date" id="sessionDate"></div>
@@ -4455,6 +4456,7 @@ function renderHome() {
     </div>
     ${draftCard}
     ${todayCard}
+    <div class="forja-training-list-title">ENTRENAMIENTOS</div>
     ${ROUTINES.map(r => {
       const last = sessions.find(s => s.routineId === r.id) || null;
       const lastText = last ? formatDate(last.date) : 'Sin sesiones';
@@ -8374,191 +8376,94 @@ body::before{
 </style>
 
 
-<!-- === FORJA HOTFIX 2026-05-22: ESPACIO INFERIOR + TIMER ESTABLE + BARRA iPHONE === -->
-<style id="forja-hotfix-espacio-timer-barra-20260522">
-  :root{
-    --forja-nav-lift: max(12px, calc(env(safe-area-inset-bottom, 0px) - 20px));
-    --forja-screen-bottom-space: calc(126px + max(0px, calc(env(safe-area-inset-bottom, 0px) - 20px)));
-  }
 
-  html,
-  body{
-    min-height:100dvh!important;
-    background:#07010d!important;
-  }
-
-  body{
-    overflow:hidden!important;
-  }
-
-  /* Corrige el hueco negro: la pantalla vuelve a ocupar la altura real disponible. */
-  body:not(.training-active) .screen{
-    padding-bottom:var(--forja-screen-bottom-space)!important;
-  }
-
-  body:not(.training-active) .screen.active{
-    height:calc(100dvh - 86px - env(safe-area-inset-top, 0px))!important;
-    min-height:0!important;
-    overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    overscroll-behavior-y:contain!important;
-  }
-
-  /* Sube ligeramente la barra inferior para que no la muerda la curva del iPhone. */
-  body:not(.training-active) .nav{
-    bottom:var(--forja-nav-lift)!important;
-    width:calc(100% - 34px)!important;
-    max-width:446px!important;
-    left:50%!important;
-    right:auto!important;
-    transform:translateX(-50%) translateZ(0)!important;
-    will-change:auto!important;
-  }
-
-  body.training-active .nav{
-    display:none!important;
-  }
-
-  /* Entrenamiento: fondo completo, sin reserva inferior duplicada. */
-  body.training-active #sessionScreen.screen.active{
-    position:fixed!important;
-    inset:0!important;
-    width:min(100vw,480px)!important;
-    max-width:480px!important;
-    height:100dvh!important;
-    min-height:100dvh!important;
-    margin:0 auto!important;
-    padding:0 0 calc(18px + env(safe-area-inset-bottom, 0px))!important;
-    overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    overscroll-behavior-y:contain!important;
-    background:
-      radial-gradient(circle at 50% -10%, rgba(96,42,143,.24), transparent 34%),
-      linear-gradient(180deg,#0b0314 0%,#130620 46%,#07010d 100%)!important;
-  }
-
-  body.training-active #exerciseList{
-    padding-bottom:8px!important;
-  }
-
-  body.training-active .finish-btn{
-    margin-bottom:calc(22px + env(safe-area-inset-bottom, 0px))!important;
-  }
-
-  /* Timer estable: ancho fijo, números tabulares y sin repintado animado. */
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted{
-    padding:0 22px 16px!important;
-  }
-
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-wrap{
-    contain:layout paint!important;
-    transform:translateZ(0)!important;
-    backface-visibility:hidden!important;
-    -webkit-font-smoothing:antialiased!important;
-    transition:none!important;
-    animation:none!important;
-    grid-template-columns:132px minmax(132px, auto)!important;
-    min-height:96px!important;
-  }
-
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerDisplay,
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted .rest-timer.visible{
-    width:132px!important;
-    min-width:132px!important;
-    max-width:132px!important;
-    display:block!important;
-    font-variant-numeric:tabular-nums!important;
-    font-feature-settings:'tnum' 1, 'lnum' 1!important;
-    text-align:left!important;
+<!-- === FORJA CORRECCIÓN INTEGRADA: NAV ICONOS + COMPARTIR HISTORIAL === -->
+<style id="forja-nav-icons-history-share-final">
+  .nav-btn{
+    font-size:24px!important;
+    line-height:1!important;
     letter-spacing:0!important;
-    line-height:.88!important;
-    white-space:nowrap!important;
-    transition:none!important;
-    animation:none!important;
-    transform:translateZ(0)!important;
-    will-change:contents!important;
+    text-transform:none!important;
+    font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji','DM Sans',sans-serif!important;
   }
 
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerControls.visible{
-    width:132px!important;
-    min-width:132px!important;
-    grid-template-columns:repeat(2,62px)!important;
-    gap:8px!important;
+  .history-toolbar-clean{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:14px!important;
+    margin-bottom:20px!important;
   }
 
-  body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-control-btn{
-    width:62px!important;
-    transform:none!important;
-    transition:none!important;
+  .history-share-all-btn{
+    display:grid!important;
+    place-items:center!important;
+    flex:0 0 44px!important;
+    width:44px!important;
+    height:44px!important;
+    border-radius:999px!important;
+    border:1px solid rgba(226,194,125,.20)!important;
+    background:rgba(255,244,212,.075)!important;
+    color:#f0d78a!important;
+    font-family:'DM Sans',sans-serif!important;
+    font-size:24px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    cursor:pointer!important;
+    box-shadow:inset 0 1px 0 rgba(255,245,214,.13),0 10px 22px rgba(0,0,0,.22)!important;
+    -webkit-appearance:none!important;
+    appearance:none!important;
   }
 
-  @media(max-width:390px){
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted{
-      padding-left:18px!important;
-      padding-right:18px!important;
-    }
-
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-wrap{
-      grid-template-columns:114px minmax(116px, auto)!important;
-      gap:12px!important;
-    }
-
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerDisplay,
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted .rest-timer.visible{
-      width:114px!important;
-      min-width:114px!important;
-      max-width:114px!important;
-      font-size:54px!important;
-    }
-
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerControls.visible{
-      width:116px!important;
-      min-width:116px!important;
-      grid-template-columns:repeat(2,54px)!important;
-    }
-
-    body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-control-btn{
-      width:54px!important;
-    }
+  .history-share-all-btn:active{
+    transform:scale(.96)!important;
   }
+
+  .forja-training-list-title{
+    margin:4px 0 0!important;
+    font-family:'Bebas Neue',sans-serif!important;
+    color:var(--fx-gold,#d9b764)!important;
+    font-size:23px!important;
+    letter-spacing:.16em!important;
+    line-height:1!important;
+    text-shadow:0 5px 16px rgba(217,183,100,.12)!important;
+  }
+
+
+/* === FORJA FINAL iPHONE: controles visibles necesarios === */
+.history-share-all-btn{
+  display:grid!important;
+  place-items:center!important;
+  width:42px!important;
+  height:42px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(226,194,125,.18)!important;
+  background:rgba(255,244,212,.075)!important;
+  color:#f0d78a!important;
+  font-size:22px!important;
+  font-weight:800!important;
+  box-shadow:inset 0 1px 0 rgba(255,245,214,.12),0 10px 22px rgba(0,0,0,.20)!important;
+}
+body.training-active #sessionScreen .session-legacy-actions{
+  display:flex!important;
+  position:sticky!important;
+  top:calc(env(safe-area-inset-top,0px) + 8px)!important;
+  z-index:3500!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:8px 12px 0!important;
+  margin:0!important;
+  background:transparent!important;
+}
+body.training-active #sessionScreen .session-legacy-actions button:first-child{
+  display:inline-flex!important;
+}
+body.training-active #sessionScreen .session-legacy-actions button:last-child{
+  display:inline-flex!important;
+  color:#ffd8dc!important;
+}
 </style>
-<script id="forja-hotfix-timer-estable-20260522">
-(function(){
-  let lastTimerText = '';
-
-  window.updateTimerDisplay = function(){
-    const remainingMs = timerPausedRemainingMs !== null
-      ? timerPausedRemainingMs
-      : (timerEndTime ? Math.max(timerEndTime - Date.now(), 0) : 0);
-
-    const totalSeconds = Math.ceil(remainingMs / 1000);
-    const m = Math.floor(totalSeconds / 60);
-    const s = totalSeconds % 60;
-    const nextText = `${m}:${String(s).padStart(2, '0')}`;
-    const el = document.getElementById('timerDisplay');
-
-    if (!el) return;
-    if (nextText !== lastTimerText || el.textContent !== nextText) {
-      el.textContent = nextText;
-      lastTimerText = nextText;
-    }
-  };
-
-  const previousStartTimerHotfix = window.startTimer;
-  window.startTimer = function(seconds){
-    const result = previousStartTimerHotfix.apply(this, arguments);
-    lastTimerText = '';
-    window.updateTimerDisplay();
-    return result;
-  };
-
-  const previousStopTimerHotfix = window.stopTimer;
-  window.stopTimer = function(){
-    lastTimerText = '';
-    return previousStopTimerHotfix.apply(this, arguments);
-  };
-})();
-</script>
 
 </body>
 </html>
