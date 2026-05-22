@@ -8373,5 +8373,192 @@ body::before{
   }
 </style>
 
+
+<!-- === FORJA HOTFIX 2026-05-22: ESPACIO INFERIOR + TIMER ESTABLE + BARRA iPHONE === -->
+<style id="forja-hotfix-espacio-timer-barra-20260522">
+  :root{
+    --forja-nav-lift: max(12px, calc(env(safe-area-inset-bottom, 0px) - 20px));
+    --forja-screen-bottom-space: calc(126px + max(0px, calc(env(safe-area-inset-bottom, 0px) - 20px)));
+  }
+
+  html,
+  body{
+    min-height:100dvh!important;
+    background:#07010d!important;
+  }
+
+  body{
+    overflow:hidden!important;
+  }
+
+  /* Corrige el hueco negro: la pantalla vuelve a ocupar la altura real disponible. */
+  body:not(.training-active) .screen{
+    padding-bottom:var(--forja-screen-bottom-space)!important;
+  }
+
+  body:not(.training-active) .screen.active{
+    height:calc(100dvh - 86px - env(safe-area-inset-top, 0px))!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-y:contain!important;
+  }
+
+  /* Sube ligeramente la barra inferior para que no la muerda la curva del iPhone. */
+  body:not(.training-active) .nav{
+    bottom:var(--forja-nav-lift)!important;
+    width:calc(100% - 34px)!important;
+    max-width:446px!important;
+    left:50%!important;
+    right:auto!important;
+    transform:translateX(-50%) translateZ(0)!important;
+    will-change:auto!important;
+  }
+
+  body.training-active .nav{
+    display:none!important;
+  }
+
+  /* Entrenamiento: fondo completo, sin reserva inferior duplicada. */
+  body.training-active #sessionScreen.screen.active{
+    position:fixed!important;
+    inset:0!important;
+    width:min(100vw,480px)!important;
+    max-width:480px!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    margin:0 auto!important;
+    padding:0 0 calc(18px + env(safe-area-inset-bottom, 0px))!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-y:contain!important;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(96,42,143,.24), transparent 34%),
+      linear-gradient(180deg,#0b0314 0%,#130620 46%,#07010d 100%)!important;
+  }
+
+  body.training-active #exerciseList{
+    padding-bottom:8px!important;
+  }
+
+  body.training-active .finish-btn{
+    margin-bottom:calc(22px + env(safe-area-inset-bottom, 0px))!important;
+  }
+
+  /* Timer estable: ancho fijo, números tabulares y sin repintado animado. */
+  body.training-active .forja-inline-timer-slot.forja-timer-mounted{
+    padding:0 22px 16px!important;
+  }
+
+  body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-wrap{
+    contain:layout paint!important;
+    transform:translateZ(0)!important;
+    backface-visibility:hidden!important;
+    -webkit-font-smoothing:antialiased!important;
+    transition:none!important;
+    animation:none!important;
+    grid-template-columns:132px minmax(132px, auto)!important;
+    min-height:96px!important;
+  }
+
+  body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerDisplay,
+  body.training-active .forja-inline-timer-slot.forja-timer-mounted .rest-timer.visible{
+    width:132px!important;
+    min-width:132px!important;
+    max-width:132px!important;
+    display:block!important;
+    font-variant-numeric:tabular-nums!important;
+    font-feature-settings:'tnum' 1, 'lnum' 1!important;
+    text-align:left!important;
+    letter-spacing:0!important;
+    line-height:.88!important;
+    white-space:nowrap!important;
+    transition:none!important;
+    animation:none!important;
+    transform:translateZ(0)!important;
+    will-change:contents!important;
+  }
+
+  body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerControls.visible{
+    width:132px!important;
+    min-width:132px!important;
+    grid-template-columns:repeat(2,62px)!important;
+    gap:8px!important;
+  }
+
+  body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-control-btn{
+    width:62px!important;
+    transform:none!important;
+    transition:none!important;
+  }
+
+  @media(max-width:390px){
+    body.training-active .forja-inline-timer-slot.forja-timer-mounted{
+      padding-left:18px!important;
+      padding-right:18px!important;
+    }
+
+    body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-wrap{
+      grid-template-columns:114px minmax(116px, auto)!important;
+      gap:12px!important;
+    }
+
+    body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerDisplay,
+    body.training-active .forja-inline-timer-slot.forja-timer-mounted .rest-timer.visible{
+      width:114px!important;
+      min-width:114px!important;
+      max-width:114px!important;
+      font-size:54px!important;
+    }
+
+    body.training-active .forja-inline-timer-slot.forja-timer-mounted #timerControls.visible{
+      width:116px!important;
+      min-width:116px!important;
+      grid-template-columns:repeat(2,54px)!important;
+    }
+
+    body.training-active .forja-inline-timer-slot.forja-timer-mounted .timer-control-btn{
+      width:54px!important;
+    }
+  }
+</style>
+<script id="forja-hotfix-timer-estable-20260522">
+(function(){
+  let lastTimerText = '';
+
+  window.updateTimerDisplay = function(){
+    const remainingMs = timerPausedRemainingMs !== null
+      ? timerPausedRemainingMs
+      : (timerEndTime ? Math.max(timerEndTime - Date.now(), 0) : 0);
+
+    const totalSeconds = Math.ceil(remainingMs / 1000);
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    const nextText = `${m}:${String(s).padStart(2, '0')}`;
+    const el = document.getElementById('timerDisplay');
+
+    if (!el) return;
+    if (nextText !== lastTimerText || el.textContent !== nextText) {
+      el.textContent = nextText;
+      lastTimerText = nextText;
+    }
+  };
+
+  const previousStartTimerHotfix = window.startTimer;
+  window.startTimer = function(seconds){
+    const result = previousStartTimerHotfix.apply(this, arguments);
+    lastTimerText = '';
+    window.updateTimerDisplay();
+    return result;
+  };
+
+  const previousStopTimerHotfix = window.stopTimer;
+  window.stopTimer = function(){
+    lastTimerText = '';
+    return previousStopTimerHotfix.apply(this, arguments);
+  };
+})();
+</script>
+
 </body>
 </html>
