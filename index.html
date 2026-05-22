@@ -2485,6 +2485,257 @@ body{
   .day-badge{min-width:62px!important;}
 }
 
+
+
+/* === FORJA FIX DEFINITIVO: TARJETAS GRANDES SIN BOTONES INTERNOS === */
+:root{
+  --forja-bg:#07010d;
+  --forja-gold:#d8b866;
+  --forja-gold-soft:#f0d78a;
+  --forja-cream:#eadfcf;
+  --forja-lav:#b8aac7;
+  --forja-dim:rgba(184,170,199,.68);
+  --forja-glass:rgba(25,8,43,.58);
+  --forja-glass-2:rgba(42,19,60,.42);
+  --forja-line:rgba(224,190,118,.18);
+}
+
+html,
+body{
+  background:
+    radial-gradient(circle at 50% -10%, rgba(96,42,143,.26), transparent 34%),
+    radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
+    linear-gradient(180deg,#07010d 0%,#12051e 48%,#050009 100%) !important;
+  color:var(--forja-cream)!important;
+}
+
+.header{
+  background:linear-gradient(180deg,rgba(7,1,13,.94),rgba(7,1,13,.76))!important;
+  border-bottom:1px solid rgba(224,190,118,.10)!important;
+}
+.header-title{color:var(--forja-gold)!important;}
+.header-sub{color:rgba(184,170,199,.70)!important;}
+.section-title{color:var(--forja-gold)!important;}
+
+.screen{
+  padding:22px 20px calc(150px + env(safe-area-inset-bottom,0px))!important;
+}
+.routine-grid,
+#historyList{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:18px!important;
+}
+
+/* nada que parezca botón dentro de tarjetas */
+.routine-inline-actions,
+.today-card,
+.today-card .mini-actions,
+.mini-actions,
+.history-export-btn,
+.session-more-btn,
+.session-legacy-actions,
+.history-summary-grid,
+.history-stats,
+.history-compact-stats,
+.day-badge,
+.hero-badge,
+.hero-grid,
+.hero-stat{
+  display:none!important;
+}
+
+.dashboard-hero,
+.routine-card,
+.history-card,
+.draft-card,
+.smart-card,
+.profile-shell,
+.detail-shell,
+.exercise-card,
+.session-overview,
+.analysis-box{
+  position:relative!important;
+  overflow:hidden!important;
+  border-radius:30px!important;
+  border:1px solid var(--forja-line)!important;
+  background:
+    linear-gradient(145deg,rgba(255,244,210,.075) 0%,rgba(255,255,255,.018) 42%,rgba(0,0,0,.12) 100%),
+    radial-gradient(circle at 18% 0%,rgba(255,238,190,.080),transparent 31%),
+    radial-gradient(circle at 95% 0%,rgba(113,52,164,.120),transparent 36%),
+    linear-gradient(180deg,var(--forja-glass),var(--forja-glass-2))!important;
+  box-shadow:
+    0 22px 48px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,245,210,.13),
+    inset 0 -1px 0 rgba(0,0,0,.30)!important;
+  -webkit-backdrop-filter:blur(34px) saturate(1.38) contrast(1.04)!important;
+  backdrop-filter:blur(34px) saturate(1.38) contrast(1.04)!important;
+}
+.dashboard-hero::before,
+.routine-card::before,
+.history-card::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:linear-gradient(120deg,rgba(255,255,255,.14),transparent 18%,transparent 75%,rgba(255,255,255,.035))!important;
+  opacity:.34!important;
+}
+.dashboard-hero::after,
+.routine-card::after,
+.history-card::after{
+  content:""!important;
+  position:absolute!important;
+  inset:1px!important;
+  pointer-events:none!important;
+  border-radius:inherit!important;
+  border:1px solid rgba(255,255,255,.035)!important;
+}
+
+.dashboard-hero{
+  padding:28px 26px!important;
+  min-height:168px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:12px!important;
+}
+.dashboard-hero-top{display:block!important;}
+.eyebrow{
+  display:inline-block!important;
+  margin-bottom:12px!important;
+  padding:0!important;
+  background:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:rgba(216,184,102,.82)!important;
+}
+.hero-title{
+  color:var(--forja-gold)!important;
+  font-size:42px!important;
+  line-height:.98!important;
+  letter-spacing:.12em!important;
+  margin-bottom:12px!important;
+}
+.hero-sub{color:var(--forja-lav)!important;font-size:17px!important;}
+.forja-hero-line,
+.forja-card-line,
+.forja-history-line{
+  color:var(--forja-dim)!important;
+  font-size:15px!important;
+  line-height:1.45!important;
+}
+.forja-hero-line strong,
+.forja-card-line strong,
+.forja-history-line strong{
+  color:var(--forja-gold-soft)!important;
+  font-weight:800!important;
+}
+
+.routine-card{
+  min-height:132px!important;
+  padding:24px 24px!important;
+  display:grid!important;
+  grid-template-columns:64px 1fr!important;
+  align-items:center!important;
+  column-gap:20px!important;
+  cursor:pointer!important;
+}
+.routine-emoji.routine-mark,
+.history-symbol{
+  width:58px!important;
+  height:58px!important;
+  border-radius:20px!important;
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 58px!important;
+  font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif!important;
+  font-size:30px!important;
+  letter-spacing:0!important;
+  line-height:1!important;
+  color:initial!important;
+  background:rgba(255,244,210,.075)!important;
+  border:1px solid rgba(224,190,118,.17)!important;
+  box-shadow:inset 0 1px 0 rgba(255,245,210,.13), 0 12px 24px rgba(0,0,0,.20)!important;
+  text-shadow:none!important;
+}
+.routine-name,
+.history-name{
+  color:var(--forja-cream)!important;
+  font-size:23px!important;
+  line-height:1.12!important;
+  font-weight:800!important;
+  letter-spacing:-.02em!important;
+  margin-bottom:8px!important;
+}
+.routine-meta{
+  color:var(--forja-lav)!important;
+  font-size:16px!important;
+  line-height:1.35!important;
+}
+.routine-info{min-width:0!important;}
+
+.history-card{
+  min-height:158px!important;
+  padding:24px!important;
+  cursor:pointer!important;
+}
+.history-clean-top{
+  display:grid!important;
+  grid-template-columns:64px 1fr auto!important;
+  align-items:start!important;
+  gap:18px!important;
+}
+.history-clean-main{min-width:0!important;}
+.history-date-clean{
+  color:var(--forja-gold-soft)!important;
+  font-weight:800!important;
+  font-size:17px!important;
+  white-space:nowrap!important;
+  padding-top:3px!important;
+}
+.forja-history-details{
+  margin-top:18px!important;
+  padding-top:16px!important;
+  border-top:1px solid rgba(255,255,255,.06)!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:10px 16px!important;
+}
+.forja-history-details span{
+  color:var(--forja-dim)!important;
+  font-size:15px!important;
+  line-height:1.35!important;
+}
+.forja-history-details strong{color:var(--forja-gold-soft)!important;}
+
+.history-toolbar-clean{margin-bottom:18px!important;}
+
+.nav{
+  width:calc(100% - 38px)!important;
+  left:19px!important;
+  bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;
+  border-radius:28px!important;
+  background:rgba(15,4,27,.72)!important;
+  border:1px solid rgba(224,190,118,.15)!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,245,210,.10)!important;
+  -webkit-backdrop-filter:blur(32px) saturate(1.28)!important;
+  backdrop-filter:blur(32px) saturate(1.28)!important;
+}
+.nav-btn{color:rgba(184,170,199,.62)!important;}
+.nav-btn.active{color:#130515!important;}
+
+@media (max-width:390px){
+  .screen{padding-left:17px!important;padding-right:17px!important;}
+  .dashboard-hero{padding:25px 22px!important;}
+  .hero-title{font-size:38px!important;}
+  .routine-card{grid-template-columns:58px 1fr!important;padding:22px 20px!important;column-gap:17px!important;}
+  .history-card{padding:22px 20px!important;}
+  .history-clean-top{grid-template-columns:58px 1fr auto!important;gap:15px!important;}
+  .routine-name,.history-name{font-size:21px!important;}
+  .routine-emoji.routine-mark,.history-symbol{width:54px!important;height:54px!important;font-size:28px!important;}
+}
+
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -6079,6 +6330,115 @@ async function initApp() {
         `;
       }).join('')}
     `;
+  };
+})();
+
+
+/* === FORJA FIX DEFINITIVO: render sin botones internos === */
+(function(){
+  function forjaRoutineEmoji(routine){
+    return (routine && routine.emoji) ? routine.emoji : '🏋️';
+  }
+
+  function forjaRoutineBySession(s){
+    const byId = (typeof getRoutineById === 'function' && s.routineId) ? getRoutineById(s.routineId) : null;
+    const byName = (typeof ROUTINES !== 'undefined') ? ROUTINES.find(r => r.name === s.routineName) : null;
+    return byId || byName || null;
+  }
+
+  function forjaEmojiBySession(s){
+    const r = forjaRoutineBySession(s);
+    return (r && r.emoji) || '🏋️';
+  }
+
+  function forjaDayShort(day){
+    return String(day || '').slice(0,3).toUpperCase();
+  }
+
+  renderHome = function(){
+    const grid = document.getElementById('routineGrid');
+    if (!grid) return;
+
+    const sessions = getSessions();
+    const totalSessions = sessions.length;
+    const completedSets = sessions.reduce((acc, s) => acc + s.exercises.reduce((sum, ex) => sum + ex.sets.filter(st => st.done).length, 0), 0);
+    const latest = sessions[0];
+    const todayRoutine = getTodayRoutine();
+    const draft = currentSession || getCurrentDraft();
+    const draftSavedAt = getDraftSavedAt();
+
+    const draftCard = draft ? `
+      <div class="draft-card tap-card" onclick="resumeSavedSession()">
+        <div class="routine-name">Sesión guardada</div>
+        <div class="routine-meta">${escapeHtml(draft.routineName)} sin terminar${draftSavedAt ? ` · ${formatDate(draftSavedAt)}` : ''}</div>
+      </div>
+    ` : '';
+
+    grid.innerHTML = `
+      <div class="dashboard-hero tap-card" ${todayRoutine ? `onclick="viewRoutine('${todayRoutine.id}')"` : ''}>
+        <div class="eyebrow">FORJA</div>
+        <div class="hero-title">${todayRoutine ? 'Hoy toca ' + escapeHtml(todayRoutine.name) : 'Cuerpo en construcción'}</div>
+        <div class="hero-sub">${todayRoutine ? escapeHtml(todayRoutine.desc || 'Rutina programada para hoy.') : 'Bitácora de entrenamiento, progreso y disciplina.'}</div>
+        <div class="forja-hero-line"><strong>${totalSessions}</strong> sesiones · <strong>${completedSets}</strong> series hechas · última: <strong>${latest ? formatDate(latest.date) : 'sin registro'}</strong></div>
+      </div>
+
+      ${draftCard}
+
+      ${ROUTINES.map(r => {
+        const last = sessions.find(s => s.routineId === r.id) || null;
+        const lastText = last ? formatDate(last.date) : 'sin sesiones';
+        const totalSets = r.exercises.reduce((acc, ex) => acc + ex.sets, 0);
+        return `
+          <div class="routine-card tap-card" onclick="viewRoutine('${r.id}')" oncontextmenu="event.preventDefault(); editRoutine('${r.id}')">
+            <div class="routine-emoji routine-mark">${escapeHtml(forjaRoutineEmoji(r))}</div>
+            <div class="routine-info">
+              <div class="routine-name">${escapeHtml(r.name)}</div>
+              <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
+              <div class="forja-card-line"><strong>${forjaDayShort(r.day)}</strong> · ${totalSets} series · última: ${lastText}</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  };
+
+  renderHistory = function(){
+    const sessions = getSessions();
+    const list = document.getElementById('historyList');
+    if (!list) return;
+
+    if (sessions.length === 0) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin sesiones registradas.<br>Selecciona una rutina para empezar.</div></div>`;
+      return;
+    }
+
+    list.innerHTML = sessions.map((s, i) => {
+      const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
+      const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
+      return `
+        <div class="history-card clean-history-card"
+          onclick="if(!window.__forjaLongPressDone){showDetail(${i})} window.__forjaLongPressDone=false;"
+          oncontextmenu="event.preventDefault(); openSessionActions(${i});"
+          onpointerdown="forjaStartLongPress(event, ${i})"
+          onpointerup="forjaEndLongPress()"
+          onpointerleave="forjaEndLongPress()"
+          onpointercancel="forjaEndLongPress()">
+          <div class="history-clean-top">
+            <div class="history-symbol">${escapeHtml(forjaEmojiBySession(s))}</div>
+            <div class="history-clean-main">
+              <div class="history-name">${escapeHtml(s.routineName)}</div>
+              <div class="routine-meta">${s.exercises.length} ejercicios registrados</div>
+            </div>
+            <div class="history-date-clean">${formatDate(s.date)}</div>
+          </div>
+          <div class="forja-history-details">
+            <span><strong>${doneSets}</strong> series</span>
+            <span><strong>${Math.round(volume).toLocaleString()}</strong> vol.</span>
+            <span><strong>${s.exercises.length}</strong> ejercicios</span>
+          </div>
+        </div>
+      `;
+    }).join('');
   };
 })();
 
