@@ -7657,5 +7657,165 @@ body.training-active .finish-btn{
 }
 </style>
 
+
+
+<style id="forja-layout-base-header-background-real-fix">
+/* === FORJA FIX REAL: encabezado + fondo base iPhone/Safari === */
+:root{
+  --forja-bg-top:#08010f;
+  --forja-bg-mid:#12051f;
+  --forja-bg-bottom:#050008;
+  --forja-gold:#d9b764;
+  --forja-text:#f2eadf;
+  --forja-muted:rgba(205,193,216,.70);
+  --forja-header-space:176px;
+}
+
+html{
+  width:100%!important;
+  min-height:100%!important;
+  background:
+    radial-gradient(circle at 50% -8%, rgba(93,42,139,.24), transparent 34%),
+    radial-gradient(circle at 10% 4%, rgba(217,183,100,.055), transparent 26%),
+    linear-gradient(180deg,var(--forja-bg-top) 0%,var(--forja-bg-mid) 48%,var(--forja-bg-bottom) 100%)!important;
+  background-color:var(--forja-bg-top)!important;
+}
+
+body{
+  width:100%!important;
+  max-width:480px!important;
+  min-height:100dvh!important;
+  margin:0 auto!important;
+  padding-top:0!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 50% -8%, rgba(93,42,139,.24), transparent 34%),
+    radial-gradient(circle at 10% 4%, rgba(217,183,100,.055), transparent 26%),
+    linear-gradient(180deg,var(--forja-bg-top) 0%,var(--forja-bg-mid) 48%,var(--forja-bg-bottom) 100%)!important;
+  background-color:var(--forja-bg-top)!important;
+}
+
+body::before{
+  content:""!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:-1!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 50% -8%, rgba(93,42,139,.24), transparent 34%),
+    radial-gradient(circle at 10% 4%, rgba(217,183,100,.055), transparent 26%),
+    linear-gradient(180deg,var(--forja-bg-top) 0%,var(--forja-bg-mid) 48%,var(--forja-bg-bottom) 100%)!important;
+}
+
+.header{
+  position:sticky!important;
+  top:0!important;
+  z-index:4000!important;
+  width:100%!important;
+  min-height:var(--forja-header-space)!important;
+  margin:0!important;
+  padding:
+    max(76px, calc(env(safe-area-inset-top,0px) + 34px))
+    24px
+    26px!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:flex-start!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  border-bottom:1px solid rgba(217,183,100,.10)!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+.header .brand{
+  display:flex!important;
+  align-items:flex-end!important;
+  width:100%!important;
+  min-width:0!important;
+}
+
+.header-title{
+  margin:0!important;
+  padding:0!important;
+  color:var(--forja-gold)!important;
+  font-family:'Bebas Neue',sans-serif!important;
+  font-size:42px!important;
+  line-height:.86!important;
+  letter-spacing:.17em!important;
+  text-shadow:0 6px 18px rgba(217,183,100,.14)!important;
+}
+
+.header-sub{
+  margin-top:12px!important;
+  color:var(--forja-muted)!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+  letter-spacing:.15em!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+}
+
+.screen,
+.screen.active,
+#homeScreen,
+#historyScreen,
+#profileScreen,
+#authScreen,
+#detailScreen{
+  background:transparent!important;
+  background-color:transparent!important;
+}
+
+.screen{
+  padding:24px 22px calc(156px + env(safe-area-inset-bottom,0px))!important;
+}
+
+.screen.active{
+  height:calc(100dvh - var(--forja-header-space))!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-y:contain!important;
+}
+
+.section-title{
+  margin:0 0 22px!important;
+  color:var(--forja-gold)!important;
+  font-size:25px!important;
+  line-height:1!important;
+  letter-spacing:.16em!important;
+}
+
+.nav{
+  bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;
+  width:calc(100% - 32px)!important;
+  max-width:448px!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+}
+
+/* Evita que iOS/Safari dibuje una franja oscura debajo del contenido. */
+@supports (-webkit-touch-callout:none){
+  html,body{
+    min-height:-webkit-fill-available!important;
+  }
+}
+
+@media(max-width:390px){
+  :root{--forja-header-space:170px;}
+  .header{
+    min-height:var(--forja-header-space)!important;
+    padding:
+      max(72px, calc(env(safe-area-inset-top,0px) + 32px))
+      22px
+      24px!important;
+  }
+  .header-title{font-size:39px!important;}
+  .header-sub{font-size:11px!important;letter-spacing:.14em!important;}
+  .screen{padding-left:20px!important;padding-right:20px!important;}
+}
+</style>
+
 </body>
 </html>
