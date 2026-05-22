@@ -2292,6 +2292,199 @@ body {
   .routine-emoji.routine-mark { width: 52px !important; height: 52px !important; font-size: 27px !important; }
 }
 
+
+
+/* === FORJA FINAL: estética limpia estable, sin botones visibles en tarjetas === */
+:root{
+  --bg:#090211;
+  --bg2:#13061f;
+  --text:#f2edf4;
+  --muted:rgba(213,202,223,.66);
+  --accent:#d7b45f;
+  --accent-soft:rgba(215,180,95,.11);
+  --glass-card:rgba(24,8,39,.64);
+  --glass-card-2:rgba(38,17,57,.52);
+  --glass-border:rgba(225,194,124,.18);
+  --glass-border-soft:rgba(255,255,255,.075);
+}
+
+html{background:#08010e!important;}
+body{
+  color:var(--text)!important;
+  background:
+    radial-gradient(circle at 50% -14%, rgba(102,46,148,.24), transparent 34%),
+    radial-gradient(circle at 14% 4%, rgba(215,180,95,.055), transparent 24%),
+    linear-gradient(180deg,#08010e 0%,#130620 46%,#07010c 100%)!important;
+}
+
+.header{
+  background:linear-gradient(180deg,rgba(8,1,14,.94),rgba(8,1,14,.78))!important;
+  border-bottom:1px solid rgba(225,194,124,.10)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.24)!important;
+}
+.header-title{color:var(--accent)!important;}
+.header-sub{color:rgba(213,202,223,.70)!important;}
+
+.screen{padding:22px 20px calc(156px + env(safe-area-inset-bottom,0px))!important;}
+.screen.active{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;}
+.section-title{color:var(--accent)!important;text-shadow:0 5px 16px rgba(215,180,95,.12)!important;}
+.routine-grid{gap:18px!important;}
+
+.dashboard-hero,
+.routine-card,
+.history-card,
+.history-summary-card,
+.hero-stat,
+.session-stat-card,
+.profile-stat,
+.smart-card,
+.draft-card,
+.session-overview,
+.exercise-card,
+.detail-shell,
+.profile-shell,
+.analysis-box{
+  background:
+    linear-gradient(150deg,rgba(255,255,255,.060) 0%,rgba(255,255,255,.018) 42%,rgba(0,0,0,.06) 100%),
+    radial-gradient(circle at 14% 0%,rgba(255,236,190,.070),transparent 29%),
+    radial-gradient(circle at 92% 8%,rgba(124,60,170,.105),transparent 34%),
+    var(--glass-card)!important;
+  border:1px solid var(--glass-border)!important;
+  box-shadow:
+    0 22px 54px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.105),
+    inset 0 -1px 0 rgba(0,0,0,.25)!important;
+  backdrop-filter:blur(30px) saturate(1.26)!important;
+  -webkit-backdrop-filter:blur(30px) saturate(1.26)!important;
+}
+.dashboard-hero::before,
+.routine-card::before,
+.history-card::before,
+.smart-card::before,
+.draft-card::before,
+.session-overview::before,
+.exercise-card::before,
+.detail-shell::before,
+.profile-shell::before,
+.analysis-box::before{
+  background:
+    linear-gradient(180deg,rgba(255,236,190,.060),transparent 31%),
+    linear-gradient(90deg,rgba(255,255,255,.020),transparent 24%,transparent 82%,rgba(255,255,255,.015))!important;
+  opacity:.38!important;
+}
+
+.dashboard-hero{border-radius:30px!important;padding:22px 22px 20px!important;margin-bottom:22px!important;}
+.routine-card{
+  min-height:112px!important;
+  padding:18px!important;
+  border-radius:28px!important;
+  gap:16px!important;
+}
+.history-card{
+  border-radius:28px!important;
+  padding:18px!important;
+  margin-bottom:18px!important;
+}
+.history-summary-grid{gap:13px!important;margin-bottom:20px!important;}
+.history-summary-card{border-radius:22px!important;min-height:76px!important;padding:16px!important;}
+
+.routine-emoji.routine-mark,
+.history-symbol{
+  width:58px!important;
+  height:58px!important;
+  min-width:58px!important;
+  border-radius:19px!important;
+  display:grid!important;
+  place-items:center!important;
+  font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif!important;
+  font-size:30px!important;
+  line-height:1!important;
+  background:linear-gradient(145deg,rgba(255,236,190,.090),rgba(255,255,255,.020)),rgba(215,180,95,.070)!important;
+  border:1px solid rgba(225,194,124,.17)!important;
+  box-shadow:inset 0 1px 0 rgba(255,236,190,.13),0 10px 22px rgba(0,0,0,.20)!important;
+}
+
+.routine-info{min-width:0!important;}
+.routine-name,
+.history-name,
+.smart-card-title,
+.session-overview-title{
+  color:#f3edf4!important;
+  font-weight:800!important;
+}
+.routine-meta,
+.history-card .routine-meta,
+.hero-sub,
+.history-summary-label,
+.hero-stat-label,
+.session-stat-label,
+.profile-stat-label,
+.hero-badge-label{
+  color:rgba(213,202,223,.66)!important;
+}
+.routine-card .routine-meta:last-child,
+.history-date-clean,
+.day-badge-value,
+.hero-title,
+.hero-badge-value,
+.section-title{
+  color:var(--accent)!important;
+}
+.history-summary-value,
+.hero-stat-value,
+.history-stat strong,
+.session-stat-value,
+.profile-stat-value{
+  color:#f2edf4!important;
+}
+
+.day-badge,
+.hero-badge,
+.history-date-badge{
+  background:rgba(255,236,190,.040)!important;
+  border:1px solid rgba(225,194,124,.15)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+.day-badge{min-width:68px!important;padding:11px 9px!important;border-radius:20px!important;text-align:center!important;}
+.day-badge-value{font-family:'Bebas Neue',sans-serif!important;font-size:27px!important;line-height:1!important;letter-spacing:.02em!important;}
+.day-badge-label{font-size:11px!important;text-transform:uppercase!important;letter-spacing:.08em!important;color:rgba(213,202,223,.58)!important;margin-top:5px!important;}
+
+.clean-history-card{cursor:pointer!important;}
+.history-clean-top{display:flex!important;align-items:flex-start!important;gap:14px!important;margin-bottom:15px!important;}
+.history-clean-main{flex:1!important;min-width:0!important;}
+.history-date-clean{font-size:14px!important;font-weight:800!important;white-space:nowrap!important;padding-top:3px!important;}
+.history-compact-stats{gap:10px!important;margin-top:0!important;}
+.history-card.session-compact .history-stat{min-height:66px!important;border-radius:18px!important;}
+.history-stat{color:rgba(213,202,223,.66)!important;}
+
+/* Sin botones visibles en tarjetas principales */
+.routine-inline-actions,
+.today-card .mini-actions,
+.history-toolbar .history-export-btn,
+.session-more-btn,
+.clean-home .mini-btn,
+.clean-home button:not(.nav-btn),
+.clean-history-card button,
+.clean-history-card .session-more-btn{
+  display:none!important;
+}
+
+.nav{
+  background:rgba(15,4,27,.76)!important;
+  border-color:rgba(225,194,124,.15)!important;
+  border-radius:25px!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+.nav-btn{color:rgba(213,202,223,.56)!important;}
+.nav-btn.active{color:#140810!important;background:linear-gradient(180deg,#f0d889 0%,#d3ad54 58%,#bd9138 100%)!important;}
+
+@media(max-width:390px){
+  .screen{padding-left:18px!important;padding-right:18px!important;}
+  .routine-card,.history-card{border-radius:25px!important;padding:16px!important;}
+  .routine-emoji.routine-mark,.history-symbol{width:54px!important;height:54px!important;min-width:54px!important;font-size:28px!important;}
+  .day-badge{min-width:62px!important;}
+}
+
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -5759,6 +5952,134 @@ async function initApp() {
   };
 
   injectForjaFinalFixStyles();
+})();
+
+
+/* === FORJA FINAL: render limpio estable === */
+(function(){
+  function routineEmojiBySession(s){
+    const r = (typeof getRoutineById === 'function' && s.routineId) ? getRoutineById(s.routineId) : null;
+    const byName = (typeof ROUTINES !== 'undefined') ? ROUTINES.find(x => x.name === s.routineName) : null;
+    return (r && r.emoji) || (byName && byName.emoji) || '🏋️';
+  }
+
+  function dayShort(day){
+    return String(day || '').slice(0,3).toUpperCase();
+  }
+
+  renderHome = function(){
+    const grid = document.getElementById('routineGrid');
+    if (!grid) return;
+    const sessions = getSessions();
+    const totalSessions = sessions.length;
+    const completedSets = sessions.reduce((acc, s) => acc + s.exercises.reduce((sum, ex) => sum + ex.sets.filter(st => st.done).length, 0), 0);
+    const latest = sessions[0];
+    const todayRoutine = getTodayRoutine();
+    const draft = currentSession || getCurrentDraft();
+    const draftSavedAt = getDraftSavedAt();
+
+    const draftCard = draft ? `
+      <div class="draft-card tap-card clean-home" onclick="resumeSavedSession()">
+        <div class="smart-card-title">Sesión guardada</div>
+        <div class="smart-card-text">${escapeHtml(draft.routineName)} sin terminar${draftSavedAt ? ` · ${formatDate(draftSavedAt)}` : ''}</div>
+      </div>
+    ` : '';
+
+    grid.innerHTML = `
+      <div class="dashboard-hero clean-home ${todayRoutine ? 'tap-card' : ''}" ${todayRoutine ? `onclick="viewRoutine('${todayRoutine.id}')"` : ''}>
+        <div class="dashboard-hero-top">
+          <div>
+            <div class="eyebrow">FORJA</div>
+            <div class="hero-title">${todayRoutine ? 'Hoy toca ' + escapeHtml(todayRoutine.name) : 'Cuerpo en construcción'}</div>
+            <div class="hero-sub">${todayRoutine ? escapeHtml(todayRoutine.desc || 'Rutina programada para hoy.') : 'Bitácora de entrenamiento, progreso y disciplina.'}</div>
+          </div>
+          <div class="hero-badge">
+            <div class="hero-badge-value">${totalSessions}</div>
+            <div class="hero-badge-label">Sesiones</div>
+          </div>
+        </div>
+        <div class="hero-grid">
+          <div class="hero-stat">
+            <div class="hero-stat-label">Última sesión</div>
+            <div class="hero-stat-value">${latest ? formatDate(latest.date) : 'Sin registro'}</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">Series hechas</div>
+            <div class="hero-stat-value">${completedSets}</div>
+          </div>
+        </div>
+      </div>
+      ${draftCard}
+      ${ROUTINES.map(r => {
+        const last = sessions.find(s => s.routineId === r.id) || null;
+        const lastText = last ? formatDate(last.date) : 'Sin sesiones';
+        const totalSets = r.exercises.reduce((acc, ex) => acc + ex.sets, 0);
+        return `
+          <div class="routine-card tap-card clean-home" onclick="viewRoutine('${r.id}')" oncontextmenu="event.preventDefault(); editRoutine('${r.id}')">
+            <div class="routine-emoji routine-mark">${escapeHtml(r.emoji || '🏋️')}</div>
+            <div class="routine-info">
+              <div class="routine-name">${escapeHtml(r.name)}</div>
+              <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
+              <div class="routine-meta" style="margin-top:6px;">${totalSets} series · Última: ${lastText}</div>
+            </div>
+            <div class="day-badge">
+              <div class="day-badge-value">${escapeHtml(dayShort(r.day))}</div>
+              <div class="day-badge-label">día</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  };
+
+  renderHistory = function(){
+    const sessions = getSessions();
+    const list = document.getElementById('historyList');
+    if (!list) return;
+    if (sessions.length === 0) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin sesiones registradas.<br>Selecciona una rutina para empezar.</div></div>`;
+      return;
+    }
+
+    const totalSets = sessions.reduce((acc, s) => acc + s.exercises.reduce((sum, ex) => sum + ex.sets.filter(st => st.done).length, 0), 0);
+    const totalVolume = sessions.reduce((acc, s) => acc + s.exercises.reduce((sum, ex) => sum + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0), 0);
+
+    list.innerHTML = `
+      <div class="history-summary-grid">
+        <div class="history-summary-card"><div class="history-summary-label">Sesiones</div><div class="history-summary-value">${sessions.length}</div></div>
+        <div class="history-summary-card"><div class="history-summary-label">Series hechas</div><div class="history-summary-value">${totalSets}</div></div>
+        <div class="history-summary-card"><div class="history-summary-label">Volumen</div><div class="history-summary-value">${Math.round(totalVolume).toLocaleString()}</div></div>
+        <div class="history-summary-card"><div class="history-summary-label">Última</div><div class="history-summary-value">${formatDate(sessions[0].date)}</div></div>
+      </div>
+      ${sessions.map((s, i) => {
+        const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
+        const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
+        return `
+          <div class="history-card session-compact clean-history-card"
+            onclick="if(!window.__forjaLongPressDone){showDetail(${i})} window.__forjaLongPressDone=false;"
+            oncontextmenu="event.preventDefault(); openSessionActions(${i});"
+            onpointerdown="forjaStartLongPress(event, ${i})"
+            onpointerup="forjaEndLongPress()"
+            onpointerleave="forjaEndLongPress()"
+            onpointercancel="forjaEndLongPress()">
+            <div class="history-clean-top">
+              <div class="history-symbol">${escapeHtml(routineEmojiBySession(s))}</div>
+              <div class="history-clean-main">
+                <div class="history-name">${escapeHtml(s.routineName)}</div>
+                <div class="routine-meta" style="margin-top:4px;">${s.exercises.length} ejercicios registrados</div>
+              </div>
+              <div class="history-date-clean">${formatDate(s.date)}</div>
+            </div>
+            <div class="history-stats history-compact-stats">
+              <div class="history-stat"><strong>${doneSets}</strong>series</div>
+              <div class="history-stat"><strong>${Math.round(volume).toLocaleString()}</strong>vol.</div>
+              <div class="history-stat"><strong>${s.exercises.length}</strong>ejercicios</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  };
 })();
 
 initApp();
