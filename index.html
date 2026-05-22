@@ -4484,5 +4484,131 @@ async function initApp() {
     };
   };
 })();
+/* === FORJA PATCH MOBILE 3: temporizador grande visible sin empalmar === */
+(function () {
+  function injectForjaBigTimerStyles() {
+    if (document.getElementById('forjaBigTimerStyles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'forjaBigTimerStyles';
+    style.textContent = `
+      body.training-active #sessionScreen > .timer-wrap {
+        display: none !important;
+        position: sticky !important;
+        top: calc(env(safe-area-inset-top, 0px) + 52px) !important;
+        left: auto !important;
+        right: auto !important;
+        width: calc(100% - 24px) !important;
+        margin: 8px 12px 12px !important;
+        padding: 12px 12px !important;
+        z-index: 3480 !important;
+        background: rgba(18, 5, 31, 0.96) !important;
+        border: 1px solid rgba(201,164,76,0.24) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 14px 30px rgba(0,0,0,0.30) !important;
+        pointer-events: auto !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 12px !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap .rest-timer.visible {
+        display: block !important;
+        font-size: 56px !important;
+        line-height: 0.9 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        color: #a56dff !important;
+        text-shadow:
+          0 0 18px rgba(165,109,255,0.42),
+          0 0 36px rgba(165,109,255,0.24) !important;
+        text-align: left !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap .timer-controls.visible {
+        display: grid !important;
+        grid-template-columns: repeat(2, 58px) !important;
+        gap: 7px !important;
+        justify-content: end !important;
+        max-width: none !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap .timer-control-btn {
+        width: 58px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(201,164,76,0.28) !important;
+        color: #d8b35a !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions {
+        z-index: 3600 !important;
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function moveTimerIntoSession() {
+    const timerWrap = document.querySelector('.timer-wrap');
+    const sessionScreen = document.getElementById('sessionScreen');
+    const actions = document.querySelector('#sessionScreen .session-legacy-actions');
+
+    if (!timerWrap || !sessionScreen || !actions) return;
+
+    if (timerWrap.parentElement !== sessionScreen) {
+      actions.insertAdjacentElement('afterend', timerWrap);
+    }
+
+    const timerVisible = document.getElementById('timerDisplay')?.classList.contains('visible');
+    if (timerVisible) document.body.classList.add('timer-active');
+  }
+
+  const previousEnterTrainingMode = window.enterTrainingMode;
+  window.enterTrainingMode = function () {
+    if (typeof previousEnterTrainingMode === 'function') {
+      previousEnterTrainingMode();
+    } else {
+      document.body.classList.add('training-active');
+    }
+
+    injectForjaBigTimerStyles();
+    moveTimerIntoSession();
+  };
+
+  const previousStartTimer = window.startTimer;
+  window.startTimer = function (seconds) {
+    injectForjaBigTimerStyles();
+    moveTimerIntoSession();
+
+    if (typeof previousStartTimer === 'function') {
+      previousStartTimer(seconds);
+    }
+
+    document.body.classList.add('timer-active');
+    moveTimerIntoSession();
+  };
+
+  const previousStopTimer = window.stopTimer;
+  window.stopTimer = function () {
+    if (typeof previousStopTimer === 'function') {
+      previousStopTimer();
+    }
+
+    document.body.classList.remove('timer-active');
+  };
+
+  injectForjaBigTimerStyles();
+})();
 initApp();
 </script>
