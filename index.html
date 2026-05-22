@@ -8467,44 +8467,11 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
 
 
 
-<!-- FORJA CORRECCIÓN INTEGRADA 2026-05-22: barra inferior sin corte + entrenamiento sin huecos -->
-<style id="forja-correccion-integrada-0522">
-  html,
-  body {
-    width: 100% !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-    background-color: #07010d !important;
-  }
-
-  body:not(.training-active) .header {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    width: 100% !important;
-    max-width: 480px !important;
-    height: auto !important;
-    min-height: 0 !important;
-    margin: 0 auto !important;
-    padding: calc(42px + env(safe-area-inset-top, 0px)) 28px 26px !important;
-    z-index: 20 !important;
-    pointer-events: auto !important;
-  }
-
-  body:not(.training-active) .screen {
-    padding: 22px 20px calc(138px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  body:not(.training-active) .screen.active {
-    display: block !important;
-    height: calc(100dvh - 190px - env(safe-area-inset-top, 0px)) !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior-y: contain !important;
-  }
-
-  body:not(.training-active) .nav {
+<!-- === FORJA AJUSTE VISUAL REAL 2026-05-22: barra inferior y entrenamiento activo === -->
+<style id="forja-ajuste-visual-real-0522">
+  /* Barra inferior: baja, pero sin quedar mordida por el borde del iPhone. */
+  body:not(.training-active) .nav,
+  .nav {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 7px !important;
@@ -8512,44 +8479,45 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
     left: 50% !important;
     right: auto !important;
     top: auto !important;
-    bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: 12px !important;
     transform: translateX(-50%) !important;
-    width: calc(100% - 36px) !important;
-    max-width: 444px !important;
-    min-height: 76px !important;
+    width: calc(100% - 32px) !important;
+    max-width: 448px !important;
+    min-height: 74px !important;
     margin: 0 !important;
-    padding: 8px !important;
+    padding: 7px !important;
     z-index: 9000 !important;
-    border-radius: 30px !important;
+    border-radius: 28px !important;
     overflow: visible !important;
   }
 
-  body:not(.training-active) .nav-btn {
+  body:not(.training-active) .nav-btn,
+  .nav-btn {
     height: 58px !important;
     min-height: 58px !important;
     padding: 0 !important;
     border-radius: 22px !important;
-    font-size: 27px !important;
+    font-size: 25px !important;
     line-height: 1 !important;
   }
 
-  @media (max-width: 390px) {
-    body:not(.training-active) .header {
-      padding-left: 24px !important;
-      padding-right: 24px !important;
-    }
-
-    body:not(.training-active) .screen {
-      padding-left: 18px !important;
-      padding-right: 18px !important;
-    }
-
-    body:not(.training-active) .nav {
-      width: calc(100% - 34px) !important;
-      bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
-    }
+  body:not(.training-active) .screen {
+    padding-bottom: 112px !important;
   }
 
+  body:not(.training-active) .screen.active {
+    height: calc(100dvh - var(--forja-header-space, 170px)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+  }
+
+  /* Si hay entrenamiento minimizado, no debe aparecer una tarjeta gigante de temporizador encima del inicio. */
+  body.timer-active:not(.training-active) > .timer-wrap {
+    display: none !important;
+  }
+
+  /* Entrenamiento activo: sin hueco enorme arriba, pero protegido de la hora/isla dinámica. */
   body.training-active {
     overflow: hidden !important;
     background: #07010d !important;
@@ -8571,7 +8539,7 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
     max-width: 480px !important;
     height: 100dvh !important;
     margin: 0 !important;
-    padding: calc(env(safe-area-inset-top, 0px) + 12px) 0 calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
+    padding: 76px 0 18px !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: contain !important;
@@ -8579,23 +8547,43 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
     background:
       radial-gradient(circle at 50% -12%, rgba(96,42,143,.28), transparent 34%),
       linear-gradient(180deg, #07010d 0%, #12051e 48%, #050009 100%) !important;
+    scroll-padding-top: 82px !important;
+  }
+
+  body.training-active #sessionScreen.screen.active::before {
+    content: "" !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: min(100vw, 480px) !important;
+    height: 72px !important;
+    z-index: 9100 !important;
+    pointer-events: none !important;
+    background:
+      linear-gradient(180deg, rgba(7,1,13,.98) 0%, rgba(7,1,13,.82) 62%, rgba(7,1,13,0) 100%) !important;
   }
 
   body.training-active #sessionScreen .session-legacy-actions {
     display: flex !important;
-    position: absolute !important;
-    top: calc(env(safe-area-inset-top, 0px) + 26px) !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 8200 !important;
+    position: fixed !important;
+    top: 56px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100vw - 32px), 448px) !important;
+    height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 9300 !important;
     justify-content: space-between !important;
     align-items: center !important;
     gap: 10px !important;
-    width: 100% !important;
-    height: 40px !important;
-    margin: 0 !important;
-    padding: 0 26px !important;
     background: transparent !important;
+    pointer-events: none !important;
+  }
+
+  body.training-active #sessionScreen .session-legacy-actions button {
     pointer-events: auto !important;
   }
 
@@ -8612,7 +8600,7 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
     border: 1px solid rgba(201,164,76,0.34) !important;
     color: #e5c16a !important;
     font-family: 'DM Sans', sans-serif !important;
-    font-size: 26px !important;
+    font-size: 25px !important;
     font-weight: 900 !important;
     line-height: 1 !important;
     box-shadow: 0 8px 18px rgba(0,0,0,0.18) !important;
@@ -8625,50 +8613,49 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
     min-height: 38px !important;
     padding: 10px 16px !important;
     border-radius: 999px !important;
-    background: linear-gradient(180deg, #ff5d68 0%, #c91f32 100%) !important;
-    border: 1px solid rgba(255,93,104,0.60) !important;
-    color: #ffffff !important;
+    background: rgba(255, 79, 98, .12) !important;
+    border: 1px solid rgba(255, 79, 98, .50) !important;
+    color: #ff6b78 !important;
     font-family: 'DM Sans', sans-serif !important;
     font-size: 11px !important;
     font-weight: 900 !important;
     letter-spacing: .8px !important;
     line-height: 1 !important;
-    box-shadow: 0 8px 18px rgba(255,93,104,0.18) !important;
+    box-shadow: 0 8px 18px rgba(255,93,104,0.15) !important;
   }
 
   body.training-active .session-header {
-    margin: 0 18px 18px !important;
-    padding: calc(env(safe-area-inset-top, 0px) + 82px) 22px 24px !important;
-    border-radius: 30px !important;
+    margin: 0 18px 16px !important;
+    padding: 18px 20px 18px !important;
+    border-radius: 28px !important;
     border: 1px solid rgba(226,194,125,.18) !important;
     background:
       linear-gradient(145deg,rgba(255,244,212,.070) 0%,rgba(255,255,255,.020) 42%,rgba(0,0,0,.13) 100%),
-      radial-gradient(circle at 100% 0%,rgba(112,52,164,.13),transparent 38%),
       rgba(28,10,45,.60) !important;
     box-shadow: 0 18px 42px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,245,214,.13) !important;
     overflow: hidden !important;
   }
 
   body.training-active .session-title {
-    font-size: 56px !important;
-    line-height: .86 !important;
+    font-size: 42px !important;
+    line-height: .90 !important;
     letter-spacing: .13em !important;
   }
 
   body.training-active .session-date {
-    font-size: 14px !important;
-    letter-spacing: .16em !important;
+    font-size: 13px !important;
+    letter-spacing: .14em !important;
   }
 
   body.training-active .session-kicker {
     display: block !important;
-    margin: 10px 0 12px !important;
+    margin: 8px 0 10px !important;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
     color: #d9b764 !important;
-    font-size: 15px !important;
-    letter-spacing: .16em !important;
+    font-size: 13px !important;
+    letter-spacing: .15em !important;
   }
 
   body.training-active .session-overview {
@@ -8683,21 +8670,80 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
     overflow: hidden !important;
   }
 
+  /* Temporizador dentro del ejercicio: visible, pero no pegado al status bar. */
+  body.training-active .forja-inline-timer-slot.forja-timer-mounted {
+    margin: 14px 22px 18px !important;
+    padding: 15px 18px !important;
+  }
+
+  body.training-active #sessionScreen > .timer-wrap,
+  body.training-active .header > .timer-wrap,
+  body.training-active .session-legacy-actions + .timer-wrap {
+    display: none !important;
+  }
+
   body.training-active .finish-btn {
     position: static !important;
     width: calc(100% - 36px) !important;
     max-width: none !important;
-    margin: 24px 18px calc(env(safe-area-inset-bottom, 0px) + 30px) !important;
+    margin: 24px 18px 28px !important;
     transform: none !important;
   }
 
-  body.training-active #sessionScreen > .timer-wrap {
-    position: sticky !important;
-    top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
-    width: calc(100% - 36px) !important;
-    margin: 0 18px 18px !important;
+  @media (max-width: 390px) {
+    body:not(.training-active) .nav {
+      bottom: 10px !important;
+      width: calc(100% - 28px) !important;
+    }
+    body.training-active #sessionScreen.screen.active {
+      padding-top: 74px !important;
+    }
+    body.training-active #sessionScreen .session-legacy-actions {
+      top: 54px !important;
+      width: min(calc(100vw - 28px), 452px) !important;
+    }
   }
 </style>
+
+<script id="forja-ajuste-visual-real-0522-js">
+(function(){
+  window.setupTrainingSwipeToHide = function(){ return; };
+
+  window.minimizeSession = function(){
+    if (!currentSession) { showScreen('home'); return; }
+    if (!editingSessionKey) saveCurrentDraft();
+    document.body.classList.remove('training-active');
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+    var home = document.getElementById('homeScreen');
+    if (home) home.classList.add('active');
+    var firstNav = document.querySelectorAll('.nav-btn')[0];
+    if (firstNav) firstNav.classList.add('active');
+    renderHome();
+    showToast('✅ Entrenamiento oculto');
+  };
+
+  var previousEnterTrainingMode = window.enterTrainingMode;
+  window.enterTrainingMode = function(){
+    if (typeof previousEnterTrainingMode === 'function') previousEnterTrainingMode();
+    else document.body.classList.add('training-active');
+    document.body.classList.add('training-active');
+    var actions = document.querySelector('#sessionScreen .session-legacy-actions');
+    if (!actions) return;
+    var buttons = actions.querySelectorAll('button');
+    if (buttons[0]) {
+      buttons[0].textContent = '⌄';
+      buttons[0].setAttribute('aria-label','Ocultar entrenamiento');
+      buttons[0].onclick = window.minimizeSession;
+    }
+    if (buttons[1]) {
+      buttons[1].textContent = 'DESCARTAR';
+      buttons[1].setAttribute('aria-label','Descartar entrenamiento');
+      buttons[1].onclick = window.discardSession;
+    }
+  };
+})();
+</script>
 
 </body>
 </html>
