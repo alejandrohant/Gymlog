@@ -1922,6 +1922,191 @@ body.training-active .session-header {
   text-align: center;
 }
 
+
+/* === FORJA CLEAN LIQUID GLASS 26.5 — tarjetas limpias, sin botones basura === */
+:root {
+  --glass-card: rgba(30, 14, 47, 0.54);
+  --glass-card-strong: rgba(42, 24, 61, 0.46);
+  --glass-border: rgba(247, 218, 156, 0.18);
+  --glass-border-soft: rgba(255,255,255,0.08);
+  --glass-glow: rgba(215, 178, 92, 0.16);
+  --glass-shadow-clean: 0 22px 55px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.13), inset 0 -1px 0 rgba(0,0,0,0.22);
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% -12%, rgba(118, 58, 168, 0.28), transparent 34%),
+    radial-gradient(circle at 12% 7%, rgba(215,178,92,0.08), transparent 25%),
+    linear-gradient(180deg, #0a0312 0%, #130720 45%, #08010d 100%) !important;
+}
+
+.dashboard-hero,
+.routine-card,
+.smart-card,
+.history-card,
+.profile-shell,
+.detail-shell,
+.exercise-card,
+.session-overview,
+.session-header,
+.history-summary-card,
+.hero-stat,
+.profile-stat,
+.session-stat-card,
+.draft-card,
+.analysis-box {
+  position: relative !important;
+  overflow: hidden !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.105) 0%, rgba(255,255,255,0.035) 42%, rgba(255,255,255,0.018) 100%),
+    radial-gradient(circle at 14% 0%, rgba(255,255,255,0.10), transparent 28%),
+    radial-gradient(circle at 100% 0%, rgba(215,178,92,0.105), transparent 30%),
+    var(--glass-card) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-clean) !important;
+  backdrop-filter: blur(32px) saturate(1.32) contrast(1.04) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(1.32) contrast(1.04) !important;
+}
+
+.dashboard-hero::before,
+.routine-card::before,
+.smart-card::before,
+.history-card::before,
+.profile-shell::before,
+.detail-shell::before,
+.exercise-card::before,
+.session-overview::before,
+.session-header::before,
+.draft-card::before,
+.analysis-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.135), transparent 34%),
+    linear-gradient(90deg, rgba(255,255,255,0.06), transparent 18%, transparent 82%, rgba(255,255,255,0.035));
+  opacity: 0.58;
+  mix-blend-mode: screen;
+}
+
+.dashboard-hero > *,
+.routine-card > *,
+.smart-card > *,
+.history-card > *,
+.profile-shell > *,
+.detail-shell > *,
+.exercise-card > *,
+.session-overview > *,
+.session-header > *,
+.draft-card > *,
+.analysis-box > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-hero {
+  padding: 19px 19px 18px !important;
+  border-radius: 26px !important;
+}
+
+.routine-card {
+  min-height: 112px !important;
+  padding: 17px 17px !important;
+  border-radius: 25px !important;
+  gap: 15px !important;
+}
+
+.smart-card,
+.draft-card {
+  border-radius: 24px !important;
+  padding: 16px 17px !important;
+}
+
+.tap-card {
+  cursor: pointer;
+}
+
+.tap-card:active,
+.routine-card:active,
+.dashboard-hero:active {
+  transform: scale(0.988) !important;
+  border-color: rgba(247,218,156,0.30) !important;
+}
+
+.routine-emoji.routine-mark {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 18px !important;
+  font-family: 'Bebas Neue', sans-serif !important;
+  font-size: 24px !important;
+  letter-spacing: 0.08em !important;
+  color: #edcf79 !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.11), rgba(255,255,255,0.025)),
+    rgba(215,178,92,0.105) !important;
+  border: 1px solid rgba(247,218,156,0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 10px 22px rgba(0,0,0,0.20) !important;
+  text-shadow: 0 0 16px rgba(215,178,92,0.22) !important;
+}
+
+.routine-name {
+  font-size: 18px !important;
+  letter-spacing: -0.25px !important;
+}
+
+.routine-meta {
+  color: rgba(232,222,239,0.68) !important;
+}
+
+.hero-badge,
+.profile-badge,
+.detail-badge,
+.history-date-badge,
+.eyebrow,
+.session-kicker {
+  background: rgba(255,255,255,0.052) !important;
+  border: 1px solid rgba(247,218,156,0.16) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.09) !important;
+}
+
+.hero-stat,
+.profile-stat,
+.history-summary-card,
+.session-stat-card,
+.history-stat {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.075) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07) !important;
+}
+
+.routine-inline-actions,
+.today-card .mini-actions {
+  display: none !important;
+}
+
+.history-export-btn {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(247,218,156,0.13) !important;
+  color: rgba(237,207,121,0.82) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+.mini-btn,
+.ghost-btn,
+.delete-btn,
+.timer-control-btn,
+.history-export-btn,
+.session-more-btn {
+  border-radius: 16px !important;
+}
+
+@media (max-width: 390px) {
+  .routine-card { min-height: 106px !important; }
+  .routine-emoji.routine-mark { width: 50px !important; height: 50px !important; font-size: 22px !important; }
+}
+
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -3174,6 +3359,18 @@ function goBack() {
   showScreen('home');
 }
 
+
+function getRoutineMark(routine) {
+  const name = normalizeText(routine?.name || '');
+  if (name.includes('push a')) return 'PA';
+  if (name.includes('pull a')) return 'PU';
+  if (name.includes('legs a')) return 'LA';
+  if (name.includes('push b')) return 'PB';
+  if (name.includes('pull b')) return 'PH';
+  if (name.includes('legs b')) return 'LB';
+  return String(routine?.name || 'F').trim().slice(0, 2).toUpperCase();
+}
+
 function renderHome() {
   const grid = document.getElementById('routineGrid');
   const sessions = getSessions();
@@ -3197,23 +3394,10 @@ function renderHome() {
     </div>
   ` : '';
 
-  const todayCard = todayRoutine ? `
-    <div class="smart-card">
-      <div class="smart-card-title">Hoy toca</div>
-      <div class="smart-card-text"><strong>${escapeHtml(todayRoutine.name)}</strong> · ${escapeHtml(todayRoutine.desc || '')}</div>
-      <div class="mini-actions">
-        <button class="mini-btn primary" onclick="viewRoutine('${todayRoutine.id}')">Abrir rutina</button>
-      </div>
-    </div>
-  ` : `
-    <div class="smart-card">
-      <div class="smart-card-title">Hoy</div>
-      <div class="smart-card-text">No hay rutina programada para este día.</div>
-    </div>
-  `;
+  const todayCard = '';
 
   grid.innerHTML = `
-    <div class="dashboard-hero">
+    <div class="dashboard-hero ${todayRoutine ? 'tap-card' : ''}" ${todayRoutine ? `onclick="viewRoutine('${todayRoutine.id}')"` : ''}>
       <div class="dashboard-hero-top">
         <div>
           <div class="eyebrow">FORJA</div>
@@ -3243,15 +3427,12 @@ function renderHome() {
       const lastText = last ? formatDate(last.date) : 'Sin sesiones';
       const totalSets = r.exercises.reduce((acc, ex) => acc + ex.sets, 0);
       return `
-        <div class="routine-card" onclick="viewRoutine('${r.id}')">
-          <div class="routine-emoji">${escapeHtml(r.emoji)}</div>
+        <div class="routine-card tap-card" onclick="viewRoutine('${r.id}')" oncontextmenu="event.preventDefault(); editRoutine('${r.id}')">
+          <div class="routine-emoji routine-mark">${escapeHtml(getRoutineMark(r))}</div>
           <div class="routine-info">
             <div class="routine-name">${escapeHtml(r.name)}</div>
             <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
             <div class="routine-meta" style="margin-top:6px;color:var(--accent);">${totalSets} series · Última: ${lastText}</div>
-            <div class="routine-inline-actions">
-              <button class="mini-btn" onclick="event.stopPropagation(); editRoutine('${r.id}')">Editar</button>
-            </div>
           </div>
           <div class="hero-badge" style="min-width:62px;padding:10px 8px;">
             <div class="hero-badge-value" style="font-size:24px;">${escapeHtml((r.day || '').slice(0,3))}</div>
