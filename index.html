@@ -3133,6 +3133,128 @@ body.training-active #sessionScreen.screen.active{
 }
 
 </style>
+
+<!-- FORJA PATCH FINAL: FONDO CONTINUO + SAFE AREA -->
+<style id="forja-safe-area-background-final">
+/* Fondo único para todo el viewport: elimina el rectángulo oscuro inferior. */
+html,
+body {
+  width: 100% !important;
+  min-height: 100% !important;
+  background: #08010e !important;
+}
+
+body {
+  position: relative !important;
+  isolation: isolate !important;
+  max-width: 480px !important;
+  margin: 0 auto !important;
+  overflow: hidden !important;
+  padding-top: 0 !important;
+  background: transparent !important;
+}
+
+body::before {
+  content: "" !important;
+  position: fixed !important;
+  inset: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(100vw, 480px) !important;
+  height: 100dvh !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(96,42,143,0.30), transparent 36%),
+    radial-gradient(circle at 8% 5%, rgba(217,183,100,0.055), transparent 28%),
+    linear-gradient(180deg, #08010e 0%, #12051e 46%, #08010e 100%) !important;
+}
+
+/* Header correcto para iPhone: nunca invade la hora ni la isla dinámica. */
+.header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 4000 !important;
+  height: auto !important;
+  min-height: calc(108px + env(safe-area-inset-top, 0px)) !important;
+  padding: calc(34px + env(safe-area-inset-top, 0px)) 22px 18px !important;
+  background: rgba(8, 1, 14, 0.82) !important;
+  border-bottom: 1px solid rgba(226,194,125,0.10) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.22) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.16) !important;
+  backdrop-filter: blur(22px) saturate(1.16) !important;
+}
+
+.header-title {
+  font-size: 36px !important;
+  line-height: 0.88 !important;
+  letter-spacing: 0.17em !important;
+}
+
+.header-sub {
+  margin-top: 10px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.15em !important;
+}
+
+/* Scroll estable debajo del header y por encima de la barra inferior. */
+.screen {
+  background: transparent !important;
+  padding: 24px 20px calc(154px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.screen.active {
+  height: calc(100dvh - 108px - env(safe-area-inset-top, 0px)) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* Barra inferior sobre el mismo fondo, sin crear bloque negro debajo. */
+.nav {
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  background: rgba(15, 4, 27, 0.70) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.25) !important;
+  backdrop-filter: blur(30px) saturate(1.25) !important;
+}
+
+/* En entrenamiento activo se conserva pantalla completa sin afectar el inicio. */
+body.training-active::before {
+  background:
+    radial-gradient(circle at 50% -12%, rgba(96,42,143,0.22), transparent 35%),
+    linear-gradient(180deg, #08010e 0%, #12051e 48%, #08010e 100%) !important;
+}
+
+body.training-active .header {
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+body.training-active #sessionScreen.screen.active {
+  height: 100dvh !important;
+  padding: 0 0 calc(24px + env(safe-area-inset-bottom,0px)) !important;
+}
+
+@media (max-width: 390px) {
+  .header {
+    min-height: calc(104px + env(safe-area-inset-top, 0px)) !important;
+    padding: calc(32px + env(safe-area-inset-top, 0px)) 20px 17px !important;
+  }
+
+  .header-title {
+    font-size: 34px !important;
+  }
+
+  .screen.active {
+    height: calc(100dvh - 104px - env(safe-area-inset-top, 0px)) !important;
+  }
+}
+</style>
+<!-- /FORJA PATCH FINAL: FONDO CONTINUO + SAFE AREA -->
+
 </head>
 <body style="background-color:#12051f">
 
