@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#12051f">
+<meta name="theme-color" content="#0b0613">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>FORJA — Bitácora de entrenamiento</title>
 <link rel="icon" type="image/png" sizes="512x512" href="forja-icon.png?v=11">
@@ -1913,7 +1913,16 @@ function setSessionsLocal(sessions) {
 }
 
 function getSessions() {
-  return currentUser ? dedupeSessions(cloudSessions) : dedupeSessions(getSessionsLocal());
+  const localSessions = dedupeSessions(getSessionsLocal());
+
+  if (!currentUser) {
+    return localSessions;
+  }
+
+  return dedupeSessions([
+    ...(Array.isArray(cloudSessions) ? cloudSessions : []),
+    ...localSessions
+  ]);
 }
 
 function getLastSession(routineId) {
@@ -1999,7 +2008,15 @@ async function syncLocalSessionsToCloud() {
   }
 
   await loadCloudSessions();
-  setSessionsLocal(dedupeSessions(cloudSessions));
+
+  const mergedSessions = dedupeSessions([
+    ...(Array.isArray(cloudSessions) ? cloudSessions : []),
+    ...localSessions
+  ]);
+
+  cloudSessions = mergedSessions;
+  setSessionsLocal(mergedSessions);
+
   return true;
 }
 
@@ -4950,6 +4967,560 @@ async function initApp() {
 
   injectForjaFinalFixStyles();
 })();
+
+
+/* === FORJA IOS 26 LIQUID GLASS — CAPA FINAL SEGURA 2026-05-22 === */
+(function () {
+  function injectForjaLiquidGlassStyles() {
+    if (document.getElementById('forjaLiquidGlassStyles0522')) return;
+
+    const style = document.createElement('style');
+    style.id = 'forjaLiquidGlassStyles0522';
+    style.textContent = `
+      :root {
+        --ios-bg-0: #090511;
+        --ios-bg-1: #12051f;
+        --ios-bg-2: #261038;
+        --ios-glass: rgba(255,255,255,0.105);
+        --ios-glass-strong: rgba(255,255,255,0.155);
+        --ios-glass-soft: rgba(255,255,255,0.065);
+        --ios-line: rgba(255,255,255,0.18);
+        --ios-line-gold: rgba(216,179,90,0.32);
+        --ios-text: #fbf7ff;
+        --ios-muted: rgba(235,226,246,0.68);
+        --ios-gold: #d8b35a;
+        --ios-gold-2: #b98d35;
+        --ios-purple: #a56dff;
+        --ios-red: #ff4d5f;
+        --ios-green: #54f095;
+        --ios-blur: blur(30px) saturate(1.65);
+        --ios-shadow: 0 22px 60px rgba(0,0,0,0.42);
+        --ios-inner: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.055);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --bg: var(--ios-bg-1);
+        --bg2: var(--ios-bg-2);
+        --surface: var(--ios-glass);
+        --surface-strong: var(--ios-glass-strong);
+        --surface-soft: var(--ios-glass-soft);
+        --surface2: rgba(255,255,255,0.075);
+        --border: var(--ios-line);
+        --border-strong: var(--ios-line-gold);
+        --accent: var(--ios-gold);
+        --accent2: var(--ios-gold-2);
+        --accent-soft: rgba(216,179,90,0.14);
+        --text: var(--ios-text);
+        --muted: var(--ios-muted);
+        --danger: var(--ios-red);
+        --success: var(--ios-green);
+        --shadow: var(--ios-shadow);
+      }
+
+      html {
+        min-height: 100%;
+        background:
+          radial-gradient(circle at 18% 0%, rgba(165,109,255,0.32), transparent 34%),
+          radial-gradient(circle at 86% 8%, rgba(216,179,90,0.18), transparent 32%),
+          radial-gradient(circle at 50% 100%, rgba(85,31,120,0.52), transparent 42%),
+          linear-gradient(180deg, #08040f 0%, #12051f 48%, #07030c 100%) !important;
+      }
+
+      body {
+        min-height: 100dvh !important;
+        background:
+          radial-gradient(circle at 20% 0%, rgba(165,109,255,0.28), transparent 34%),
+          radial-gradient(circle at 90% 10%, rgba(216,179,90,0.14), transparent 30%),
+          linear-gradient(180deg, rgba(18,5,31,0.82) 0%, rgba(8,4,15,0.94) 100%) !important;
+        color: var(--ios-text) !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'DM Sans', system-ui, sans-serif !important;
+        letter-spacing: -0.01em;
+      }
+
+      body::before {
+        content: '' !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: -1 !important;
+        pointer-events: none !important;
+        background:
+          linear-gradient(120deg, rgba(255,255,255,0.055), transparent 24%, rgba(255,255,255,0.025) 52%, transparent 80%),
+          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 25%) !important;
+      }
+
+      .header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 120 !important;
+        max-width: 480px !important;
+        margin: 0 auto !important;
+        padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 12px !important;
+        background: linear-gradient(180deg, rgba(18,5,31,0.76), rgba(18,5,31,0.42)) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.18) !important;
+        backdrop-filter: var(--ios-blur) !important;
+        -webkit-backdrop-filter: var(--ios-blur) !important;
+      }
+
+      .header-title,
+      .hero-title,
+      .profile-name,
+      .detail-title,
+      .session-title,
+      .session-overview-title,
+      .edit-title {
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'DM Sans', system-ui, sans-serif !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.055em !important;
+        color: var(--ios-text) !important;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.08), 0 14px 34px rgba(165,109,255,0.22) !important;
+      }
+
+      .header-title {
+        font-size: 31px !important;
+        line-height: 0.95 !important;
+      }
+
+      .header-sub,
+      .hero-sub,
+      .profile-sub,
+      .detail-sub,
+      .routine-meta,
+      .session-date,
+      .exercise-submeta,
+      .form-label {
+        color: var(--ios-muted) !important;
+      }
+
+      .nav {
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
+        top: auto !important;
+        transform: translateX(-50%) !important;
+        width: min(calc(100% - 24px), 456px) !important;
+        margin: 0 !important;
+        z-index: 5200 !important;
+        padding: 7px !important;
+        gap: 6px !important;
+        border-radius: 26px !important;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.075)),
+          rgba(30,16,45,0.62) !important;
+        border: 1px solid rgba(255,255,255,0.22) !important;
+        box-shadow: 0 18px 46px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.24) !important;
+        backdrop-filter: blur(34px) saturate(1.85) !important;
+        -webkit-backdrop-filter: blur(34px) saturate(1.85) !important;
+      }
+
+      .nav-btn {
+        min-height: 44px !important;
+        border-radius: 20px !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'DM Sans', system-ui, sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.015em !important;
+        text-transform: none !important;
+        color: rgba(251,247,255,0.64) !important;
+        background: transparent !important;
+      }
+
+      .nav-btn.active {
+        color: #16091f !important;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.80), rgba(216,179,90,0.88)),
+          linear-gradient(180deg, #efd27a, #b98d35) !important;
+        box-shadow: 0 10px 24px rgba(216,179,90,0.24), inset 0 1px 0 rgba(255,255,255,0.50) !important;
+      }
+
+      .screen {
+        padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 112px) !important;
+      }
+
+      .screen.active {
+        height: calc(100dvh - 88px) !important;
+      }
+
+      .dashboard-hero,
+      .profile-shell,
+      .detail-shell,
+      .routine-card,
+      .exercise-card,
+      .history-card,
+      .session-overview,
+      .session-header,
+      .smart-card,
+      .draft-card,
+      .analysis-box,
+      .edit-overlay-card,
+      .hero-stat,
+      .profile-stat,
+      .history-summary-card,
+      .session-stat-card,
+      .profile-note,
+      .detail-notes,
+      .history-stat {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.145), rgba(255,255,255,0.055)),
+          rgba(34,17,50,0.56) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        box-shadow: var(--ios-shadow), var(--ios-inner) !important;
+        backdrop-filter: var(--ios-blur) !important;
+        -webkit-backdrop-filter: var(--ios-blur) !important;
+      }
+
+      .dashboard-hero,
+      .profile-shell,
+      .detail-shell,
+      .session-overview {
+        border-radius: 32px !important;
+      }
+
+      .routine-card,
+      .exercise-card,
+      .history-card {
+        border-radius: 26px !important;
+      }
+
+      .dashboard-hero::after,
+      .profile-shell::after,
+      .detail-shell::after {
+        background:
+          radial-gradient(circle at 20% 0%, rgba(255,255,255,0.20), transparent 34%),
+          radial-gradient(circle at 92% 12%, rgba(216,179,90,0.20), transparent 38%) !important;
+      }
+
+      .eyebrow,
+      .session-kicker,
+      .prev-badge,
+      .history-date-badge {
+        background: rgba(216,179,90,0.16) !important;
+        border: 1px solid rgba(216,179,90,0.28) !important;
+        color: #f1d37c !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.18) !important;
+      }
+
+      .hero-badge,
+      .profile-badge,
+      .detail-badge,
+      .routine-emoji,
+      .session-progress-ring,
+      .exercise-index,
+      .detail-set-num,
+      .set-num {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.055)),
+          rgba(216,179,90,0.11) !important;
+        border: 1px solid rgba(216,179,90,0.24) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.22) !important;
+        color: var(--ios-gold) !important;
+      }
+
+      .hero-badge-value,
+      .profile-badge-value,
+      .detail-badge-value,
+      .hero-stat-value,
+      .profile-stat-value,
+      .history-summary-value,
+      .session-stat-value {
+        color: var(--ios-text) !important;
+      }
+
+      .set-row {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)),
+          rgba(255,255,255,0.035) !important;
+        border: 1px solid rgba(255,255,255,0.13) !important;
+        border-radius: 18px !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12) !important;
+      }
+
+      .set-input,
+      .notes-input,
+      input[type="email"],
+      input[type="password"],
+      .form-input,
+      .form-textarea,
+      .form-select,
+      select,
+      textarea {
+        min-height: 44px !important;
+        border-radius: 18px !important;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.055)),
+          rgba(9,5,17,0.48) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.13) !important;
+        color: var(--ios-text) !important;
+        backdrop-filter: blur(18px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(1.35) !important;
+      }
+
+      .set-input:focus,
+      .notes-input:focus,
+      input[type="email"]:focus,
+      input[type="password"]:focus,
+      .form-input:focus,
+      .form-textarea:focus,
+      .form-select:focus {
+        border-color: rgba(216,179,90,0.62) !important;
+        box-shadow: 0 0 0 4px rgba(216,179,90,0.14), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+      }
+
+      .set-check {
+        border-radius: 16px !important;
+        background: rgba(255,255,255,0.09) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        color: rgba(251,247,255,0.72) !important;
+      }
+
+      .set-check.done {
+        background: linear-gradient(180deg, #7dffae, #31d879) !important;
+        color: #03130a !important;
+        box-shadow: 0 12px 24px rgba(84,240,149,0.22), inset 0 1px 0 rgba(255,255,255,0.38) !important;
+      }
+
+      .mini-btn,
+      .ghost-btn,
+      .delete-btn,
+      .add-set-btn,
+      .timer-control-btn,
+      button[onclick="exportSessions()"],
+      button[onclick="exportSessionsCsv()"] {
+        min-height: 42px !important;
+        border-radius: 18px !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'DM Sans', system-ui, sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.01em !important;
+        text-transform: none !important;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.065)),
+          rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        color: #f1d37c !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.16) !important;
+        backdrop-filter: blur(18px) saturate(1.4) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(1.4) !important;
+      }
+
+      .mini-btn.primary,
+      .finish-btn,
+      button[onclick="exportSessionsCsv()"] {
+        color: #16091f !important;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.70), rgba(216,179,90,0.90)),
+          linear-gradient(180deg, #f0d37f, #b98d35) !important;
+        border: 1px solid rgba(255,255,255,0.22) !important;
+        box-shadow: 0 18px 36px rgba(216,179,90,0.24), inset 0 1px 0 rgba(255,255,255,0.50) !important;
+      }
+
+      .mini-btn.danger,
+      .delete-btn {
+        background:
+          linear-gradient(180deg, rgba(255,100,112,0.34), rgba(255,77,95,0.16)),
+          rgba(255,77,95,0.12) !important;
+        border-color: rgba(255,77,95,0.34) !important;
+        color: #ffe2e6 !important;
+      }
+
+      .finish-btn {
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 84px) !important;
+        border-radius: 24px !important;
+        max-width: 456px !important;
+      }
+
+      .toast {
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 92px) !important;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.10)),
+          rgba(31,17,48,0.84) !important;
+        color: var(--ios-text) !important;
+        border: 1px solid rgba(255,255,255,0.20) !important;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.20) !important;
+        backdrop-filter: blur(28px) saturate(1.8) !important;
+        -webkit-backdrop-filter: blur(28px) saturate(1.8) !important;
+      }
+
+      .edit-overlay {
+        background:
+          radial-gradient(circle at top, rgba(165,109,255,0.20), transparent 30%),
+          rgba(2,1,5,0.62) !important;
+        backdrop-filter: blur(20px) saturate(1.5) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.5) !important;
+      }
+
+      .edit-overlay-card {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.075)),
+          rgba(31,17,48,0.78) !important;
+      }
+
+      .prev-info,
+      .analysis-box {
+        background:
+          linear-gradient(180deg, rgba(216,179,90,0.12), rgba(255,255,255,0.055)),
+          rgba(255,255,255,0.045) !important;
+        border-color: rgba(216,179,90,0.22) !important;
+      }
+
+      .rest-timer {
+        color: #c7a4ff !important;
+        text-shadow:
+          0 0 18px rgba(199,164,255,0.48),
+          0 0 42px rgba(165,109,255,0.28) !important;
+      }
+
+      body.training-active {
+        background: #090511 !important;
+      }
+
+      body.training-active .header {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: 0 !important;
+      }
+
+      body.training-active #sessionScreen.screen.active {
+        width: min(100vw, 480px) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px) !important;
+        background:
+          radial-gradient(circle at 18% 0%, rgba(165,109,255,0.24), transparent 34%),
+          radial-gradient(circle at 92% 6%, rgba(216,179,90,0.14), transparent 28%),
+          linear-gradient(180deg, #0b0613 0%, #12051f 50%, #090511 100%) !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions {
+        padding-top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions button:first-child,
+      body.training-active #sessionScreen .session-legacy-actions button:last-child {
+        min-height: 38px !important;
+        border-radius: 999px !important;
+        backdrop-filter: blur(24px) saturate(1.65) !important;
+        -webkit-backdrop-filter: blur(24px) saturate(1.65) !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions button:first-child {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.075)),
+          rgba(216,179,90,0.12) !important;
+        border-color: rgba(216,179,90,0.28) !important;
+        color: #f1d37c !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions button:last-child {
+        background:
+          linear-gradient(180deg, rgba(255,77,95,0.76), rgba(201,31,50,0.70)) !important;
+        border-color: rgba(255,255,255,0.18) !important;
+        color: #fff !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap,
+      body.timer-active:not(.training-active) > .timer-wrap {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.075)),
+          rgba(18,5,31,0.68) !important;
+        border: 1px solid rgba(255,255,255,0.20) !important;
+        border-radius: 26px !important;
+        box-shadow: 0 22px 46px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.24) !important;
+        backdrop-filter: blur(34px) saturate(1.85) !important;
+        -webkit-backdrop-filter: blur(34px) saturate(1.85) !important;
+      }
+
+      body.training-active .exercise-card.training-card {
+        margin: 10px 10px 12px !important;
+        border-radius: 26px !important;
+        border-left: 1px solid rgba(255,255,255,0.18) !important;
+        border-right: 1px solid rgba(255,255,255,0.18) !important;
+        overflow: hidden !important;
+      }
+
+      body.training-active .session-header {
+        margin: 10px !important;
+        border-radius: 26px !important;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045)),
+          rgba(34,17,50,0.42) !important;
+        border: 1px solid rgba(255,255,255,0.14) !important;
+      }
+
+      body.training-active .finish-btn {
+        margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px) !important;
+      }
+
+      @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .nav,
+        .header,
+        .dashboard-hero,
+        .profile-shell,
+        .detail-shell,
+        .routine-card,
+        .exercise-card,
+        .history-card,
+        .session-overview,
+        .edit-overlay-card {
+          background: rgba(31,17,48,0.94) !important;
+        }
+      }
+
+      @media (max-width: 390px) {
+        .screen {
+          padding-left: 14px !important;
+          padding-right: 14px !important;
+        }
+
+        .nav {
+          width: min(calc(100% - 18px), 456px) !important;
+        }
+
+        .nav-btn {
+          font-size: 11px !important;
+        }
+
+        .header-title {
+          font-size: 29px !important;
+        }
+
+        .hero-title,
+        .profile-name,
+        .detail-title,
+        .session-title {
+          font-size: 30px !important;
+        }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .routine-card,
+        .exercise-card,
+        .history-card,
+        .mini-btn,
+        .nav-btn,
+        .finish-btn,
+        .set-check {
+          transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease, background 0.18s ease !important;
+        }
+
+        .routine-card:active,
+        .exercise-card:active,
+        .history-card:active,
+        .mini-btn:active,
+        .finish-btn:active,
+        .set-check:active {
+          transform: scale(0.985) !important;
+          filter: brightness(1.08) !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  injectForjaLiquidGlassStyles();
+})();
+
 
 initApp();
 </script>
