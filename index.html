@@ -1818,6 +1818,110 @@ body.training-active .session-header {
   .nav-btn { font-size: 12px !important; }
 }
 
+
+
+/* === FORJA HISTORIAL LIMPIO: una acción visible por sesión === */
+.history-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.history-export-btn,
+.session-more-btn {
+  border: 1px solid rgba(238,210,146,0.16);
+  background: rgba(255,255,255,0.045);
+  color: #d8b866;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+  cursor: pointer;
+}
+
+.history-export-btn {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.history-card.session-compact {
+  padding: 16px !important;
+}
+
+.session-compact .history-top {
+  align-items: flex-start !important;
+  margin-bottom: 12px !important;
+}
+
+.history-main {
+  min-width: 0;
+  flex: 1;
+  cursor: pointer;
+}
+
+.session-date-actions {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.session-more-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 23px;
+  line-height: 1;
+  padding: 0 0 3px;
+}
+
+.history-compact-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 0 !important;
+}
+
+.history-card.session-compact .history-stat {
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.action-sheet-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.action-sheet-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.action-sheet-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.action-sheet-grid .mini-btn {
+  width: 100%;
+  padding: 13px;
+  text-align: center;
+}
+
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -1854,16 +1958,9 @@ body.training-active .session-header {
 </div>
 
 <div id="historyScreen" class="screen">
-  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;">
+  <div class="history-toolbar">
     <div class="section-title" style="margin:0;">SESIONES</div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="exportSessions()" style="padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer">
-        JSON
-      </button>
-      <button onclick="exportSessionsCsv()" style="padding:10px 12px;background:var(--accent);border:none;border-radius:10px;color:#12051f;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer">
-        CSV
-      </button>
-    </div>
+    <button class="history-export-btn" onclick="openExportMenu()">Exportar</button>
   </div>
   <div id="historyList"></div>
 </div>
@@ -3679,29 +3776,90 @@ function renderHistory() {
       const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
       const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
       return `
-        <div class="history-card">
-          <div class="history-top" onclick="showDetail(${i})" style="cursor:pointer;">
-            <div>
-              <div class="history-name">${s.routineName}</div>
+        <div class="history-card session-compact">
+          <div class="history-top">
+            <div class="history-main" onclick="showDetail(${i})">
+              <div class="history-name">${escapeHtml(s.routineName)}</div>
               <div class="routine-meta" style="margin-top:4px;">${s.exercises.length} ejercicios registrados</div>
             </div>
-            <div class="history-date-badge">${formatDate(s.date)}</div>
+            <div class="session-date-actions">
+              <div class="history-date-badge" onclick="showDetail(${i})" style="cursor:pointer;">${formatDate(s.date)}</div>
+              <button class="session-more-btn" onclick="event.stopPropagation(); openSessionActions(${i})" aria-label="Opciones">⋯</button>
+            </div>
           </div>
-          <div class="history-stats" onclick="showDetail(${i})" style="cursor:pointer;">
+          <div class="history-stats history-compact-stats" onclick="showDetail(${i})" style="cursor:pointer;">
             <div class="history-stat"><strong>${doneSets}</strong>series</div>
             <div class="history-stat"><strong>${Math.round(volume).toLocaleString()}</strong>vol.</div>
             <div class="history-stat"><strong>${s.exercises.length}</strong>ejercicios</div>
-          </div>
-          <div class="session-actions">
-            <button onclick="editSavedSession(${i})" class="mini-btn">Editar</button>
-            <button onclick="changeSavedSessionDate(${i})" class="mini-btn">Fecha</button>
-            <button onclick="openShareMenu(${i})" class="mini-btn primary">Compartir</button>
-            <button onclick="deleteSession(${i})" class="mini-btn danger">Eliminar</button>
           </div>
         </div>
       `;
     }).join('')}
   `;
+}
+
+function closeExportMenu() {
+  const overlay = document.getElementById('exportMenuOverlay');
+  if (overlay) overlay.remove();
+}
+
+function openExportMenu() {
+  closeExportMenu();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'exportMenuOverlay';
+  overlay.className = 'edit-overlay';
+  overlay.innerHTML = `
+    <div class="edit-overlay-card">
+      <div class="action-sheet-title">Exportar historial</div>
+      <div class="action-sheet-sub">Elige el formato. JSON conserva la estructura completa; CSV sirve para Excel.</div>
+      <div class="action-sheet-grid">
+        <button class="mini-btn primary" onclick="closeExportMenu(); exportSessionsCsv();">CSV para Excel</button>
+        <button class="mini-btn" onclick="closeExportMenu(); exportSessions();">JSON completo</button>
+        <button class="mini-btn danger" onclick="closeExportMenu();">Cancelar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.onclick = event => {
+    if (event.target === overlay) closeExportMenu();
+  };
+}
+
+function closeSessionActions() {
+  const overlay = document.getElementById('sessionActionsOverlay');
+  if (overlay) overlay.remove();
+}
+
+function openSessionActions(index) {
+  const session = getSessionByIndex(index);
+  if (!session) return;
+
+  closeSessionActions();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'sessionActionsOverlay';
+  overlay.className = 'edit-overlay';
+  overlay.innerHTML = `
+    <div class="edit-overlay-card">
+      <div class="action-sheet-title">${escapeHtml(session.routineName)}</div>
+      <div class="action-sheet-sub">${formatDateFull(new Date(session.date))}</div>
+      <div class="action-sheet-grid">
+        <button class="mini-btn primary" onclick="closeSessionActions(); showDetail(${index});">Ver detalle</button>
+        <button class="mini-btn" onclick="closeSessionActions(); editSavedSession(${index});">Editar</button>
+        <button class="mini-btn" onclick="closeSessionActions(); changeSavedSessionDate(${index});">Cambiar fecha</button>
+        <button class="mini-btn" onclick="closeSessionActions(); openShareMenu(${index});">Compartir / copiar</button>
+        <button class="mini-btn danger" onclick="closeSessionActions(); deleteSession(${index});">Eliminar</button>
+        <button class="mini-btn" onclick="closeSessionActions();">Cancelar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.onclick = event => {
+    if (event.target === overlay) closeSessionActions();
+  };
 }
 
 async function deleteSession(index) {
