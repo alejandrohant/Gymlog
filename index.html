@@ -3133,128 +3133,6 @@ body.training-active #sessionScreen.screen.active{
 }
 
 </style>
-
-<!-- FORJA PATCH FINAL: FONDO CONTINUO + SAFE AREA -->
-<style id="forja-safe-area-background-final">
-/* Fondo único para todo el viewport: elimina el rectángulo oscuro inferior. */
-html,
-body {
-  width: 100% !important;
-  min-height: 100% !important;
-  background: #08010e !important;
-}
-
-body {
-  position: relative !important;
-  isolation: isolate !important;
-  max-width: 480px !important;
-  margin: 0 auto !important;
-  overflow: hidden !important;
-  padding-top: 0 !important;
-  background: transparent !important;
-}
-
-body::before {
-  content: "" !important;
-  position: fixed !important;
-  inset: 0 !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: min(100vw, 480px) !important;
-  height: 100dvh !important;
-  z-index: -1 !important;
-  pointer-events: none !important;
-  background:
-    radial-gradient(circle at 50% -12%, rgba(96,42,143,0.30), transparent 36%),
-    radial-gradient(circle at 8% 5%, rgba(217,183,100,0.055), transparent 28%),
-    linear-gradient(180deg, #08010e 0%, #12051e 46%, #08010e 100%) !important;
-}
-
-/* Header correcto para iPhone: nunca invade la hora ni la isla dinámica. */
-.header {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 4000 !important;
-  height: auto !important;
-  min-height: calc(108px + env(safe-area-inset-top, 0px)) !important;
-  padding: calc(34px + env(safe-area-inset-top, 0px)) 22px 18px !important;
-  background: rgba(8, 1, 14, 0.82) !important;
-  border-bottom: 1px solid rgba(226,194,125,0.10) !important;
-  box-shadow: 0 10px 28px rgba(0,0,0,0.22) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(1.16) !important;
-  backdrop-filter: blur(22px) saturate(1.16) !important;
-}
-
-.header-title {
-  font-size: 36px !important;
-  line-height: 0.88 !important;
-  letter-spacing: 0.17em !important;
-}
-
-.header-sub {
-  margin-top: 10px !important;
-  font-size: 11px !important;
-  letter-spacing: 0.15em !important;
-}
-
-/* Scroll estable debajo del header y por encima de la barra inferior. */
-.screen {
-  background: transparent !important;
-  padding: 24px 20px calc(154px + env(safe-area-inset-bottom, 0px)) !important;
-}
-
-.screen.active {
-  height: calc(100dvh - 108px - env(safe-area-inset-top, 0px)) !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain !important;
-}
-
-/* Barra inferior sobre el mismo fondo, sin crear bloque negro debajo. */
-.nav {
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
-  background: rgba(15, 4, 27, 0.70) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(1.25) !important;
-  backdrop-filter: blur(30px) saturate(1.25) !important;
-}
-
-/* En entrenamiento activo se conserva pantalla completa sin afectar el inicio. */
-body.training-active::before {
-  background:
-    radial-gradient(circle at 50% -12%, rgba(96,42,143,0.22), transparent 35%),
-    linear-gradient(180deg, #08010e 0%, #12051e 48%, #08010e 100%) !important;
-}
-
-body.training-active .header {
-  min-height: 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-body.training-active #sessionScreen.screen.active {
-  height: 100dvh !important;
-  padding: 0 0 calc(24px + env(safe-area-inset-bottom,0px)) !important;
-}
-
-@media (max-width: 390px) {
-  .header {
-    min-height: calc(104px + env(safe-area-inset-top, 0px)) !important;
-    padding: calc(32px + env(safe-area-inset-top, 0px)) 20px 17px !important;
-  }
-
-  .header-title {
-    font-size: 34px !important;
-  }
-
-  .screen.active {
-    height: calc(100dvh - 104px - env(safe-area-inset-top, 0px)) !important;
-  }
-}
-</style>
-<!-- /FORJA PATCH FINAL: FONDO CONTINUO + SAFE AREA -->
-
 </head>
 <body style="background-color:#12051f">
 
@@ -7356,6 +7234,428 @@ body.training-active #sessionScreen.screen.active{height:100dvh!important;paddin
   },0);
 })();
 </script>
+
+
+
+<style id="forja-training-panel-final-css">
+/* === FORJA — PANTALLA DE ENTRENAMIENTO EN PANEL, SIN DIVISIONES DURAS === */
+body.training-active{
+  background:
+    radial-gradient(circle at 50% -12%, rgba(96,42,143,.28), transparent 34%),
+    radial-gradient(circle at 8% 4%, rgba(217,183,100,.055), transparent 28%),
+    linear-gradient(180deg,#07010d 0%,#11051e 48%,#050009 100%) !important;
+}
+
+body.training-active #sessionScreen.screen.active{
+  position:fixed!important;
+  inset:0!important;
+  width:min(100vw,480px)!important;
+  max-width:480px!important;
+  height:100dvh!important;
+  margin:0 auto!important;
+  padding:calc(env(safe-area-inset-top,0px) + 112px) 18px calc(env(safe-area-inset-bottom,0px) + 26px)!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-y:contain!important;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(96,42,143,.28), transparent 34%),
+    radial-gradient(circle at 8% 4%, rgba(217,183,100,.055), transparent 28%),
+    linear-gradient(180deg,#07010d 0%,#11051e 48%,#050009 100%) !important;
+}
+
+/* Panel superior del temporizador: mismo idioma visual del inicio */
+body.training-active .timer-wrap{
+  display:grid!important;
+  grid-template-columns:1fr auto!important;
+  align-items:center!important;
+  gap:14px!important;
+  position:fixed!important;
+  top:calc(env(safe-area-inset-top,0px) + 12px)!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  width:calc(100% - 36px)!important;
+  max-width:444px!important;
+  min-height:84px!important;
+  padding:14px 16px!important;
+  z-index:9700!important;
+  border-radius:26px!important;
+  border:1px solid rgba(226,194,125,.20)!important;
+  background:
+    linear-gradient(145deg,rgba(255,244,212,.070),rgba(255,255,255,.018) 44%,rgba(0,0,0,.10)),
+    radial-gradient(circle at 16% 0%,rgba(255,238,190,.080),transparent 31%),
+    radial-gradient(circle at 100% 0%,rgba(112,52,164,.13),transparent 38%),
+    rgba(28,10,45,.62)!important;
+  box-shadow:0 22px 52px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,245,214,.13), inset 0 -1px 0 rgba(0,0,0,.30)!important;
+  -webkit-backdrop-filter:blur(34px) saturate(1.34) contrast(1.04)!important;
+  backdrop-filter:blur(34px) saturate(1.34) contrast(1.04)!important;
+  pointer-events:auto!important;
+}
+
+body.training-active .rest-timer.visible{
+  display:block!important;
+  margin:0!important;
+  color:#a970ff!important;
+  font-family:'Bebas Neue',sans-serif!important;
+  font-size:52px!important;
+  line-height:.9!important;
+  letter-spacing:.02em!important;
+  text-shadow:0 0 22px rgba(169,112,255,.36)!important;
+}
+
+body.training-active .timer-controls.visible{
+  display:grid!important;
+  grid-template-columns:repeat(2,56px)!important;
+  gap:8px!important;
+  max-width:none!important;
+}
+
+body.training-active .timer-control-btn{
+  width:56px!important;
+  height:38px!important;
+  padding:0!important;
+  border-radius:14px!important;
+  color:#f0d78a!important;
+  font-size:13px!important;
+  font-weight:850!important;
+  background:rgba(255,244,212,.052)!important;
+  border:1px solid rgba(226,194,125,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,245,214,.10)!important;
+}
+
+/* DESCARTAR: rojo real, sin heredar dorado/morado */
+body.training-active #sessionScreen .session-legacy-actions{
+  display:flex!important;
+  position:fixed!important;
+  top:calc(env(safe-area-inset-top,0px) + 12px)!important;
+  right:max(18px,calc((100vw - 480px)/2 + 18px))!important;
+  left:auto!important;
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  background:transparent!important;
+  border:0!important;
+  z-index:9800!important;
+  pointer-events:auto!important;
+}
+
+body.training-active #sessionScreen .session-legacy-actions button:first-child{
+  display:none!important;
+}
+
+body.training-active #sessionScreen .session-legacy-actions button:last-child{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  min-width:112px!important;
+  height:42px!important;
+  padding:0 18px!important;
+  border-radius:999px!important;
+  background:rgba(255,58,82,.20)!important;
+  border:1px solid rgba(255,58,82,.72)!important;
+  color:#ffe3e7!important;
+  font-family:'DM Sans',sans-serif!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+  box-shadow:0 10px 24px rgba(255,58,82,.16), inset 0 1px 0 rgba(255,255,255,.10)!important;
+}
+
+/* Encabezado de la sesión como panel, no como franja */
+body.training-active .session-header{
+  margin:0 0 16px!important;
+  padding:22px 22px 20px!important;
+  border-radius:28px!important;
+  border:1px solid rgba(226,194,125,.18)!important;
+  background:
+    linear-gradient(145deg,rgba(255,244,212,.060),rgba(255,255,255,.018) 44%,rgba(0,0,0,.10)),
+    radial-gradient(circle at 16% 0%,rgba(255,238,190,.075),transparent 31%),
+    radial-gradient(circle at 100% 0%,rgba(112,52,164,.12),transparent 38%),
+    rgba(28,10,45,.60)!important;
+  box-shadow:0 22px 52px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,245,214,.12), inset 0 -1px 0 rgba(0,0,0,.28)!important;
+  -webkit-backdrop-filter:blur(34px) saturate(1.34)!important;
+  backdrop-filter:blur(34px) saturate(1.34)!important;
+}
+
+body.training-active .session-title{
+  color:#d9b764!important;
+  font-family:'Bebas Neue',sans-serif!important;
+  font-size:42px!important;
+  line-height:.95!important;
+  letter-spacing:.14em!important;
+  margin:0 0 8px!important;
+}
+
+body.training-active .session-date{
+  color:rgba(205,193,216,.68)!important;
+  font-size:13px!important;
+  line-height:1.45!important;
+  letter-spacing:.12em!important;
+}
+
+body.training-active .session-kicker{
+  display:block!important;
+  margin:0 0 7px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#d9b764!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  letter-spacing:.14em!important;
+  text-transform:uppercase!important;
+}
+
+body.training-active .session-overview{
+  display:none!important;
+}
+
+/* Cada ejercicio es un panel único: sin franjas horizontales duras */
+body.training-active .exercise-card.training-card{
+  margin:0 0 18px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:30px!important;
+  border:1px solid rgba(226,194,125,.18)!important;
+  background:
+    linear-gradient(145deg,rgba(255,244,212,.060),rgba(255,255,255,.018) 44%,rgba(0,0,0,.10)),
+    radial-gradient(circle at 16% 0%,rgba(255,238,190,.080),transparent 31%),
+    radial-gradient(circle at 100% 0%,rgba(112,52,164,.12),transparent 38%),
+    rgba(28,10,45,.60)!important;
+  box-shadow:0 22px 52px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,245,214,.12), inset 0 -1px 0 rgba(0,0,0,.28)!important;
+  -webkit-backdrop-filter:blur(34px) saturate(1.34)!important;
+  backdrop-filter:blur(34px) saturate(1.34)!important;
+}
+
+body.training-active .training-card::before,
+body.training-active .exercise-card.training-card::before,
+body.training-active .exercise-card.training-card::after{
+  display:none!important;
+}
+
+body.training-active .exercise-header{
+  padding:22px 22px 8px!important;
+  border:0!important;
+  background:transparent!important;
+}
+
+body.training-active .exercise-topline{
+  gap:14px!important;
+  align-items:flex-start!important;
+}
+
+body.training-active .exercise-index{
+  width:42px!important;
+  height:42px!important;
+  border-radius:15px!important;
+  background:rgba(255,244,212,.075)!important;
+  border:1px solid rgba(226,194,125,.18)!important;
+  color:#d9b764!important;
+  font-weight:900!important;
+  box-shadow:inset 0 1px 0 rgba(255,245,214,.11)!important;
+}
+
+body.training-active .exercise-name{
+  color:#f2eadf!important;
+  font-size:20px!important;
+  line-height:1.16!important;
+  font-weight:900!important;
+  letter-spacing:-.03em!important;
+}
+
+body.training-active .exercise-submeta{
+  color:rgba(205,193,216,.66)!important;
+  font-size:14px!important;
+  margin-top:6px!important;
+}
+
+body.training-active .prev-badge{
+  background:rgba(217,183,100,.10)!important;
+  border:1px solid rgba(226,194,125,.18)!important;
+  color:#f0d78a!important;
+  border-radius:999px!important;
+  padding:7px 10px!important;
+  font-size:11px!important;
+  box-shadow:none!important;
+}
+
+body.training-active .exercise-tools{
+  padding:0 22px 8px!important;
+  border:0!important;
+  background:transparent!important;
+  justify-content:flex-end!important;
+}
+
+body.training-active .ghost-link{
+  color:rgba(240,215,138,.76)!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  text-decoration:none!important;
+}
+
+body.training-active .prev-info,
+body.training-active .analysis-box{
+  margin:8px 22px 0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:rgba(205,193,216,.72)!important;
+}
+
+body.training-active .analysis-title{
+  color:#d9b764!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.14em!important;
+  margin:14px 0 8px!important;
+}
+
+body.training-active .analysis-text{
+  color:#f2eadf!important;
+  font-size:15px!important;
+  line-height:1.50!important;
+}
+
+body.training-active .sets-table{
+  padding:20px 22px 18px!important;
+  border:0!important;
+  background:transparent!important;
+}
+
+body.training-active .sets-header{
+  grid-template-columns:44px 1fr 1fr 58px!important;
+  gap:10px!important;
+  color:rgba(205,193,216,.54)!important;
+  font-size:11px!important;
+  letter-spacing:.16em!important;
+  margin-bottom:10px!important;
+}
+
+body.training-active .set-row{
+  display:grid!important;
+  grid-template-columns:44px 1fr 1fr 58px!important;
+  gap:10px!important;
+  align-items:center!important;
+  margin:0 0 10px!important;
+  padding:10px!important;
+  border-radius:20px!important;
+  border:1px solid rgba(255,255,255,.070)!important;
+  background:rgba(255,255,255,.030)!important;
+  box-shadow:inset 0 1px 0 rgba(255,245,214,.055)!important;
+}
+
+body.training-active .set-num{
+  width:34px!important;
+  height:34px!important;
+  border-radius:13px!important;
+  color:rgba(240,215,138,.82)!important;
+  background:rgba(255,244,212,.060)!important;
+  border:0!important;
+  font-weight:900!important;
+}
+
+body.training-active .set-input{
+  height:46px!important;
+  border-radius:17px!important;
+  background:rgba(5,1,10,.58)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  color:#f2eadf!important;
+  font-size:16px!important;
+  font-weight:850!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+
+body.training-active .set-check{
+  width:46px!important;
+  height:46px!important;
+  border-radius:17px!important;
+  background:rgba(255,255,255,.035)!important;
+  border:1px solid rgba(255,255,255,.11)!important;
+  color:#f2eadf!important;
+}
+
+body.training-active .set-check.done{
+  background:linear-gradient(180deg,#4aff8d 0%,#2ed96c 100%)!important;
+  border-color:rgba(255,255,255,.20)!important;
+  color:#06170d!important;
+  box-shadow:0 12px 26px rgba(71,255,138,.22)!important;
+}
+
+body.training-active .add-set-btn{
+  height:52px!important;
+  margin-top:12px!important;
+  border-radius:20px!important;
+  color:#f0d78a!important;
+  background:rgba(217,183,100,.070)!important;
+  border:1px solid rgba(226,194,125,.20)!important;
+  font-weight:900!important;
+  font-size:15px!important;
+}
+
+body.training-active .notes-shell{
+  padding:0 22px 22px!important;
+  background:transparent!important;
+  border:0!important;
+}
+
+body.training-active .notes-input{
+  min-height:78px!important;
+  border-radius:20px!important;
+  background:rgba(5,1,10,.52)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  color:#f2eadf!important;
+  font-size:15px!important;
+}
+
+body.training-active .finish-btn{
+  position:static!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:24px 0 0!important;
+  padding:17px!important;
+  border-radius:22px!important;
+  background:linear-gradient(180deg,#f1da8f 0%,#d5af57 58%,#bd9138 100%)!important;
+  color:#130515!important;
+  border:1px solid rgba(255,255,255,.44)!important;
+  box-shadow:0 12px 26px rgba(217,183,100,.23),inset 0 1px 0 rgba(255,255,255,.50)!important;
+}
+
+@media(max-width:390px){
+  body.training-active #sessionScreen.screen.active{
+    padding-left:14px!important;
+    padding-right:14px!important;
+  }
+  body.training-active .timer-wrap{
+    width:calc(100% - 28px)!important;
+    padding:13px 14px!important;
+  }
+  body.training-active .rest-timer.visible{
+    font-size:48px!important;
+  }
+  body.training-active .timer-controls.visible{
+    grid-template-columns:repeat(2,52px)!important;
+  }
+  body.training-active .timer-control-btn{
+    width:52px!important;
+  }
+  body.training-active .session-title{
+    font-size:38px!important;
+  }
+  body.training-active .exercise-name{
+    font-size:18px!important;
+  }
+  body.training-active .set-row,
+  body.training-active .sets-header{
+    grid-template-columns:38px 1fr 1fr 50px!important;
+    gap:8px!important;
+  }
+}
+</style>
 
 </body>
 </html>
