@@ -8115,5 +8115,186 @@ body.training-active #sessionScreen .session-legacy-actions button:last-child{
   restartInterval();
 })();
 </script>
+
+<!-- === FORJA FIX REAL FINAL: temporizador sin barra vacía, SIN tocar barra inferior === -->
+<style id="forja-final-hide-empty-timer-shell-0522">
+  /* La barra inferior NO se modifica aquí. Este bloque solo controla el temporizador. */
+
+  html body:not(.timer-active) .timer-wrap,
+  html body.training-active:not(.timer-active) .timer-wrap,
+  html body.training-active:not(.timer-active) > .timer-wrap,
+  html body.training-active:not(.timer-active) #sessionScreen .timer-wrap{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    width:0!important;
+    height:0!important;
+    min-width:0!important;
+    min-height:0!important;
+    max-width:0!important;
+    max-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+    transform:none!important;
+    box-shadow:none!important;
+    background:transparent!important;
+  }
+
+  html body.training-active.timer-active > .timer-wrap{
+    display:grid!important;
+    visibility:visible!important;
+    opacity:1!important;
+    position:fixed!important;
+    left:50%!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 18px)!important;
+    transform:translateX(-50%)!important;
+    width:min(calc(100vw - 32px),448px)!important;
+    max-width:448px!important;
+    min-height:70px!important;
+    margin:0!important;
+    padding:10px 12px!important;
+    grid-template-columns:minmax(88px,1fr) auto!important;
+    align-items:center!important;
+    gap:10px!important;
+    z-index:9950!important;
+    border-radius:24px!important;
+    border:1px solid rgba(226,194,125,.24)!important;
+    background:rgba(12,3,22,.96)!important;
+    box-shadow:0 16px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.10)!important;
+    pointer-events:auto!important;
+    -webkit-backdrop-filter:blur(18px) saturate(1.15)!important;
+    backdrop-filter:blur(18px) saturate(1.15)!important;
+  }
+
+  html body.training-active.timer-active > .timer-wrap #timerDisplay.visible{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    margin:0!important;
+    padding:0!important;
+    color:#a970ff!important;
+    font-family:'Bebas Neue',sans-serif!important;
+    font-size:50px!important;
+    line-height:.9!important;
+    letter-spacing:.02em!important;
+    text-align:left!important;
+    white-space:nowrap!important;
+    text-shadow:0 0 18px rgba(169,112,255,.46),0 0 34px rgba(169,112,255,.24)!important;
+  }
+
+  html body.training-active.timer-active > .timer-wrap #timerDisplay:not(.visible),
+  html body.training-active.timer-active > .timer-wrap #timerControls:not(.visible){
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+  }
+
+  html body.training-active.timer-active > .timer-wrap #timerControls.visible{
+    display:grid!important;
+    visibility:visible!important;
+    opacity:1!important;
+    grid-template-columns:repeat(2,50px)!important;
+    gap:6px!important;
+    justify-content:end!important;
+    max-width:none!important;
+  }
+
+  html body.training-active.timer-active > .timer-wrap .timer-control-btn{
+    width:50px!important;
+    height:32px!important;
+    padding:0!important;
+    border-radius:13px!important;
+    color:#f0d78a!important;
+    font-family:'DM Sans',sans-serif!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    background:rgba(255,244,212,.058)!important;
+    border:1px solid rgba(226,194,125,.24)!important;
+    box-shadow:inset 0 1px 0 rgba(255,245,214,.10)!important;
+  }
+</style>
+
+<script id="forja-final-empty-timer-shell-guard-0522">
+(function(){
+  function timerTextLooksActive(text){
+    text = String(text || '').trim();
+    return /^\d+:\d{2}$/.test(text) && text !== '0:00';
+  }
+
+  function normalizeTimerShell(){
+    const wrap = document.querySelector('.timer-wrap');
+    const display = document.getElementById('timerDisplay');
+    const controls = document.getElementById('timerControls');
+    if (!wrap || !display) return;
+
+    if (wrap.parentElement !== document.body) document.body.appendChild(wrap);
+
+    const visible = display.classList.contains('visible') && timerTextLooksActive(display.textContent);
+    if (!visible) {
+      document.body.classList.remove('timer-active');
+      display.classList.remove('visible');
+      if (controls) controls.classList.remove('visible');
+    }
+  }
+
+  const previousStartTimerGuard = window.startTimer;
+  if (typeof previousStartTimerGuard === 'function') {
+    window.startTimer = function(seconds){
+      const result = previousStartTimerGuard.apply(this, arguments);
+      setTimeout(normalizeTimerShell, 0);
+      return result;
+    };
+  }
+
+  const previousStopTimerGuard = window.stopTimer;
+  if (typeof previousStopTimerGuard === 'function') {
+    window.stopTimer = function(){
+      const result = previousStopTimerGuard.apply(this, arguments);
+      setTimeout(normalizeTimerShell, 0);
+      return result;
+    };
+  }
+
+  const previousEnterTrainingModeGuard = window.enterTrainingMode;
+  if (typeof previousEnterTrainingModeGuard === 'function') {
+    window.enterTrainingMode = function(){
+      const result = previousEnterTrainingModeGuard.apply(this, arguments);
+      setTimeout(normalizeTimerShell, 0);
+      return result;
+    };
+  }
+
+  const previousExitTrainingModeGuard = window.exitTrainingMode;
+  if (typeof previousExitTrainingModeGuard === 'function') {
+    window.exitTrainingMode = function(){
+      const result = previousExitTrainingModeGuard.apply(this, arguments);
+      setTimeout(normalizeTimerShell, 0);
+      return result;
+    };
+  }
+
+  const previousRenderExercisesGuard = window.renderExercises;
+  if (typeof previousRenderExercisesGuard === 'function') {
+    window.renderExercises = function(){
+      const result = previousRenderExercisesGuard.apply(this, arguments);
+      setTimeout(normalizeTimerShell, 0);
+      return result;
+    };
+  }
+
+  ['DOMContentLoaded','visibilitychange','focus','pageshow','touchstart','pointerdown'].forEach(function(evt){
+    window.addEventListener(evt, function(){ setTimeout(normalizeTimerShell, 0); }, {passive:true});
+  });
+
+  setInterval(normalizeTimerShell, 700);
+  setTimeout(normalizeTimerShell, 0);
+})();
+</script>
+
 </body>
 </html>
