@@ -4610,5 +4610,341 @@ async function initApp() {
 
   injectForjaBigTimerStyles();
 })();
+
+/* === FORJA FIX FINAL 2026-05-22: entrenamiento móvil estable === */
+(function () {
+  function injectForjaFinalFixStyles() {
+    if (document.getElementById('forjaFinalFixStyles0522')) return;
+
+    const style = document.createElement('style');
+    style.id = 'forjaFinalFixStyles0522';
+    style.textContent = `
+      /* No minimizar por gesto. Solo con flecha. */
+      body.training-active #sessionScreen {
+        touch-action: pan-y !important;
+      }
+
+      /* Acciones superiores en entrenamiento */
+      body.training-active #sessionScreen .session-legacy-actions {
+        display: flex !important;
+        position: sticky !important;
+        top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+        z-index: 4200 !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin: 0 !important;
+        padding: 8px 12px 0 !important;
+        background: transparent !important;
+        pointer-events: auto !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions button:first-child {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        width: 40px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        border-radius: 999px !important;
+        background: rgba(201,164,76,0.14) !important;
+        border: 1px solid rgba(201,164,76,0.34) !important;
+        color: #e5c16a !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 26px !important;
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.18) !important;
+        transform: none !important;
+      }
+
+      body.training-active #sessionScreen .session-legacy-actions button:last-child {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-height: 36px !important;
+        padding: 9px 14px !important;
+        border-radius: 999px !important;
+        background: linear-gradient(180deg, #ff5d68 0%, #c91f32 100%) !important;
+        border: 1px solid rgba(255,93,104,0.60) !important;
+        color: #ffffff !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.8px !important;
+        line-height: 1 !important;
+        box-shadow: 0 8px 18px rgba(255,93,104,0.18) !important;
+        transform: none !important;
+      }
+
+      /* Temporizador dentro de la sesión: grande, visible y sin empalmar */
+      body.training-active #sessionScreen > .timer-wrap {
+        display: none !important;
+        position: sticky !important;
+        top: calc(env(safe-area-inset-top, 0px) + 54px) !important;
+        left: auto !important;
+        right: auto !important;
+        width: calc(100% - 24px) !important;
+        max-width: none !important;
+        margin: 10px 12px 12px !important;
+        padding: 13px 12px !important;
+        z-index: 4100 !important;
+        background: rgba(18, 5, 31, 0.97) !important;
+        border: 1px solid rgba(201,164,76,0.30) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 14px 30px rgba(0,0,0,0.34) !important;
+        pointer-events: auto !important;
+        transform: none !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 12px !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap .rest-timer.visible {
+        display: block !important;
+        font-size: 58px !important;
+        line-height: 0.9 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        color: #a56dff !important;
+        text-align: left !important;
+        white-space: nowrap !important;
+        text-shadow:
+          0 0 18px rgba(165,109,255,0.42),
+          0 0 36px rgba(165,109,255,0.24) !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap .timer-controls.visible {
+        display: grid !important;
+        grid-template-columns: repeat(2, 58px) !important;
+        gap: 7px !important;
+        justify-content: end !important;
+        max-width: none !important;
+      }
+
+      body.training-active.timer-active #sessionScreen > .timer-wrap .timer-control-btn {
+        width: 58px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        background: rgba(255,255,255,0.065) !important;
+        border: 1px solid rgba(201,164,76,0.32) !important;
+        color: #e5c16a !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+      }
+
+      /* Si minimizas con temporizador activo, se queda visible en inicio. */
+      body.timer-active:not(.training-active) > .timer-wrap {
+        display: grid !important;
+        position: fixed !important;
+        top: calc(env(safe-area-inset-top, 0px) + 132px) !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: calc(100% - 24px) !important;
+        max-width: 456px !important;
+        margin: 0 !important;
+        padding: 13px 12px !important;
+        z-index: 5000 !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 12px !important;
+        background: rgba(18, 5, 31, 0.97) !important;
+        border: 1px solid rgba(201,164,76,0.30) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 14px 30px rgba(0,0,0,0.34) !important;
+        pointer-events: auto !important;
+      }
+
+      body.timer-active:not(.training-active) > .timer-wrap .rest-timer.visible {
+        display: block !important;
+        font-size: 54px !important;
+        line-height: 0.9 !important;
+        color: #a56dff !important;
+        white-space: nowrap !important;
+      }
+
+      body.timer-active:not(.training-active) > .timer-wrap .timer-controls.visible {
+        display: grid !important;
+        grid-template-columns: repeat(2, 58px) !important;
+        gap: 7px !important;
+      }
+
+      body.timer-active:not(.training-active) > .timer-wrap .timer-control-btn {
+        width: 58px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        background: rgba(255,255,255,0.065) !important;
+        border: 1px solid rgba(201,164,76,0.32) !important;
+        color: #e5c16a !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+      }
+
+      @media (max-width: 390px) {
+        body.training-active.timer-active #sessionScreen > .timer-wrap .rest-timer.visible,
+        body.timer-active:not(.training-active) > .timer-wrap .rest-timer.visible {
+          font-size: 50px !important;
+        }
+
+        body.training-active.timer-active #sessionScreen > .timer-wrap .timer-controls.visible,
+        body.timer-active:not(.training-active) > .timer-wrap .timer-controls.visible {
+          grid-template-columns: repeat(2, 54px) !important;
+        }
+
+        body.training-active.timer-active #sessionScreen > .timer-wrap .timer-control-btn,
+        body.timer-active:not(.training-active) > .timer-wrap .timer-control-btn {
+          width: 54px !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function getTimerWrap() {
+    return document.querySelector('.timer-wrap');
+  }
+
+  function moveTimerIntoSessionFinal() {
+    const timerWrap = getTimerWrap();
+    const sessionScreen = document.getElementById('sessionScreen');
+    const actions = document.querySelector('#sessionScreen .session-legacy-actions');
+    if (!timerWrap || !sessionScreen || !actions) return;
+
+    if (timerWrap.parentElement !== sessionScreen) {
+      actions.insertAdjacentElement('afterend', timerWrap);
+    }
+  }
+
+  function moveTimerToBodyFinal() {
+    const timerWrap = getTimerWrap();
+    if (timerWrap && timerWrap.parentElement !== document.body) {
+      document.body.appendChild(timerWrap);
+    }
+  }
+
+  function prepareTrainingActionsFinal() {
+    const actions = document.querySelector('#sessionScreen .session-legacy-actions');
+    if (!actions) return;
+
+    const buttons = actions.querySelectorAll('button');
+
+    if (buttons[0]) {
+      buttons[0].textContent = '⌄';
+      buttons[0].setAttribute('aria-label', 'Minimizar entrenamiento');
+      buttons[0].onclick = window.minimizeSession;
+    }
+
+    if (buttons[1]) {
+      buttons[1].textContent = 'DESCARTAR';
+      buttons[1].setAttribute('aria-label', 'Descartar entrenamiento');
+      buttons[1].onclick = window.discardSession;
+    }
+  }
+
+  /* El gesto hacia abajo queda cancelado definitivamente. */
+  window.setupTrainingSwipeToHide = function () {
+    return;
+  };
+
+  window.minimizeSession = function () {
+    if (!currentSession) {
+      showScreen('home');
+      return;
+    }
+
+    if (!editingSessionKey) saveCurrentDraft();
+
+    document.body.classList.remove('training-active');
+    moveTimerToBodyFinal();
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+    const home = document.getElementById('homeScreen');
+    if (home) home.classList.add('active');
+
+    const firstNav = document.querySelectorAll('.nav-btn')[0];
+    if (firstNav) firstNav.classList.add('active');
+
+    renderHome();
+    showToast('✅ Entrenamiento minimizado');
+  };
+
+  const previousEnterTrainingModeFinal = window.enterTrainingMode;
+  window.enterTrainingMode = function () {
+    if (typeof previousEnterTrainingModeFinal === 'function') {
+      previousEnterTrainingModeFinal();
+    } else {
+      document.body.classList.add('training-active');
+    }
+
+    injectForjaFinalFixStyles();
+    document.body.classList.add('training-active');
+    moveTimerIntoSessionFinal();
+    prepareTrainingActionsFinal();
+  };
+
+  const previousExitTrainingModeFinal = window.exitTrainingMode;
+  window.exitTrainingMode = function () {
+    if (typeof previousExitTrainingModeFinal === 'function') {
+      previousExitTrainingModeFinal();
+    } else {
+      document.body.classList.remove('training-active');
+    }
+    document.body.classList.remove('training-active');
+  };
+
+  const previousStartTimerFinal = window.startTimer;
+  window.startTimer = function (seconds) {
+    injectForjaFinalFixStyles();
+    moveTimerIntoSessionFinal();
+
+    if (typeof previousStartTimerFinal === 'function') {
+      previousStartTimerFinal(seconds);
+    }
+
+    document.body.classList.add('timer-active');
+    if (document.body.classList.contains('training-active')) {
+      moveTimerIntoSessionFinal();
+    } else {
+      moveTimerToBodyFinal();
+    }
+  };
+
+  const previousStopTimerFinal = window.stopTimer;
+  window.stopTimer = function () {
+    if (typeof previousStopTimerFinal === 'function') {
+      previousStopTimerFinal();
+    }
+
+    document.body.classList.remove('timer-active');
+
+    if (!document.body.classList.contains('training-active')) {
+      const header = document.querySelector('.header');
+      const timerWrap = getTimerWrap();
+      if (header && timerWrap && timerWrap.parentElement === document.body) {
+        header.appendChild(timerWrap);
+      }
+    }
+  };
+
+  injectForjaFinalFixStyles();
+})();
+
 initApp();
 </script>
