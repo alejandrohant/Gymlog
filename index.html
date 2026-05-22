@@ -2107,6 +2107,191 @@ body {
   .routine-emoji.routine-mark { width: 50px !important; height: 50px !important; font-size: 22px !important; }
 }
 
+
+
+/* === FORJA FIX 2026-05-22: SIN BOTONES VISIBLES + EMOJIS + GLASS MENOS BLANCO === */
+:root {
+  --text: #efe0c1;
+  --muted: rgba(214, 200, 224, 0.62);
+  --accent: #d7b45f;
+  --glass-card: rgba(23, 7, 39, 0.58);
+  --glass-border: rgba(232, 196, 112, 0.20);
+  --glass-shadow-clean: 0 20px 48px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,236,190,0.10), inset 0 -1px 0 rgba(0,0,0,0.24);
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(111, 49, 160, 0.20), transparent 32%),
+    radial-gradient(circle at 8% 6%, rgba(215, 180, 95, 0.06), transparent 24%),
+    linear-gradient(180deg, #090211 0%, #13061f 44%, #06010b 100%) !important;
+  color: var(--text) !important;
+}
+
+.header {
+  background: linear-gradient(180deg, rgba(9,2,17,0.96), rgba(9,2,17,0.78)) !important;
+}
+
+.header-sub,
+.routine-meta,
+.hero-sub,
+.history-summary-label,
+.hero-stat-label,
+.profile-stat-label,
+.session-stat-label,
+.history-stat,
+.hero-badge-label,
+.detail-badge-label,
+.profile-badge-label {
+  color: rgba(214,200,224,0.60) !important;
+}
+
+.dashboard-hero,
+.routine-card,
+.history-card,
+.smart-card,
+.profile-shell,
+.detail-shell,
+.exercise-card,
+.session-overview,
+.session-header,
+.history-summary-card,
+.hero-stat,
+.profile-stat,
+.session-stat-card,
+.draft-card,
+.analysis-box {
+  background:
+    linear-gradient(145deg, rgba(255,236,190,0.055) 0%, rgba(255,255,255,0.018) 42%, rgba(255,255,255,0.010) 100%),
+    radial-gradient(circle at 16% 0%, rgba(255,236,190,0.075), transparent 28%),
+    radial-gradient(circle at 100% 0%, rgba(130,69,177,0.095), transparent 34%),
+    rgba(23, 7, 39, 0.62) !important;
+  border: 1px solid rgba(232,196,112,0.18) !important;
+  box-shadow: var(--glass-shadow-clean) !important;
+  backdrop-filter: blur(34px) saturate(1.35) contrast(1.03) !important;
+  -webkit-backdrop-filter: blur(34px) saturate(1.35) contrast(1.03) !important;
+}
+
+.dashboard-hero::before,
+.routine-card::before,
+.history-card::before,
+.smart-card::before,
+.profile-shell::before,
+.detail-shell::before,
+.exercise-card::before,
+.session-overview::before,
+.session-header::before,
+.draft-card::before,
+.analysis-box::before {
+  background:
+    linear-gradient(180deg, rgba(255,236,190,0.075), transparent 32%),
+    linear-gradient(90deg, rgba(255,255,255,0.025), transparent 22%, transparent 82%, rgba(255,255,255,0.020)) !important;
+  opacity: 0.44 !important;
+}
+
+.routine-name,
+.history-name,
+.hero-stat-value,
+.history-summary-value,
+.history-stat strong,
+.session-stat-value,
+.profile-stat-value,
+.detail-set-weight {
+  color: #efd889 !important;
+}
+
+.hero-title,
+.section-title,
+.session-title,
+.profile-name,
+.detail-title,
+.edit-title,
+.header-title {
+  color: #d7b45f !important;
+  text-shadow: 0 6px 18px rgba(215,180,95,0.13) !important;
+}
+
+.routine-emoji.routine-mark {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 18px !important;
+  font-family: 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif !important;
+  font-size: 29px !important;
+  letter-spacing: 0 !important;
+  color: initial !important;
+  display: grid !important;
+  place-items: center !important;
+  background:
+    linear-gradient(145deg, rgba(255,236,190,0.090), rgba(255,255,255,0.020)),
+    rgba(215,180,95,0.075) !important;
+  border: 1px solid rgba(232,196,112,0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,236,190,0.12), 0 10px 22px rgba(0,0,0,0.20) !important;
+  text-shadow: none !important;
+}
+
+.history-toolbar-clean {
+  justify-content: flex-start !important;
+  margin-bottom: 14px !important;
+}
+
+.history-export-btn,
+.session-more-btn,
+.routine-inline-actions,
+.today-card .mini-actions {
+  display: none !important;
+}
+
+.clean-history-card {
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.history-date-badge {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #d7b45f !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-weight: 800 !important;
+}
+
+.hero-badge,
+.profile-badge,
+.detail-badge,
+.eyebrow,
+.session-kicker {
+  background: rgba(255,236,190,0.045) !important;
+  border: 1px solid rgba(232,196,112,0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,236,190,0.08) !important;
+}
+
+.history-stat,
+.hero-stat,
+.profile-stat,
+.history-summary-card,
+.session-stat-card {
+  background: rgba(255,255,255,0.026) !important;
+  border: 1px solid rgba(255,236,190,0.060) !important;
+}
+
+.nav {
+  background: rgba(17, 5, 30, 0.72) !important;
+  border-color: rgba(232,196,112,0.16) !important;
+}
+
+.nav-btn {
+  color: rgba(214,200,224,0.52) !important;
+}
+
+.nav-btn.active {
+  color: #120614 !important;
+}
+
+@media (max-width: 390px) {
+  .routine-emoji.routine-mark { width: 52px !important; height: 52px !important; font-size: 27px !important; }
+}
+
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -2143,9 +2328,8 @@ body {
 </div>
 
 <div id="historyScreen" class="screen">
-  <div class="history-toolbar">
+  <div class="history-toolbar history-toolbar-clean">
     <div class="section-title" style="margin:0;">SESIONES</div>
-    <button class="history-export-btn" onclick="openExportMenu()">Exportar</button>
   </div>
   <div id="historyList"></div>
 </div>
@@ -2191,6 +2375,22 @@ let timerPausedRemainingMs = null;
 let audioCtx = null;
 let cloudSessions = [];
 let editingSessionKey = null;
+
+let __forjaLongPressTimer = null;
+window.__forjaLongPressDone = false;
+function forjaStartLongPress(event, index) {
+  window.__forjaLongPressDone = false;
+  clearTimeout(__forjaLongPressTimer);
+  __forjaLongPressTimer = setTimeout(() => {
+    window.__forjaLongPressDone = true;
+    openSessionActions(index);
+  }, 560);
+}
+function forjaEndLongPress() {
+  clearTimeout(__forjaLongPressTimer);
+  __forjaLongPressTimer = null;
+}
+
 
 // =====================
 // DATA
@@ -3361,14 +3561,7 @@ function goBack() {
 
 
 function getRoutineMark(routine) {
-  const name = normalizeText(routine?.name || '');
-  if (name.includes('push a')) return 'PA';
-  if (name.includes('pull a')) return 'PU';
-  if (name.includes('legs a')) return 'LA';
-  if (name.includes('push b')) return 'PB';
-  if (name.includes('pull b')) return 'PH';
-  if (name.includes('legs b')) return 'LB';
-  return String(routine?.name || 'F').trim().slice(0, 2).toUpperCase();
+  return routine?.emoji || '🏋️';
 }
 
 function renderHome() {
@@ -3428,7 +3621,7 @@ function renderHome() {
       const totalSets = r.exercises.reduce((acc, ex) => acc + ex.sets, 0);
       return `
         <div class="routine-card tap-card" onclick="viewRoutine('${r.id}')" oncontextmenu="event.preventDefault(); editRoutine('${r.id}')">
-          <div class="routine-emoji routine-mark">${escapeHtml(getRoutineMark(r))}</div>
+          <div class="routine-emoji routine-mark">${escapeHtml(r.emoji || getRoutineMark(r))}</div>
           <div class="routine-info">
             <div class="routine-name">${escapeHtml(r.name)}</div>
             <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
@@ -3957,18 +4150,23 @@ function renderHistory() {
       const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
       const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
       return `
-        <div class="history-card session-compact">
+        <div class="history-card session-compact clean-history-card"
+          onclick="if(!window.__forjaLongPressDone){showDetail(${i})} window.__forjaLongPressDone=false;"
+          oncontextmenu="event.preventDefault(); openSessionActions(${i});"
+          onpointerdown="forjaStartLongPress(event, ${i})"
+          onpointerup="forjaEndLongPress()"
+          onpointerleave="forjaEndLongPress()"
+          onpointercancel="forjaEndLongPress()">
           <div class="history-top">
-            <div class="history-main" onclick="showDetail(${i})">
+            <div class="history-main">
               <div class="history-name">${escapeHtml(s.routineName)}</div>
               <div class="routine-meta" style="margin-top:4px;">${s.exercises.length} ejercicios registrados</div>
             </div>
             <div class="session-date-actions">
-              <div class="history-date-badge" onclick="showDetail(${i})" style="cursor:pointer;">${formatDate(s.date)}</div>
-              <button class="session-more-btn" onclick="event.stopPropagation(); openSessionActions(${i})" aria-label="Opciones">⋯</button>
+              <div class="history-date-badge">${formatDate(s.date)}</div>
             </div>
           </div>
-          <div class="history-stats history-compact-stats" onclick="showDetail(${i})" style="cursor:pointer;">
+          <div class="history-stats history-compact-stats">
             <div class="history-stat"><strong>${doneSets}</strong>series</div>
             <div class="history-stat"><strong>${Math.round(volume).toLocaleString()}</strong>vol.</div>
             <div class="history-stat"><strong>${s.exercises.length}</strong>ejercicios</div>
