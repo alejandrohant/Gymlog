@@ -1,16 +1,17 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0b0314">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="#0b0314" name="theme-color"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <title>FORJA — Bitácora de entrenamiento</title>
-<link rel="icon" type="image/png" sizes="512x512" href="forja-icon.png?v=11">
-<link rel="apple-touch-icon" sizes="180x180" href="forja-icon.png?v=11">
-<link rel="manifest" href="manifest.webmanifest?v=11">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="forja-icon.png?v=11" rel="icon" sizes="512x512" type="image/png"/>
+<link href="forja-icon.png?v=11" rel="apple-touch-icon" sizes="180x180"/>
+<link href="manifest.webmanifest?v=11" rel="manifest"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
 <style>
   :root {
     --bg: #12051f;
@@ -3053,76 +3054,65 @@ body.training-active .sets-header.bodyweight-header{
 </style>
 </head>
 <body style="background-color:#12051f">
-
 <div class="header">
-  <div class="brand">
-    <div>
-      <div class="header-title">FORJA</div>
-      <div class="header-sub">Alejandro • Cuerpo en construcción</div>
-    </div>
-  </div>
+<div class="brand">
+<div>
+<div class="header-title">FORJA</div>
+<div class="header-sub">Alejandro • Cuerpo en construcción</div>
 </div>
-
-<div class="timer-wrap" aria-live="polite">
-  <div id="timerDisplay" class="rest-timer"></div>
-  <div id="timerControls" class="timer-controls">
-    <button class="timer-control-btn" onclick="adjustTimer(-15)" aria-label="Quitar 15 segundos" title="Quitar 15 segundos">−</button>
-    <button class="timer-control-btn" onclick="adjustTimer(15)" aria-label="Agregar 15 segundos" title="Agregar 15 segundos">+</button>
-    <button id="timerPauseBtn" class="timer-control-btn" onclick="toggleTimerPause()" aria-label="Pausar o continuar" title="Pausar o continuar">⏸</button>
-    <button class="timer-control-btn" onclick="stopTimer()" aria-label="Detener temporizador" title="Detener temporizador">⏹</button>
-  </div>
 </div>
-
+</div>
+<div aria-live="polite" class="timer-wrap">
+<div class="rest-timer" id="timerDisplay"></div>
+<div class="timer-controls" id="timerControls">
+<button aria-label="Quitar 15 segundos" class="timer-control-btn" onclick="adjustTimer(-15)" title="Quitar 15 segundos">−</button>
+<button aria-label="Agregar 15 segundos" class="timer-control-btn" onclick="adjustTimer(15)" title="Agregar 15 segundos">+</button>
+<button aria-label="Pausar o continuar" class="timer-control-btn" id="timerPauseBtn" onclick="toggleTimerPause()" title="Pausar o continuar">⏸</button>
+<button aria-label="Detener temporizador" class="timer-control-btn" onclick="stopTimer()" title="Detener temporizador">⏹</button>
+</div>
+</div>
 <div class="nav">
-  <button class="nav-btn" onclick="showScreen('home')" aria-label="Rutinas" title="Rutinas">🏋️</button>
-  <button class="nav-btn" onclick="showScreen('history')" aria-label="Historial" title="Historial">📊</button>
-  <button class="nav-btn" onclick="showScreen('profile')" aria-label="Perfil" title="Perfil">👤</button>
-  <button class="nav-btn active" onclick="showScreen('auth')" aria-label="Cuenta" title="Cuenta">🔐</button>
+<button aria-label="Rutinas" class="nav-btn" onclick="showScreen('home')" title="Rutinas">🏋️</button>
+<button aria-label="Historial" class="nav-btn" onclick="showScreen('history')" title="Historial">📊</button>
+<button aria-label="Perfil" class="nav-btn" onclick="showScreen('profile')" title="Perfil">👤</button>
+<button aria-label="Cuenta" class="nav-btn active" onclick="showScreen('auth')" title="Cuenta">🔐</button>
 </div>
-
-<div id="homeScreen" class="screen">
-  <div class="section-title">HOY TOCA</div>
-  <div class="routine-grid" id="routineGrid"></div>
+<div class="screen" id="homeScreen">
+<div class="section-title">HOY TOCA</div>
+<div class="routine-grid" id="routineGrid"></div>
 </div>
-
-<div id="historyScreen" class="screen">
-  <div class="history-toolbar history-toolbar-clean">
-    <div class="section-title" style="margin:0;">SESIONES</div>
-    <button class="history-share-all-btn" onclick="openExportMenu()" aria-label="Exportar historial" title="Exportar historial">⤴</button>
-  </div>
-  <div id="historyList"></div>
+<div class="screen" id="historyScreen">
+<div class="history-toolbar history-toolbar-clean">
+<div class="section-title" style="margin:0;">SESIONES</div>
+<button aria-label="Exportar historial" class="history-share-all-btn" onclick="openExportMenu()" title="Exportar historial">⤴</button>
 </div>
-
-<div id="sessionScreen" class="screen">
-  <div class="session-legacy-actions">
-    <button class="session-hide-btn" onclick="minimizeSession()" aria-label="Ocultar entrenamiento" title="Ocultar entrenamiento">⌄</button>
-    <button class="session-discard-btn" onclick="discardSession()" aria-label="Descartar entrenamiento" title="Descartar entrenamiento">DESCARTAR</button>
-  </div>
-  <div class="session-header">
-    <div class="session-title" id="sessionTitle"></div>
-    <div class="session-date" id="sessionDate"></div>
-  </div>
-  <div id="exerciseList"></div>
-  <button class="finish-btn" onclick="finishSession()">TERMINAR SESIÓN</button>
+<div id="historyList"></div>
 </div>
-
-<div id="detailScreen" class="screen">
-  <button class="back-btn" onclick="showScreen('history')">← Historial</button>
-  <div id="detailContent"></div>
+<div class="screen" id="sessionScreen">
+<div class="session-legacy-actions">
+<button aria-label="Ocultar entrenamiento" class="session-hide-btn" onclick="minimizeSession()" title="Ocultar entrenamiento">⌄</button>
+<button aria-label="Descartar entrenamiento" class="session-discard-btn" onclick="discardSession()" title="Descartar entrenamiento">DESCARTAR</button>
 </div>
-
-<div id="profileScreen" class="screen">
-  <div class="section-title">PERFIL</div>
-  <div id="profileContent"></div>
+<div class="session-header">
+<div class="session-title" id="sessionTitle"></div>
+<div class="session-date" id="sessionDate"></div>
 </div>
-
-<div id="authScreen" class="screen active">
-  <div class="section-title">CUENTA</div>
-  <div id="authPanel"></div>
+<div id="exerciseList"></div>
+<button class="finish-btn" onclick="finishSession()">TERMINAR SESIÓN</button>
 </div>
-  
+<div class="screen" id="detailScreen">
+<button class="back-btn" onclick="showScreen('history')">← Historial</button>
+<div id="detailContent"></div>
+</div>
+<div class="screen" id="profileScreen">
+<div class="section-title">PERFIL</div>
+<div id="profileContent"></div>
+</div>
+<div class="screen active" id="authScreen">
+<div class="section-title">CUENTA</div>
+<div id="authPanel"></div>
+</div>
 <div class="toast" id="toast"></div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://zflsvgnvxtozinucrnsp.supabase.co';
@@ -3402,36 +3392,134 @@ function stripCloudMeta(session) {
   return copy;
 }
 
+function normalizeSessionRecord(session) {
+  if (!session || typeof session !== 'object') return null;
+
+  const base = session.data_json && typeof session.data_json === 'object' ? session.data_json : session;
+  if (!base || typeof base !== 'object') return null;
+
+  const clean = cloneData(base);
+  clean.routineName = clean.routineName || clean.routine_name || session.routine_name || clean.name || '';
+  clean.routineId = clean.routineId || clean.routine_id || session.routine_id || '';
+  clean.date = clean.date || session.date || clean.createdAt || clean.startedAt || clean.finishedAt || '';
+
+  if (!clean.routineName || !clean.date || !Array.isArray(clean.exercises)) return null;
+
+  clean.exercises = clean.exercises
+    .filter(ex => ex && typeof ex === 'object')
+    .map(ex => ({
+      ...ex,
+      name: ex.name || '',
+      sets: Array.isArray(ex.sets) ? ex.sets.map(st => ({ ...st })) : []
+    }))
+    .filter(ex => ex.name);
+
+  if (!clean.exercises.length) return null;
+
+  if (session._cloudId && !clean._cloudId) clean._cloudId = session._cloudId;
+  delete clean.routine_name;
+  delete clean.routine_id;
+  return clean;
+}
+
+function doneSetCount(session) {
+  return (session?.exercises || []).reduce((acc, ex) => acc + (ex.sets || []).filter(st => st && st.done).length, 0);
+}
+
+function totalSetCount(session) {
+  return (session?.exercises || []).reduce((acc, ex) => acc + (ex.sets || []).length, 0);
+}
+
+function sessionScore(session) {
+  const s = normalizeSessionRecord(session);
+  if (!s) return -1;
+  return (doneSetCount(s) * 1000) + (s.exercises.length * 100) + totalSetCount(s);
+}
+
+function isRealHistorySession(session) {
+  const s = normalizeSessionRecord(session);
+  if (!s) return false;
+  return doneSetCount(s) > 0;
+}
+
 function sessionKey(session) {
-  return `${session.routineName}__${session.date}`;
+  const s = normalizeSessionRecord(session);
+  if (!s) return '';
+  return `${s.routineName}__${s.date}`;
+}
+
+function sessionSameIdentity(a, b) {
+  const ka = sessionKey(a);
+  const kb = sessionKey(b);
+  return !!ka && !!kb && ka === kb;
+}
+
+function getActiveDraftSession() {
+  if (currentSession && !editingSessionKey) return currentSession;
+  try {
+    const draft = JSON.parse(localStorage.getItem(CURRENT_SESSION_KEY) || 'null');
+    if (!draft?.session) return null;
+    if (draft.owner && draft.owner !== getDraftOwnerId()) return null;
+    return draft.session;
+  } catch {
+    return null;
+  }
+}
+
+function removeActiveDraftFromHistory(sessions) {
+  const draft = getActiveDraftSession();
+  if (!draft) return sessions;
+  return (sessions || []).filter(session => !sessionSameIdentity(session, draft));
 }
 
 function dedupeSessions(sessions) {
   const map = new Map();
-  for (const session of sessions || []) {
-    if (!session || !session.routineName || !session.date) continue;
+
+  for (const item of sessions || []) {
+    const session = normalizeSessionRecord(item);
+    if (!isRealHistorySession(session)) continue;
+
     const key = sessionKey(session);
-    if (!map.has(key)) map.set(key, session);
+    if (!key) continue;
+
+    if (!map.has(key)) {
+      map.set(key, session);
+      continue;
+    }
+
+    const previous = map.get(key);
+    const candidate = sessionScore(session) > sessionScore(previous) ? session : previous;
+    const cloudId = previous._cloudId || session._cloudId || null;
+    if (cloudId) candidate._cloudId = cloudId;
+    map.set(key, candidate);
   }
+
   return Array.from(map.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-function getSessionsLocal() {
+function readSessionsArrayFromStorage(key) {
   try {
-    const raw = JSON.parse(localStorage.getItem('gymlog_sessions') || '[]');
+    const raw = JSON.parse(localStorage.getItem(key) || '[]');
     return Array.isArray(raw) ? raw : [];
   } catch {
     return [];
   }
 }
 
+function getSessionsLocal() {
+  const canonical = readSessionsArrayFromStorage('gymlog_sessions');
+  const legacyMirror = readSessionsArrayFromStorage('forja_sessions');
+  return removeActiveDraftFromHistory(dedupeSessions([...canonical, ...legacyMirror]));
+}
+
 function setSessionsLocal(sessions) {
-  localStorage.setItem('gymlog_sessions', JSON.stringify(sessions.map(stripCloudMeta)));
+  const clean = removeActiveDraftFromHistory(dedupeSessions(sessions || [])).map(stripCloudMeta);
+  localStorage.setItem('gymlog_sessions', JSON.stringify(clean));
+  localStorage.setItem('forja_sessions', JSON.stringify(clean));
 }
 
 function getSessions() {
-  if (!currentUser) return dedupeSessions(getSessionsLocal());
-  return dedupeSessions([...(cloudSessions || []), ...getSessionsLocal()]);
+  return removeActiveDraftFromHistory(dedupeSessions([...(cloudSessions || []), ...getSessionsLocal()]));
 }
 
 function getLastSession(routineId) {
@@ -3464,24 +3552,28 @@ async function loadCloudSessions() {
   }
 
   cloudSessions = dedupeSessions((data || []).map(row => ({
-    ...row.data_json,
+    ...(row.data_json || {}),
     _cloudId: row.id,
     routineId: row.data_json?.routineId || row.routine_id,
     routineName: row.data_json?.routineName || row.routine_name,
     date: row.data_json?.date || row.date,
   })));
 
+  setSessionsLocal([...getSessionsLocal(), ...cloudSessions]);
   return cloudSessions;
 }
 
 async function syncLocalSessionsToCloud() {
-  if (!currentUser) return true;
+  if (!currentUser) {
+    setSessionsLocal(getSessionsLocal());
+    return true;
+  }
 
-  const localSessions = dedupeSessions(getSessionsLocal());
+  const localBefore = getSessionsLocal();
 
   const { data: existingRows, error: fetchError } = await supabaseClient
     .from('sessions')
-    .select('id, routine_name, date')
+    .select('id, routine_id, routine_name, date, data_json')
     .eq('user_id', currentUser.id);
 
   if (fetchError) {
@@ -3491,11 +3583,19 @@ async function syncLocalSessionsToCloud() {
     return false;
   }
 
-  const existingKeys = new Set(
-    (existingRows || []).map(row => `${row.routine_name}__${row.date}`)
-  );
+  const cloudBefore = dedupeSessions((existingRows || []).map(row => ({
+    ...(row.data_json || {}),
+    _cloudId: row.id,
+    routineId: row.data_json?.routineId || row.routine_id,
+    routineName: row.data_json?.routineName || row.routine_name,
+    date: row.data_json?.date || row.date,
+  })));
 
-  const rows = localSessions
+  const merged = dedupeSessions([...localBefore, ...cloudBefore]);
+  setSessionsLocal(merged);
+
+  const existingKeys = new Set((existingRows || []).map(row => `${row.routine_name}__${row.date}`));
+  const rows = merged
     .filter(session => !existingKeys.has(sessionKey(session)))
     .map(session => ({
       user_id: currentUser.id,
@@ -3516,7 +3616,7 @@ async function syncLocalSessionsToCloud() {
   }
 
   await loadCloudSessions();
-  setSessionsLocal(dedupeSessions([...(cloudSessions || []), ...localSessions]));
+  setSessionsLocal([...merged, ...cloudSessions]);
   return true;
 }
 
@@ -3527,9 +3627,13 @@ async function saveSession(session) {
     return false;
   }
 
-  const cleanSession = stripCloudMeta(session);
-  const localSessions = dedupeSessions([cleanSession, ...getSessionsLocal()]);
-  setSessionsLocal(localSessions);
+  const cleanSession = normalizeSessionRecord(stripCloudMeta(session));
+  if (!isRealHistorySession(cleanSession)) {
+    showToast('⚠️ No hay datos suficientes para guardar');
+    return false;
+  }
+
+  setSessionsLocal([cleanSession, ...getSessionsLocal(), ...(cloudSessions || [])]);
 
   const { data: existing, error: checkError } = await supabaseClient
     .from('sessions')
@@ -3589,7 +3693,7 @@ async function saveSession(session) {
   }
 
   cloudSessions = dedupeSessions(cloudSessions);
-  setSessionsLocal(dedupeSessions(cloudSessions));
+  setSessionsLocal([cleanSession, ...getSessionsLocal(), ...cloudSessions]);
   return true;
 }
 
@@ -3612,7 +3716,11 @@ async function updateSavedSession(originalRef, updatedSession) {
     return false;
   }
 
-  const cleanSession = stripCloudMeta(updatedSession);
+  const cleanSession = normalizeSessionRecord(stripCloudMeta(updatedSession));
+  if (!isRealHistorySession(cleanSession)) {
+    showToast('⚠️ No hay datos suficientes para guardar');
+    return false;
+  }
 
   let query = supabaseClient
     .from('sessions')
@@ -3639,10 +3747,13 @@ async function updateSavedSession(originalRef, updatedSession) {
   }
 
   const localSessions = getSessionsLocal().filter(s => !sameSessionRef(s, originalRef));
-  setSessionsLocal(dedupeSessions([cleanSession, ...localSessions]));
+  cloudSessions = (cloudSessions || []).filter(s => !sameSessionRef(s, originalRef));
+  cloudSessions.unshift({ ...cleanSession, _cloudId: originalRef?.cloudId || cleanSession._cloudId || null });
+  cloudSessions = dedupeSessions(cloudSessions);
 
+  setSessionsLocal([cleanSession, ...localSessions, ...cloudSessions]);
   await loadCloudSessions();
-  setSessionsLocal(dedupeSessions(cloudSessions));
+  setSessionsLocal([cleanSession, ...getSessionsLocal(), ...cloudSessions]);
   return true;
 }
 
@@ -4495,6 +4606,7 @@ function startSession(routineId) {
   };
 
   saveCurrentDraft();
+  setSessionsLocal(getSessionsLocal());
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').innerHTML = `<span class="session-kicker">Sesión en curso</span><div>${formatDateFull(new Date())}</div>`;
   renderExercises();
@@ -5706,10 +5818,10 @@ function exportSessionsCsv() {
 async function initApp() {
   await renderAuthStatus();
 
+  setSessionsLocal(getSessionsLocal());
+
   if (currentUser) {
     await syncLocalSessionsToCloud();
-  } else {
-    setSessionsLocal(dedupeSessions(getSessionsLocal()));
   }
 
   renderHome();
@@ -5718,7 +5830,7 @@ async function initApp() {
   showScreen(currentUser ? 'home' : 'auth');
 }
 
-/* === FORJA PATCH MOBILE: lista amplia + minimizar con flecha === */
+/* === FORJA MÓVIL: lista amplia + minimizar con flecha === */
 (function () {
   const EXERCISE_LIBRARY = [
     { name: 'Press de Banca Inclinado (Mancuerna)' },
@@ -6749,7 +6861,9 @@ function minimizeSession() {
   if (home) home.classList.add('active');
   const firstNav = document.querySelectorAll('.nav-btn')[0];
   if (firstNav) firstNav.classList.add('active');
+  setSessionsLocal(getSessionsLocal());
   renderHome();
+  renderHistory();
   showToast('✅ Entrenamiento oculto');
 }
 
@@ -6763,376 +6877,9 @@ renderTimer();
 restartTimerInterval();
 
 
-/* === FORJA AUTOSYNC FINAL 2026-05-23 ===
-   Objetivo: que las sesiones reales de Forja aparezcan sin botones ni importación manual.
-   - No usa CSV.
-   - No mezcla Hevy.
-   - No permite que nube/local reduzcan el historial.
-   - Si este archivo se abre donde existen las sesiones de abril, las sube automáticamente a Supabase.
-   - Si este archivo se abre donde Supabase ya tiene más sesiones, las baja automáticamente.
-*/
-(function(){
-  const CANONICAL_KEY = 'gymlog_sessions';
-  const MIRROR_KEY = 'forja_sessions';
-  const BACKUP_PREFIX = 'forja_auto_backup_';
-  const PATCH_ID = 'forja-autosync-final-2026-05-23';
-  const SESSION_KEYS = [
-    'gymlog_sessions',
-    'forja_sessions',
-    'forja_completed_sessions',
-    'forja_history',
-    'forja_workouts',
-    'forja_historial',
-    'workout_sessions',
-    'completedSessions',
-    'savedSessions',
-    'historySessions'
-  ];
-
-  function parseJson(raw){
-    if (!raw || typeof raw !== 'string') return null;
-    try { return JSON.parse(raw); } catch(e) { return null; }
-  }
-
-  function clone(value){
-    return JSON.parse(JSON.stringify(value));
-  }
-
-  function hasExerciseShape(exercises){
-    return Array.isArray(exercises) && exercises.some(function(ex){
-      return ex && typeof ex === 'object' && typeof ex.name === 'string' && Array.isArray(ex.sets);
-    });
-  }
-
-  function looksLikeForjaSession(value){
-    const v = value && value.data_json && typeof value.data_json === 'object' ? value.data_json : value;
-    if (!v || typeof v !== 'object') return false;
-    const name = v.routineName || v.routine_name || v.name;
-    const date = v.date || v.createdAt || v.startedAt || v.finishedAt;
-    return !!(name && date && hasExerciseShape(v.exercises));
-  }
-
-  function slugRoutineName(name){
-    const n = String(name || '').toLowerCase();
-    if (n.includes('push') && n.includes('a')) return 'push_a';
-    if (n.includes('pull') && n.includes('a')) return 'pull_a';
-    if (n.includes('legs') && n.includes('a')) return 'legs_a';
-    if (n.includes('push') && n.includes('b')) return 'push_b';
-    if (n.includes('pull') && n.includes('b')) return 'pull_b';
-    if (n.includes('legs') && n.includes('b')) return 'legs_b';
-    return String(name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'session';
-  }
-
-  function normalizeSession(value){
-    if (!value || typeof value !== 'object') return null;
-    const source = value.data_json && typeof value.data_json === 'object' ? value.data_json : value;
-    if (!looksLikeForjaSession(source)) return null;
-    const clean = clone(source);
-    clean.routineName = clean.routineName || clean.routine_name || value.routine_name || clean.name || 'Entrenamiento';
-    clean.routineId = clean.routineId || clean.routine_id || value.routine_id || slugRoutineName(clean.routineName);
-    clean.date = clean.date || clean.createdAt || clean.startedAt || clean.finishedAt || value.date || new Date().toISOString();
-    if (!Array.isArray(clean.exercises)) return null;
-    clean.exercises = clean.exercises.map(function(ex){
-      const e = Object.assign({}, ex);
-      if (!Array.isArray(e.sets)) e.sets = [];
-      return e;
-    });
-    delete clean._cloudId;
-    delete clean.routine_name;
-    delete clean.routine_id;
-    return clean;
-  }
-
-  function sessionKey(session){
-    const s = normalizeSession(session);
-    if (!s) return '';
-    return String(s.routineName) + '__' + String(s.date);
-  }
-
-  function dedupeSessionsSafe(list){
-    const map = new Map();
-    (list || []).forEach(function(item){
-      const s = normalizeSession(item);
-      if (!s) return;
-      const key = sessionKey(s);
-      if (!key) return;
-      if (!map.has(key)) map.set(key, s);
-    });
-    return Array.from(map.values()).sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
-  }
-
-  function collectSessions(value, bucket, depth, seen){
-    if (depth > 7 || !value || typeof value !== 'object') return;
-    if (seen.has(value)) return;
-    seen.add(value);
-
-    if (looksLikeForjaSession(value)) {
-      const s = normalizeSession(value);
-      if (s) bucket.push(s);
-      return;
-    }
-
-    if (Array.isArray(value)) {
-      value.forEach(function(item){ collectSessions(item, bucket, depth + 1, seen); });
-      return;
-    }
-
-    ['sessions','history','historial','workouts','items','data','records','completedSessions','savedSessions','visibleSessions'].forEach(function(key){
-      if (Object.prototype.hasOwnProperty.call(value, key)) collectSessions(value[key], bucket, depth + 1, seen);
-    });
-
-    Object.keys(value).slice(0, 140).forEach(function(key){
-      collectSessions(value[key], bucket, depth + 1, seen);
-    });
-  }
-
-  function sessionsFromAny(value){
-    const found = [];
-    collectSessions(value, found, 0, new WeakSet());
-    return dedupeSessionsSafe(found);
-  }
-
-  function readSessionsFromKey(key){
-    return sessionsFromAny(parseJson(localStorage.getItem(key)));
-  }
-
-  function discoverLocalSessions(){
-    const found = [];
-    SESSION_KEYS.forEach(function(key){
-      try { found.push.apply(found, readSessionsFromKey(key)); } catch(e) {}
-    });
-
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (!key) continue;
-        const low = key.toLowerCase();
-        if (
-          low.includes('session') || low.includes('sesion') || low.includes('forja') ||
-          low.includes('gym') || low.includes('history') || low.includes('historial') ||
-          low.includes('backup') || low.includes('respaldo')
-        ) {
-          found.push.apply(found, readSessionsFromKey(key));
-        }
-      }
-    } catch(e) {}
-
-    return dedupeSessionsSafe(found);
-  }
-
-  function backupLocal(reason){
-    try {
-      const dump = {
-        app:'FORJA',
-        patch:PATCH_ID,
-        reason:reason || 'auto',
-        href:location.href,
-        createdAt:new Date().toISOString(),
-        localStorage:{}
-      };
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        dump.localStorage[key] = localStorage.getItem(key);
-      }
-      const key = BACKUP_PREFIX + new Date().toISOString().replace(/[:.]/g, '-');
-      localStorage.setItem(key, JSON.stringify(dump));
-      return key;
-    } catch(e) { return ''; }
-  }
-
-  function writeLocalSessions(sessions, allowShrink){
-    const incoming = dedupeSessionsSafe(sessions || []);
-    const existing = dedupeSessionsSafe(discoverLocalSessions());
-    const finalSessions = (!allowShrink && existing.length > incoming.length)
-      ? dedupeSessionsSafe([].concat(existing, incoming))
-      : incoming;
-
-    const clean = finalSessions.map(function(s){ return typeof stripCloudMeta === 'function' ? stripCloudMeta(s) : s; });
-    localStorage.setItem(CANONICAL_KEY, JSON.stringify(clean));
-    localStorage.setItem(MIRROR_KEY, JSON.stringify(clean));
-    localStorage.setItem('forja_last_history_count', String(clean.length));
-    localStorage.setItem('forja_last_history_sync', new Date().toISOString());
-    localStorage.setItem('forja_autosync_patch', PATCH_ID);
-    return finalSessions;
-  }
-
-  async function fetchCloudSessions(){
-    if (!currentUser) return [];
-    const result = await supabaseClient
-      .from('sessions')
-      .select('id, routine_id, routine_name, date, data_json')
-      .eq('user_id', currentUser.id)
-      .order('date', { ascending:false });
-    if (result.error) throw result.error;
-    return dedupeSessionsSafe((result.data || []).map(function(row){
-      const base = row.data_json && typeof row.data_json === 'object' ? row.data_json : {};
-      return Object.assign({}, base, {
-        _cloudId: row.id,
-        routineId: base.routineId || row.routine_id,
-        routineName: base.routineName || row.routine_name,
-        date: base.date || row.date
-      });
-    }));
-  }
-
-  async function insertMissingToCloud(sessions){
-    if (!currentUser || !sessions || !sessions.length) return 0;
-
-    const existing = await supabaseClient
-      .from('sessions')
-      .select('id, routine_name, date')
-      .eq('user_id', currentUser.id);
-    if (existing.error) throw existing.error;
-
-    const existingKeys = new Set((existing.data || []).map(function(row){ return String(row.routine_name) + '__' + String(row.date); }));
-    const rows = dedupeSessionsSafe(sessions)
-      .filter(function(session){ return !existingKeys.has(sessionKey(session)); })
-      .map(function(session){
-        const clean = typeof stripCloudMeta === 'function' ? stripCloudMeta(session) : session;
-        return {
-          user_id: currentUser.id,
-          routine_id: clean.routineId,
-          routine_name: clean.routineName,
-          date: clean.date,
-          data_json: clean
-        };
-      });
-
-    if (!rows.length) return 0;
-    const inserted = await supabaseClient.from('sessions').insert(rows);
-    if (inserted.error) throw inserted.error;
-    return rows.length;
-  }
-
-  async function autoSyncForja(reason){
-    try {
-      backupLocal(reason || 'autosync');
-      const local = dedupeSessionsSafe(discoverLocalSessions());
-      writeLocalSessions(local, false);
-
-      if (!currentUser) {
-        window.__forjaAutoSyncState = { ok:true, reason:reason || 'autosync', local:local.length, cloud:null, final:local.length, user:false };
-        return window.__forjaAutoSyncState;
-      }
-
-      const cloud = await fetchCloudSessions();
-      const mergedBeforeUpload = dedupeSessionsSafe([].concat(local, cloud));
-      writeLocalSessions(mergedBeforeUpload, false);
-
-      let uploaded = 0;
-      try { uploaded = await insertMissingToCloud(mergedBeforeUpload); } catch(uploadError) { throw uploadError; }
-
-      let finalCloud = cloud;
-      try { finalCloud = await fetchCloudSessions(); } catch(e) {}
-      cloudSessions = dedupeSessionsSafe(finalCloud);
-      const finalSessions = writeLocalSessions(dedupeSessionsSafe([].concat(mergedBeforeUpload, cloudSessions)), false);
-
-      window.__forjaAutoSyncState = {
-        ok:true,
-        reason:reason || 'autosync',
-        local:local.length,
-        cloud:cloud.length,
-        uploaded:uploaded,
-        final:finalSessions.length,
-        user:true
-      };
-      return window.__forjaAutoSyncState;
-    } catch(error) {
-      console.error('FORJA autosync error', error);
-      const local = dedupeSessionsSafe(discoverLocalSessions());
-      writeLocalSessions(local, false);
-      window.__forjaAutoSyncState = { ok:false, error:error && error.message ? error.message : String(error), local:local.length, user:!!currentUser };
-      return window.__forjaAutoSyncState;
-    }
-  }
-
-  const originalGetSessionsLocal = typeof getSessionsLocal === 'function' ? getSessionsLocal : null;
-  const originalSetSessionsLocal = typeof setSessionsLocal === 'function' ? setSessionsLocal : null;
-  const originalGetSessions = typeof getSessions === 'function' ? getSessions : null;
-  const originalLoadCloudSessions = typeof loadCloudSessions === 'function' ? loadCloudSessions : null;
-  const originalSyncLocalSessionsToCloud = typeof syncLocalSessionsToCloud === 'function' ? syncLocalSessionsToCloud : null;
-  const originalInitApp = typeof initApp === 'function' ? initApp : null;
-
-  getSessionsLocal = window.getSessionsLocal = function(){
-    const direct = originalGetSessionsLocal ? originalGetSessionsLocal() : [];
-    return dedupeSessionsSafe([].concat(direct || [], discoverLocalSessions()));
-  };
-
-  setSessionsLocal = window.setSessionsLocal = function(sessions){
-    try { return writeLocalSessions(sessions || [], false); }
-    catch(e) {
-      console.warn('FORJA setSessionsLocal seguro falló', e);
-      if (originalSetSessionsLocal) return originalSetSessionsLocal(sessions);
-    }
-  };
-
-  getSessions = window.getSessions = function(){
-    const local = dedupeSessionsSafe(discoverLocalSessions());
-    const cloud = dedupeSessionsSafe(cloudSessions || []);
-    return dedupeSessionsSafe([].concat(cloud, local));
-  };
-
-  loadCloudSessions = window.loadCloudSessions = async function(){
-    if (!currentUser) { cloudSessions = []; return []; }
-    try {
-      const cloud = await fetchCloudSessions();
-      cloudSessions = dedupeSessionsSafe(cloud);
-      const merged = dedupeSessionsSafe([].concat(discoverLocalSessions(), cloudSessions));
-      writeLocalSessions(merged, false);
-      return cloudSessions;
-    } catch(error) {
-      console.error('FORJA loadCloudSessions seguro falló', error);
-      if (originalLoadCloudSessions) return originalLoadCloudSessions();
-      return [];
-    }
-  };
-
-  syncLocalSessionsToCloud = window.syncLocalSessionsToCloud = async function(){
-    const state = await autoSyncForja('syncLocalSessionsToCloud');
-    if (!state.ok && originalSyncLocalSessionsToCloud) {
-      try { return await originalSyncLocalSessionsToCloud(); } catch(e) {}
-    }
-    return !!state.ok;
-  };
-
-  initApp = window.initApp = async function(){
-    backupLocal('antes_de_init');
-    await renderAuthStatus();
-    await autoSyncForja('init');
-    renderHome();
-    renderHistory();
-    await renderProfile();
-    showScreen(currentUser ? 'home' : 'auth');
-    setTimeout(function(){ autoSyncForja('post_init').then(function(){ try { renderHome(); renderHistory(); } catch(e) {} }); }, 800);
-  };
-
-  window.forjaDiagnosticoAutomatico = async function(){
-    const state = await autoSyncForja('diagnostico');
-    alert([
-      'FORJA AUTOSYNC',
-      'Visible: ' + (typeof getSessions === 'function' ? getSessions().length : discoverLocalSessions().length),
-      'Local: ' + discoverLocalSessions().length,
-      'Nube: ' + (state.cloud == null ? 'sin sesión' : state.cloud),
-      'Subidas ahora: ' + (state.uploaded || 0),
-      'Usuario: ' + (currentUser ? 'sí' : 'no'),
-      state.error ? 'Error: ' + state.error : ''
-    ].filter(Boolean).join('\n'));
-    return state;
-  };
-
-  document.addEventListener('visibilitychange', function(){
-    if (!document.hidden) autoSyncForja('visibility').then(function(){ try { renderHistory(); renderHome(); } catch(e) {} });
-  });
-
-  window.addEventListener('pageshow', function(){
-    setTimeout(function(){ autoSyncForja('pageshow').then(function(){ try { renderHistory(); renderHome(); } catch(e) {} }); }, 250);
-  });
-})();
 
 initApp();
 </script>
-
-
 <!-- === FORJA PATCH FINAL 2026-05-22: fondo uniforme, sesión sin barra inferior, entrenamiento compacto === -->
 <style id="forja-user-fixes-2026-05-22">
   /* 1) FORJA sin franja oscura: encabezado transparente sobre el mismo fondo */
@@ -7261,7 +7008,6 @@ initApp();
     }
   }
 </style>
-
 <script id="forja-user-fixes-2026-05-22">
 (function(){
   function syncSessionPreviewClass(){
@@ -7320,9 +7066,6 @@ initApp();
   window.addEventListener('pageshow', syncSessionPreviewClass, {passive:true});
 })();
 </script>
-
-
-
 <!-- === FORJA PATCH 2026-05-22 V2: regreso en vista previa + botón inicio completo + timer por símbolos === -->
 <style id="forja-user-fixes-2026-05-22-v2">
   /* Vista previa de rutina: permite regresar y mantiene el botón de inicio completo dentro de pantalla. */
@@ -7419,7 +7162,6 @@ initApp();
     font-size:15px !important;
   }
 </style>
-
 <script id="forja-user-fixes-2026-05-22-v2">
 (function(){
   function hasCurrentTrainingSession(){
@@ -7581,6 +7323,5 @@ initApp();
   window.addEventListener('pageshow', syncSessionPreviewClass, {passive:true});
 })();
 </script>
-
 </body>
 </html>
