@@ -2737,6 +2737,12 @@ body{
   .routine-emoji.routine-mark,.history-symbol{width:54px!important;height:54px!important;font-size:28px!important;}
 }
 
+
+.active-session-card {
+  border-color: rgba(243, 201, 105, .42) !important;
+  box-shadow: 0 18px 46px rgba(0,0,0,.28), inset 0 1px 0 rgba(243,201,105,.14) !important;
+}
+
 </style>
 <style id="forja-final-stable-css">
 /* === FORJA FINAL INTEGRADO — navegación baja + entrenamiento estable + temporizador compacto === */
@@ -3326,6 +3332,7 @@ function saveCurrentDraft() {
   } catch (e) {
     console.warn('saveCurrentDraft', e);
   }
+  queueCurrentSessionCloudSave(false);
 }
 
 function getCurrentDraft() {
@@ -3389,115 +3396,110 @@ function stripCloudMeta(session) {
   if (!session) return session;
   const copy = JSON.parse(JSON.stringify(session));
   delete copy._cloudId;
+  delete copy.routine_name;
+  delete copy.routine_id;
   return copy;
 }
 
-function normalizeSessionRecord(session) {
+function normalizeSession(session) {
   if (!session || typeof session !== 'object') return null;
-
-  const base = session.data_json && typeof session.data_json === 'object' ? session.data_json : session;
-  if (!base || typeof base !== 'object') return null;
-
-  const clean = cloneData(base);
-  clean.routineName = clean.routineName || clean.routine_name || session.routine_name || clean.name || '';
-  clean.routineId = clean.routineId || clean.routine_id || session.routine_id || '';
-  clean.date = clean.date || session.date || clean.createdAt || clean.startedAt || clean.finishedAt || '';
-
-  if (!clean.routineName || !clean.date || !Array.isArray(clean.exercises)) return null;
-
-  clean.exercises = clean.exercises
-    .filter(ex => ex && typeof ex === 'object')
-    .map(ex => ({
-      ...ex,
-      name: ex.name || '',
-      sets: Array.isArray(ex.sets) ? ex.sets.map(st => ({ ...st })) : []
-    }))
-    .filter(ex => ex.name);
-
-  if (!clean.exercises.length) return null;
-
-  if (session._cloudId && !clean._cloudId) clean._cloudId = session._cloudId;
-  delete clean.routine_name;
-  delete clean.routine_id;
-  return clean;
-}
-
-function doneSetCount(session) {
-  return (session?.exercises || []).reduce((acc, ex) => acc + (ex.sets || []).filter(st => st && st.done).length, 0);
-}
-
-function totalSetCount(session) {
-  return (session?.exercises || []).reduce((acc, ex) => acc + (ex.sets || []).length, 0);
-}
-
-function sessionScore(session) {
-  const s = normalizeSessionRecord(session);
-  if (!s) return -1;
-  return (doneSetCount(s) * 1000) + (s.exercises.length * 100) + totalSetCount(s);
-}
-
-function isRealHistorySession(session) {
-  const s = normalizeSessionRecord(session);
-  if (!s) return false;
-  return doneSetCount(s) > 0;
+  const source = session.data_json && typeof session.data_json === 'object' ? session.data_json : session;
+  if (!source || typeof source !== 'object') return null;
+  const copy = JSON.parse(JSON.stringify(source));
+  copy.routineName = copy.routineName || copy.routine_name || session.routine_name || copy.name || '';
+  copy.routineId = copy.routineId || copy.routine_id || session.routine_id || '';
+  copy.date = copy.date || session.date || copy.finishedAt || copy.createdAt || copy.startedAt || '';
+  if (!copy.routineName || !copy.date || !Array.isArray(copy.exercises)) return null;
+  copy.exercises = copy.exercises.map(ex => ({ ...ex, sets: Array.isArray(ex.sets) ? ex.sets : [] }));
+  delete copy._cloudId;
+  delete copy.routine_name;
+  delete copy.routine_id;
+  return copy;
 }
 
 function sessionKey(session) {
-  const s = normalizeSessionRecord(session);
-  if (!s) return '';
-  return `${s.routineName}__${s.date}`;
+  const s = normalizeSession(session);
+  return s ? `${s.routineName}__${s.date}` : '';
 }
 
-function sessionSameIdentity(a, b) {
-  const ka = sessionKey(a);
-  const kb = sessionKey(b);
-  return !!ka && !!kb && ka === kb;
+function doneSetsCount(session) {
+  const s = normalizeSession(session);
+  if (!s) return 0;
+  return s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st && st.done).length, 0);
 }
 
 function getActiveDraftSession() {
-  if (currentSession && !editingSessionKey) return currentSession;
   try {
-    const draft = JSON.parse(localStorage.getItem(CURRENT_SESSION_KEY) || 'null');
-    if (!draft?.session) return null;
-    if (draft.owner && draft.owner !== getDraftOwnerId()) return null;
-    return draft.session;
+    const raw = JSON.parse(localStorage.getItem(CURRENT_SESSION_KEY) || 'null');
+    return normalizeSession(raw?.session || raw);
   } catch {
     return null;
   }
 }
 
-function removeActiveDraftFromHistory(sessions) {
-  const draft = getActiveDraftSession();
-  if (!draft) return sessions;
-  return (sessions || []).filter(session => !sessionSameIdentity(session, draft));
+function getSessionStatus(session) {
+  const s = normalizeSession(session);
+  return String(s?.status || s?.sessionStatus || '').toLowerCase();
+}
+
+function isActiveCloudSession(session) {
+  const s = normalizeSession(session);
+  if (!s) return false;
+  const status = getSessionStatus(s);
+  return s.inProgress === true || s.isActive === true || status === 'active' || status === 'in_progress' || status === 'en_curso';
+}
+
+function markActiveSession(session) {
+  const clean = stripCloudMeta(normalizeSession(session));
+  if (!clean) return null;
+  clean.status = 'active';
+  clean.inProgress = true;
+  clean.updatedAt = new Date().toISOString();
+  delete clean.finishedAt;
+  return clean;
+}
+
+function markFinishedSession(session) {
+  const clean = stripCloudMeta(normalizeSession(session));
+  if (!clean) return null;
+  clean.status = 'finished';
+  clean.inProgress = false;
+  clean.finishedAt = clean.finishedAt || new Date().toISOString();
+  clean.updatedAt = new Date().toISOString();
+  return clean;
+}
+
+function isValidHistorySession(session) {
+  const s = normalizeSession(session);
+  if (!s) return false;
+  return isActiveCloudSession(s) || doneSetsCount(s) > 0;
+}
+
+function scoreSessionForDedupe(session) {
+  const s = normalizeSession(session);
+  if (!s) return -1;
+  const activeBonus = isActiveCloudSession(s) ? 1000000 : 0;
+  const doneBonus = doneSetsCount(s) * 1000;
+  const updated = Date.parse(s.updatedAt || s.finishedAt || s.date || 0) || 0;
+  return activeBonus + doneBonus + updated / 1000000000000;
 }
 
 function dedupeSessions(sessions) {
   const map = new Map();
-
   for (const item of sessions || []) {
-    const session = normalizeSessionRecord(item);
-    if (!isRealHistorySession(session)) continue;
-
+    const session = normalizeSession(item);
+    if (!session || !isValidHistorySession(session)) continue;
     const key = sessionKey(session);
     if (!key) continue;
-
-    if (!map.has(key)) {
+    const current = map.get(key);
+    if (!current || scoreSessionForDedupe(session) >= scoreSessionForDedupe(current)) {
       map.set(key, session);
-      continue;
     }
-
-    const previous = map.get(key);
-    const candidate = sessionScore(session) > sessionScore(previous) ? session : previous;
-    const cloudId = previous._cloudId || session._cloudId || null;
-    if (cloudId) candidate._cloudId = cloudId;
-    map.set(key, candidate);
   }
-
   return Array.from(map.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-function readSessionsArrayFromStorage(key) {
+function readSessionsArrayFromStorageKey(key) {
   try {
     const raw = JSON.parse(localStorage.getItem(key) || '[]');
     return Array.isArray(raw) ? raw : [];
@@ -3507,23 +3509,41 @@ function readSessionsArrayFromStorage(key) {
 }
 
 function getSessionsLocal() {
-  const canonical = readSessionsArrayFromStorage('gymlog_sessions');
-  const legacyMirror = readSessionsArrayFromStorage('forja_sessions');
-  return removeActiveDraftFromHistory(dedupeSessions([...canonical, ...legacyMirror]));
+  /* Caché local mínima. NO es la fuente oficial del historial. */
+  return dedupeSessions(readSessionsArrayFromStorageKey('gymlog_sessions'));
+}
+
+function getLegacyLocalSessionsForCloudMigration() {
+  /* Migración automática una sola vía: local antiguo -> Supabase.
+     No lee gymlog_current_session para no meter entrenamientos en curso al historial. */
+  const legacy = [
+    ...readSessionsArrayFromStorageKey('gymlog_sessions'),
+    ...readSessionsArrayFromStorageKey('forja_sessions')
+  ];
+  return dedupeSessions(legacy);
 }
 
 function setSessionsLocal(sessions) {
-  const clean = removeActiveDraftFromHistory(dedupeSessions(sessions || [])).map(stripCloudMeta);
-  localStorage.setItem('gymlog_sessions', JSON.stringify(clean));
-  localStorage.setItem('forja_sessions', JSON.stringify(clean));
+  /* Solo caché de lectura rápida / respaldo. El historial oficial vive en Supabase. */
+  localStorage.setItem('gymlog_sessions', JSON.stringify(dedupeSessions(sessions).map(stripCloudMeta)));
 }
 
 function getSessions() {
-  return removeActiveDraftFromHistory(dedupeSessions([...(cloudSessions || []), ...getSessionsLocal()]));
+  /* Supabase es la fuente oficial. La sesión en curso también vive en Supabase
+     y debe verse en Historial en cualquier navegador con la misma cuenta. */
+  if (currentUser) {
+    const live = currentSession && isActiveCloudSession(currentSession) ? [currentSession] : [];
+    return dedupeSessions([...(cloudSessions || []), ...live]);
+  }
+  return getSessionsLocal();
+}
+
+function getFinishedSessions() {
+  return getSessions().filter(s => !isActiveCloudSession(s));
 }
 
 function getLastSession(routineId) {
-  const sessions = getSessions();
+  const sessions = getFinishedSessions();
   return sessions.find(s => s.routineId === routineId) || null;
 }
 
@@ -3548,7 +3568,7 @@ async function loadCloudSessions() {
   if (error) {
     console.error('loadCloudSessions', error);
     showToast('❌ ' + error.message);
-    return [];
+    return cloudSessions || [];
   }
 
   cloudSessions = dedupeSessions((data || []).map(row => ({
@@ -3559,21 +3579,18 @@ async function loadCloudSessions() {
     date: row.data_json?.date || row.date,
   })));
 
-  setSessionsLocal([...getSessionsLocal(), ...cloudSessions]);
+  setSessionsLocal(cloudSessions);
   return cloudSessions;
 }
 
 async function syncLocalSessionsToCloud() {
-  if (!currentUser) {
-    setSessionsLocal(getSessionsLocal());
-    return true;
-  }
+  if (!currentUser) return true;
 
-  const localBefore = getSessionsLocal();
+  const legacyLocalSessions = getLegacyLocalSessionsForCloudMigration();
 
   const { data: existingRows, error: fetchError } = await supabaseClient
     .from('sessions')
-    .select('id, routine_id, routine_name, date, data_json')
+    .select('id, routine_name, date')
     .eq('user_id', currentUser.id);
 
   if (fetchError) {
@@ -3583,27 +3600,22 @@ async function syncLocalSessionsToCloud() {
     return false;
   }
 
-  const cloudBefore = dedupeSessions((existingRows || []).map(row => ({
-    ...(row.data_json || {}),
-    _cloudId: row.id,
-    routineId: row.data_json?.routineId || row.routine_id,
-    routineName: row.data_json?.routineName || row.routine_name,
-    date: row.data_json?.date || row.date,
-  })));
+  const existingKeys = new Set(
+    (existingRows || []).map(row => `${row.routine_name}__${row.date}`)
+  );
 
-  const merged = dedupeSessions([...localBefore, ...cloudBefore]);
-  setSessionsLocal(merged);
-
-  const existingKeys = new Set((existingRows || []).map(row => `${row.routine_name}__${row.date}`));
-  const rows = merged
+  const rows = legacyLocalSessions
     .filter(session => !existingKeys.has(sessionKey(session)))
-    .map(session => ({
-      user_id: currentUser.id,
-      routine_id: session.routineId,
-      routine_name: session.routineName,
-      date: session.date,
-      data_json: stripCloudMeta(session),
-    }));
+    .map(session => {
+      const clean = stripCloudMeta(session);
+      return {
+        user_id: currentUser.id,
+        routine_id: clean.routineId,
+        routine_name: clean.routineName,
+        date: clean.date,
+        data_json: clean,
+      };
+    });
 
   if (rows.length) {
     const { error } = await supabaseClient.from('sessions').insert(rows);
@@ -3616,8 +3628,77 @@ async function syncLocalSessionsToCloud() {
   }
 
   await loadCloudSessions();
-  setSessionsLocal([...merged, ...cloudSessions]);
   return true;
+}
+
+let currentSessionCloudTimer = null;
+let currentSessionCloudSaving = false;
+
+function queueCurrentSessionCloudSave(immediate = false) {
+  if (!currentUser || !currentSession || !isActiveCloudSession(currentSession)) return;
+  clearTimeout(currentSessionCloudTimer);
+  const run = () => saveActiveSessionToCloud();
+  if (immediate) run();
+  else currentSessionCloudTimer = setTimeout(run, 450);
+}
+
+async function saveActiveSessionToCloud() {
+  if (!currentUser || !currentSession || currentSessionCloudSaving) return false;
+  const cleanSession = markActiveSession(currentSession);
+  if (!cleanSession) return false;
+
+  currentSessionCloudSaving = true;
+  try {
+    const { data: existing, error: checkError } = await supabaseClient
+      .from('sessions')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .eq('routine_name', cleanSession.routineName)
+      .eq('date', cleanSession.date)
+      .limit(1);
+
+    if (checkError) throw checkError;
+
+    if (existing && existing.length > 0) {
+      const existingId = existing[0].id;
+      const { error } = await supabaseClient
+        .from('sessions')
+        .update({
+          routine_id: cleanSession.routineId,
+          routine_name: cleanSession.routineName,
+          date: cleanSession.date,
+          data_json: cleanSession,
+        })
+        .eq('user_id', currentUser.id)
+        .eq('id', existingId);
+      if (error) throw error;
+      cleanSession._cloudId = existingId;
+    } else {
+      const { data, error } = await supabaseClient
+        .from('sessions')
+        .insert({
+          user_id: currentUser.id,
+          routine_id: cleanSession.routineId,
+          routine_name: cleanSession.routineName,
+          date: cleanSession.date,
+          data_json: cleanSession,
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      cleanSession._cloudId = data?.id || null;
+    }
+
+    currentSession = { ...currentSession, ...cleanSession };
+    cloudSessions = dedupeSessions([...(cloudSessions || []), cleanSession]);
+    setSessionsLocal(cloudSessions);
+    return true;
+  } catch (error) {
+    console.error('saveActiveSessionToCloud', error);
+    return false;
+  } finally {
+    currentSessionCloudSaving = false;
+  }
 }
 
 async function saveSession(session) {
@@ -3627,13 +3708,11 @@ async function saveSession(session) {
     return false;
   }
 
-  const cleanSession = normalizeSessionRecord(stripCloudMeta(session));
-  if (!isRealHistorySession(cleanSession)) {
-    showToast('⚠️ No hay datos suficientes para guardar');
+  const cleanSession = markFinishedSession(session);
+  if (!cleanSession || doneSetsCount(cleanSession) === 0) {
+    showToast('⚠️ No hay series terminadas para guardar');
     return false;
   }
-
-  setSessionsLocal([cleanSession, ...getSessionsLocal(), ...(cloudSessions || [])]);
 
   const { data: existing, error: checkError } = await supabaseClient
     .from('sessions')
@@ -3667,11 +3746,8 @@ async function saveSession(session) {
       showToast('❌ ' + error.message);
       return false;
     }
-
-    cloudSessions = cloudSessions.filter(s => !(s.routineName === cleanSession.routineName && s.date === cleanSession.date));
-    cloudSessions.unshift({ ...cleanSession, _cloudId: existingId });
   } else {
-    const { data, error } = await supabaseClient
+    const { error } = await supabaseClient
       .from('sessions')
       .insert({
         user_id: currentUser.id,
@@ -3679,21 +3755,16 @@ async function saveSession(session) {
         routine_name: cleanSession.routineName,
         date: cleanSession.date,
         data_json: cleanSession,
-      })
-      .select('id')
-      .single();
+      });
 
     if (error) {
       console.error('saveSession insert', error);
       showToast('❌ ' + error.message);
       return false;
     }
-
-    cloudSessions.unshift({ ...cleanSession, _cloudId: data.id });
   }
 
-  cloudSessions = dedupeSessions(cloudSessions);
-  setSessionsLocal([cleanSession, ...getSessionsLocal(), ...cloudSessions]);
+  await loadCloudSessions();
   return true;
 }
 
@@ -3716,9 +3787,9 @@ async function updateSavedSession(originalRef, updatedSession) {
     return false;
   }
 
-  const cleanSession = normalizeSessionRecord(stripCloudMeta(updatedSession));
-  if (!isRealHistorySession(cleanSession)) {
-    showToast('⚠️ No hay datos suficientes para guardar');
+  const cleanSession = markFinishedSession(updatedSession);
+  if (!cleanSession || doneSetsCount(cleanSession) === 0) {
+    showToast('⚠️ No hay series terminadas para guardar');
     return false;
   }
 
@@ -3746,14 +3817,7 @@ async function updateSavedSession(originalRef, updatedSession) {
     return false;
   }
 
-  const localSessions = getSessionsLocal().filter(s => !sameSessionRef(s, originalRef));
-  cloudSessions = (cloudSessions || []).filter(s => !sameSessionRef(s, originalRef));
-  cloudSessions.unshift({ ...cleanSession, _cloudId: originalRef?.cloudId || cleanSession._cloudId || null });
-  cloudSessions = dedupeSessions(cloudSessions);
-
-  setSessionsLocal([cleanSession, ...localSessions, ...cloudSessions]);
   await loadCloudSessions();
-  setSessionsLocal([cleanSession, ...getSessionsLocal(), ...cloudSessions]);
   return true;
 }
 
@@ -3784,9 +3848,10 @@ function getYesterdayInputValue() {
 function setCurrentSessionDate(value) {
   if (!currentSession || !value) return;
   currentSession.date = fromDateInputValue(value, currentSession.date);
+  currentSession.updatedAt = new Date().toISOString();
   const label = document.getElementById('sessionDateLabel');
   if (label) label.textContent = formatDateFull(new Date(currentSession.date));
-  if (!editingSessionKey) saveCurrentDraft();
+  saveCurrentDraft();
 }
 
 async function editSavedSession(index) {
@@ -3798,14 +3863,19 @@ async function editSavedSession(index) {
     return;
   }
 
+  const active = isActiveCloudSession(session);
   editingSessionKey = makeSessionRef(session);
   currentSession = cloneData(stripCloudMeta(session));
   currentSession._cloudId = session._cloudId || null;
+  if (active) currentSession = markActiveSession(currentSession);
   clearCurrentDraft();
   stopTimer();
 
   document.getElementById('sessionTitle').textContent = currentSession.routineName.toUpperCase();
-  document.getElementById('sessionDate').innerHTML = `
+  document.getElementById('sessionDate').innerHTML = active ? `
+    <span class="session-kicker">Sesión en curso</span>
+    <div id="sessionDateLabel">${formatDateFull(new Date(currentSession.date))}</div>
+  ` : `
     <span class="session-kicker">Editando sesión guardada</span>
     <div id="sessionDateLabel">${formatDateFull(new Date(currentSession.date))}</div>
     <input type="date" class="form-input" style="margin-top:10px;" value="${toDateInputValue(currentSession.date)}" onchange="setCurrentSessionDate(this.value)">
@@ -3813,7 +3883,7 @@ async function editSavedSession(index) {
 
   renderExercises();
   const finishBtn = document.querySelector('.finish-btn');
-  finishBtn.textContent = 'GUARDAR CAMBIOS';
+  finishBtn.textContent = active ? 'TERMINAR SESIÓN' : 'GUARDAR CAMBIOS';
   finishBtn.onclick = () => finishSession();
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -4390,14 +4460,39 @@ function showScreen(name) {
     document.querySelectorAll('.nav-btn')[navMap[name]].classList.add('active');
   }
 
-  if (name === 'history') renderHistory();
-  if (name === 'home') renderHome();
+  if (name === 'history') {
+    renderHistory();
+    if (currentUser) loadCloudSessions().then(renderHistory);
+  }
+  if (name === 'home') {
+    renderHome();
+    if (currentUser) loadCloudSessions().then(renderHome);
+  }
   if (name === 'profile') renderProfile();
   if (name === 'auth') renderAuthStatus();
 }
 
-function discardSession() {
-  if (editingSessionKey) {
+async function deleteActiveCloudSession(session) {
+  const s = normalizeSession(session);
+  if (!currentUser || !s || !isActiveCloudSession(s)) return;
+  try {
+    const { error } = await supabaseClient
+      .from('sessions')
+      .delete()
+      .eq('user_id', currentUser.id)
+      .eq('routine_name', s.routineName)
+      .eq('date', s.date);
+    if (error) throw error;
+    cloudSessions = dedupeSessions((cloudSessions || []).filter(item => sessionKey(item) !== sessionKey(s)));
+    setSessionsLocal(cloudSessions);
+  } catch (error) {
+    console.error('deleteActiveCloudSession', error);
+    showToast('❌ ' + error.message);
+  }
+}
+
+async function discardSession() {
+  if (editingSessionKey && !isActiveCloudSession(currentSession)) {
     currentSession = null;
     editingSessionKey = null;
     clearCurrentDraft();
@@ -4407,7 +4502,9 @@ function discardSession() {
   }
 
   if (confirm('¿Descartar entrenamiento?')) {
+    await deleteActiveCloudSession(currentSession);
     currentSession = null;
+    editingSessionKey = null;
     clearCurrentDraft();
     stopTimer();
     showScreen('home');
@@ -4590,6 +4687,9 @@ function startSession(routineId) {
     routineId,
     routineName: routine.name,
     date: new Date().toISOString(),
+    status: 'active',
+    inProgress: true,
+    updatedAt: new Date().toISOString(),
     exercises: routine.exercises.map(ex => {
       const lastEx = getLastExerciseData(routineId, ex.name);
       return {
@@ -4605,8 +4705,10 @@ function startSession(routineId) {
     })
   };
 
+  currentSession = markActiveSession(currentSession);
   saveCurrentDraft();
-  setSessionsLocal(getSessionsLocal());
+  queueCurrentSessionCloudSave(true);
+  renderHistory();
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').innerHTML = `<span class="session-kicker">Sesión en curso</span><div>${formatDateFull(new Date())}</div>`;
   renderExercises();
@@ -4983,9 +5085,10 @@ async function finishSession() {
   }
 
   const wasEditing = !!editingSessionKey;
+  const finishedSession = markFinishedSession(currentSession);
   const ok = wasEditing
-    ? await updateSavedSession(editingSessionKey, currentSession)
-    : await saveSession(currentSession);
+    ? await updateSavedSession(editingSessionKey, finishedSession)
+    : await saveSession(finishedSession);
   if (ok === false) return;
 
   currentSession = null;
@@ -5022,11 +5125,12 @@ function renderHistory() {
       <div class="history-summary-card"><div class="history-summary-label">Última</div><div class="history-summary-value">${formatDate(sessions[0].date)}</div></div>
     </div>
     ${sessions.map((s, i) => {
+      const active = isActiveCloudSession(s);
       const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
       const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
       return `
-        <div class="history-card session-compact clean-history-card"
-          onclick="if(!window.__forjaLongPressDone){showDetail(${i})} window.__forjaLongPressDone=false;"
+        <div class="history-card session-compact clean-history-card ${active ? 'active-session-card' : ''}"
+          onclick="if(!window.__forjaLongPressDone){${active ? `editSavedSession(${i})` : `showDetail(${i})`}} window.__forjaLongPressDone=false;"
           oncontextmenu="event.preventDefault(); openSessionActions(${i});"
           onpointerdown="forjaStartLongPress(event, ${i})"
           onpointerup="forjaEndLongPress()"
@@ -5034,8 +5138,8 @@ function renderHistory() {
           onpointercancel="forjaEndLongPress()">
           <div class="history-top">
             <div class="history-main">
-              <div class="history-name">${escapeHtml(s.routineName)}</div>
-              <div class="routine-meta" style="margin-top:4px;">${s.exercises.length} ejercicios registrados</div>
+              <div class="history-name">${escapeHtml(s.routineName)}${active ? ' <span style="font-size:11px;letter-spacing:.8px;color:#f3c969;margin-left:6px;">EN CURSO</span>' : ''}</div>
+              <div class="routine-meta" style="margin-top:4px;">${s.exercises.length} ejercicios registrados${active ? ' · actualizándose en Supabase' : ''}</div>
             </div>
             <div class="session-date-actions">
               <div class="history-date-badge">${formatDate(s.date)}</div>
@@ -5100,8 +5204,8 @@ function openSessionActions(index) {
       <div class="action-sheet-title">${escapeHtml(session.routineName)}</div>
       <div class="action-sheet-sub">${formatDateFull(new Date(session.date))}</div>
       <div class="action-sheet-grid">
-        <button class="mini-btn primary" onclick="closeSessionActions(); showDetail(${index});">Ver detalle</button>
-        <button class="mini-btn" onclick="closeSessionActions(); editSavedSession(${index});">Editar</button>
+        ${isActiveCloudSession(session) ? `<button class="mini-btn primary" onclick="closeSessionActions(); editSavedSession(${index});">Continuar</button>` : `<button class="mini-btn primary" onclick="closeSessionActions(); showDetail(${index});">Ver detalle</button>`}
+        <button class="mini-btn" onclick="closeSessionActions(); editSavedSession(${index});">${isActiveCloudSession(session) ? 'Abrir' : 'Editar'}</button>
         <button class="mini-btn" onclick="closeSessionActions(); changeSavedSessionDate(${index});">Cambiar fecha</button>
         <button class="mini-btn" onclick="closeSessionActions(); openShareMenu(${index});">Compartir / copiar</button>
         <button class="mini-btn danger" onclick="closeSessionActions(); deleteSession(${index});">Eliminar</button>
@@ -5815,13 +5919,26 @@ function exportSessionsCsv() {
   showToast('✅ CSV exportado');
 }
 
+setInterval(() => {
+  const historyOpen = document.getElementById('historyScreen')?.classList.contains('active');
+  if (!currentUser || !historyOpen || currentSession) return;
+  loadCloudSessions().then(renderHistory);
+}, 8000);
+
+window.addEventListener('pageshow', () => {
+  if (currentUser) loadCloudSessions().then(() => {
+    renderHome();
+    if (document.getElementById('historyScreen')?.classList.contains('active')) renderHistory();
+  });
+}, { passive: true });
+
 async function initApp() {
   await renderAuthStatus();
 
-  setSessionsLocal(getSessionsLocal());
-
   if (currentUser) {
     await syncLocalSessionsToCloud();
+  } else {
+    cloudSessions = [];
   }
 
   renderHome();
@@ -6271,11 +6388,12 @@ async function initApp() {
         <div class="history-summary-card"><div class="history-summary-label">Última</div><div class="history-summary-value">${formatDate(sessions[0].date)}</div></div>
       </div>
       ${sessions.map((s, i) => {
+        const active = isActiveCloudSession(s);
         const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
         const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
         return `
           <div class="history-card session-compact clean-history-card"
-            onclick="if(!window.__forjaLongPressDone){showDetail(${i})} window.__forjaLongPressDone=false;"
+            onclick="if(!window.__forjaLongPressDone){${active ? `editSavedSession(${i})` : `showDetail(${i})`}} window.__forjaLongPressDone=false;"
             oncontextmenu="event.preventDefault(); openSessionActions(${i});"
             onpointerdown="forjaStartLongPress(event, ${i})"
             onpointerup="forjaEndLongPress()"
@@ -6381,11 +6499,12 @@ async function initApp() {
     }
 
     list.innerHTML = sessions.map((s, i) => {
+      const active = isActiveCloudSession(s);
       const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
       const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
       return `
-        <div class="history-card clean-history-card"
-          onclick="if(!window.__forjaLongPressDone){showDetail(${i})} window.__forjaLongPressDone=false;"
+        <div class="history-card clean-history-card ${active ? 'active-session-card' : ''}"
+          onclick="if(!window.__forjaLongPressDone){${active ? `editSavedSession(${i})` : `showDetail(${i})`}} window.__forjaLongPressDone=false;"
           oncontextmenu="event.preventDefault(); openSessionActions(${i});"
           onpointerdown="forjaStartLongPress(event, ${i})"
           onpointerup="forjaEndLongPress()"
@@ -6394,8 +6513,8 @@ async function initApp() {
           <div class="history-clean-top">
             <div class="history-symbol">${escapeHtml(forjaEmojiBySession(s))}</div>
             <div class="history-clean-main">
-              <div class="history-name">${escapeHtml(s.routineName)}</div>
-              <div class="routine-meta">${s.exercises.length} ejercicios registrados</div>
+              <div class="history-name">${escapeHtml(s.routineName)}${active ? ' <span style="font-size:11px;letter-spacing:.8px;color:#f3c969;margin-left:6px;">EN CURSO</span>' : ''}</div>
+              <div class="routine-meta">${s.exercises.length} ejercicios registrados${active ? ' · actualizándose en Supabase' : ''}</div>
             </div>
             <div class="history-date-clean">${formatDate(s.date)}</div>
           </div>
@@ -6489,11 +6608,12 @@ async function initApp() {
     }
 
     list.innerHTML = sessions.map((s, i) => {
+      const active = isActiveCloudSession(s);
       const doneSets = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).length, 0);
       const volume = s.exercises.reduce((acc, ex) => acc + ex.sets.filter(st => st.done).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0), 0);
       return `
-        <div class="history-card clean-history-card"
-          onclick="if(!window.__forjaLongPressDone){showDetail(${i})} window.__forjaLongPressDone=false;"
+        <div class="history-card clean-history-card ${active ? 'active-session-card' : ''}"
+          onclick="if(!window.__forjaLongPressDone){${active ? `editSavedSession(${i})` : `showDetail(${i})`}} window.__forjaLongPressDone=false;"
           oncontextmenu="event.preventDefault(); openSessionActions(${i});"
           onpointerdown="forjaStartLongPress(event, ${i})"
           onpointerup="forjaEndLongPress()"
@@ -6502,8 +6622,8 @@ async function initApp() {
           <div class="history-clean-top">
             <div class="history-symbol">${escapeHtml(fxEmojiBySession(s))}</div>
             <div class="history-clean-main">
-              <div class="history-name">${escapeHtml(s.routineName)}</div>
-              <div class="routine-meta">${s.exercises.length} ejercicios registrados</div>
+              <div class="history-name">${escapeHtml(s.routineName)}${active ? ' <span style="font-size:11px;letter-spacing:.8px;color:#f3c969;margin-left:6px;">EN CURSO</span>' : ''}</div>
+              <div class="routine-meta">${s.exercises.length} ejercicios registrados${active ? ' · actualizándose en Supabase' : ''}</div>
             </div>
             <div class="history-date-clean">${formatDate(s.date)}</div>
           </div>
