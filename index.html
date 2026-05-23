@@ -6763,61 +6763,53 @@ renderTimer();
 restartTimerInterval();
 
 
-
-/* === FORJA RESCATE REAL DE SESIONES + SINCRONIZACIÓN SEGURA 2026-05-23 ===
-   No importa CSV. No mezcla Hevy. Solo rescata objetos con forma de sesión Forja.
-   Protege contra reemplazos accidentales por listas más pequeñas.
+/* === FORJA AUTOSYNC FINAL 2026-05-23 ===
+   Objetivo: que las sesiones reales de Forja aparezcan sin botones ni importación manual.
+   - No usa CSV.
+   - No mezcla Hevy.
+   - No permite que nube/local reduzcan el historial.
+   - Si este archivo se abre donde existen las sesiones de abril, las sube automáticamente a Supabase.
+   - Si este archivo se abre donde Supabase ya tiene más sesiones, las baja automáticamente.
 */
 (function(){
-  const CANONICAL_SESSION_KEY = 'gymlog_sessions';
-  const KNOWN_SESSION_KEYS = [
+  const CANONICAL_KEY = 'gymlog_sessions';
+  const MIRROR_KEY = 'forja_sessions';
+  const BACKUP_PREFIX = 'forja_auto_backup_';
+  const PATCH_ID = 'forja-autosync-final-2026-05-23';
+  const SESSION_KEYS = [
     'gymlog_sessions',
     'forja_sessions',
     'forja_completed_sessions',
     'forja_history',
     'forja_workouts',
+    'forja_historial',
     'workout_sessions',
-    'sessions',
     'completedSessions',
-    'savedSessions'
+    'savedSessions',
+    'historySessions'
   ];
-  const BACKUP_PREFIX = 'forja_respaldo_local_';
-  const PATCH_VERSION = 'forja-sync-rescate-2026-05-23';
 
-  function safeParse(raw){
+  function parseJson(raw){
     if (!raw || typeof raw !== 'string') return null;
     try { return JSON.parse(raw); } catch(e) { return null; }
   }
 
-  function isObject(value){
-    return value && typeof value === 'object' && !Array.isArray(value);
+  function clone(value){
+    return JSON.parse(JSON.stringify(value));
   }
 
-  function hasForjaExerciseShape(exercises){
-    return Array.isArray(exercises) && exercises.some(ex =>
-      ex && typeof ex === 'object' && typeof ex.name === 'string' && Array.isArray(ex.sets)
-    );
+  function hasExerciseShape(exercises){
+    return Array.isArray(exercises) && exercises.some(function(ex){
+      return ex && typeof ex === 'object' && typeof ex.name === 'string' && Array.isArray(ex.sets);
+    });
   }
 
   function looksLikeForjaSession(value){
     const v = value && value.data_json && typeof value.data_json === 'object' ? value.data_json : value;
     if (!v || typeof v !== 'object') return false;
     const name = v.routineName || v.routine_name || v.name;
-    const date = v.date || v.createdAt || v.startedAt;
-    return !!(name && date && hasForjaExerciseShape(v.exercises));
-  }
-
-  function normalizeForjaSession(value){
-    if (!value || typeof value !== 'object') return null;
-    const source = value.data_json && typeof value.data_json === 'object' ? value.data_json : value;
-    if (!looksLikeForjaSession(source)) return null;
-    const clean = JSON.parse(JSON.stringify(source));
-    clean.routineId = clean.routineId || clean.routine_id || value.routine_id || slugRoutineName(clean.routineName || clean.routine_name || clean.name);
-    clean.routineName = clean.routineName || clean.routine_name || value.routine_name || clean.name || 'Entrenamiento';
-    clean.date = clean.date || clean.createdAt || clean.startedAt || value.date || new Date().toISOString();
-    if (!Array.isArray(clean.exercises)) return null;
-    delete clean._cloudId;
-    return clean;
+    const date = v.date || v.createdAt || v.startedAt || v.finishedAt;
+    return !!(name && date && hasExerciseShape(v.exercises));
   }
 
   function slugRoutineName(name){
@@ -6831,355 +6823,311 @@ restartTimerInterval();
     return String(name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'session';
   }
 
-  function stableSessionKey(session){
-    const s = normalizeForjaSession(session);
+  function normalizeSession(value){
+    if (!value || typeof value !== 'object') return null;
+    const source = value.data_json && typeof value.data_json === 'object' ? value.data_json : value;
+    if (!looksLikeForjaSession(source)) return null;
+    const clean = clone(source);
+    clean.routineName = clean.routineName || clean.routine_name || value.routine_name || clean.name || 'Entrenamiento';
+    clean.routineId = clean.routineId || clean.routine_id || value.routine_id || slugRoutineName(clean.routineName);
+    clean.date = clean.date || clean.createdAt || clean.startedAt || clean.finishedAt || value.date || new Date().toISOString();
+    if (!Array.isArray(clean.exercises)) return null;
+    clean.exercises = clean.exercises.map(function(ex){
+      const e = Object.assign({}, ex);
+      if (!Array.isArray(e.sets)) e.sets = [];
+      return e;
+    });
+    delete clean._cloudId;
+    delete clean.routine_name;
+    delete clean.routine_id;
+    return clean;
+  }
+
+  function sessionKey(session){
+    const s = normalizeSession(session);
     if (!s) return '';
-    return `${s.routineName}__${s.date}`;
+    return String(s.routineName) + '__' + String(s.date);
   }
 
-  function dedupeForjaSessionsSafe(items){
+  function dedupeSessionsSafe(list){
     const map = new Map();
-    for (const item of items || []) {
-      const s = normalizeForjaSession(item);
-      if (!s) continue;
-      const key = stableSessionKey(s);
-      if (!key) continue;
+    (list || []).forEach(function(item){
+      const s = normalizeSession(item);
+      if (!s) return;
+      const key = sessionKey(s);
+      if (!key) return;
       if (!map.has(key)) map.set(key, s);
-    }
-    return Array.from(map.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
+    });
+    return Array.from(map.values()).sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
   }
 
-  function collectSessionsFromValue(value, bucket, depth, seen){
-    if (depth > 5 || value == null) return;
-    if (typeof value !== 'object') return;
+  function collectSessions(value, bucket, depth, seen){
+    if (depth > 7 || !value || typeof value !== 'object') return;
     if (seen.has(value)) return;
     seen.add(value);
 
     if (looksLikeForjaSession(value)) {
-      const s = normalizeForjaSession(value);
+      const s = normalizeSession(value);
       if (s) bucket.push(s);
       return;
     }
 
     if (Array.isArray(value)) {
-      for (const item of value) collectSessionsFromValue(item, bucket, depth + 1, seen);
+      value.forEach(function(item){ collectSessions(item, bucket, depth + 1, seen); });
       return;
     }
 
-    const preferred = ['sessions','history','workouts','items','data','records','completedSessions','savedSessions'];
-    for (const key of preferred) {
-      if (value && Object.prototype.hasOwnProperty.call(value, key)) collectSessionsFromValue(value[key], bucket, depth + 1, seen);
-    }
-    for (const key of Object.keys(value).slice(0, 60)) {
-      if (!preferred.includes(key)) collectSessionsFromValue(value[key], bucket, depth + 1, seen);
-    }
+    ['sessions','history','historial','workouts','items','data','records','completedSessions','savedSessions','visibleSessions'].forEach(function(key){
+      if (Object.prototype.hasOwnProperty.call(value, key)) collectSessions(value[key], bucket, depth + 1, seen);
+    });
+
+    Object.keys(value).slice(0, 140).forEach(function(key){
+      collectSessions(value[key], bucket, depth + 1, seen);
+    });
   }
 
-  function readKeySessions(key){
-    const parsed = safeParse(localStorage.getItem(key));
+  function sessionsFromAny(value){
     const found = [];
-    collectSessionsFromValue(parsed, found, 0, new WeakSet());
-    return dedupeForjaSessionsSafe(found);
+    collectSessions(value, found, 0, new WeakSet());
+    return dedupeSessionsSafe(found);
   }
 
-  function discoverStoredForjaSessions(){
-    const found = [];
+  function readSessionsFromKey(key){
+    return sessionsFromAny(parseJson(localStorage.getItem(key)));
+  }
 
-    for (const key of KNOWN_SESSION_KEYS) {
-      try { found.push(...readKeySessions(key)); } catch(e) {}
-    }
+  function discoverLocalSessions(){
+    const found = [];
+    SESSION_KEYS.forEach(function(key){
+      try { found.push.apply(found, readSessionsFromKey(key)); } catch(e) {}
+    });
 
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (!key) continue;
-        const lower = key.toLowerCase();
+        const low = key.toLowerCase();
         if (
-          lower.includes('session') ||
-          lower.includes('sesion') ||
-          lower.includes('forja') ||
-          lower.includes('gym') ||
-          lower.includes('history') ||
-          lower.includes('backup') ||
-          lower.includes('respaldo')
+          low.includes('session') || low.includes('sesion') || low.includes('forja') ||
+          low.includes('gym') || low.includes('history') || low.includes('historial') ||
+          low.includes('backup') || low.includes('respaldo')
         ) {
-          found.push(...readKeySessions(key));
+          found.push.apply(found, readSessionsFromKey(key));
         }
       }
     } catch(e) {}
 
-    return dedupeForjaSessionsSafe(found);
+    return dedupeSessionsSafe(found);
   }
 
-  function makeLocalStorageBackup(reason){
+  function backupLocal(reason){
     try {
       const dump = {
-        app: 'FORJA',
-        patch: PATCH_VERSION,
-        reason: reason || 'auto',
-        href: location.href,
-        createdAt: new Date().toISOString(),
-        keys: {}
+        app:'FORJA',
+        patch:PATCH_ID,
+        reason:reason || 'auto',
+        href:location.href,
+        createdAt:new Date().toISOString(),
+        localStorage:{}
       };
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        dump.keys[key] = localStorage.getItem(key);
+        dump.localStorage[key] = localStorage.getItem(key);
       }
-      const backupKey = BACKUP_PREFIX + new Date().toISOString().replace(/[:.]/g, '-');
-      localStorage.setItem(backupKey, JSON.stringify(dump));
-      return backupKey;
-    } catch(e) {
-      console.warn('FORJA backup local falló', e);
-      return '';
-    }
+      const key = BACKUP_PREFIX + new Date().toISOString().replace(/[:.]/g, '-');
+      localStorage.setItem(key, JSON.stringify(dump));
+      return key;
+    } catch(e) { return ''; }
   }
 
-  function downloadText(filename, text, mime){
-    const blob = new Blob([text], {type: mime || 'text/plain;charset=utf-8;'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  function writeLocalSessions(sessions, allowShrink){
+    const incoming = dedupeSessionsSafe(sessions || []);
+    const existing = dedupeSessionsSafe(discoverLocalSessions());
+    const finalSessions = (!allowShrink && existing.length > incoming.length)
+      ? dedupeSessionsSafe([].concat(existing, incoming))
+      : incoming;
+
+    const clean = finalSessions.map(function(s){ return typeof stripCloudMeta === 'function' ? stripCloudMeta(s) : s; });
+    localStorage.setItem(CANONICAL_KEY, JSON.stringify(clean));
+    localStorage.setItem(MIRROR_KEY, JSON.stringify(clean));
+    localStorage.setItem('forja_last_history_count', String(clean.length));
+    localStorage.setItem('forja_last_history_sync', new Date().toISOString());
+    localStorage.setItem('forja_autosync_patch', PATCH_ID);
+    return finalSessions;
+  }
+
+  async function fetchCloudSessions(){
+    if (!currentUser) return [];
+    const result = await supabaseClient
+      .from('sessions')
+      .select('id, routine_id, routine_name, date, data_json')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending:false });
+    if (result.error) throw result.error;
+    return dedupeSessionsSafe((result.data || []).map(function(row){
+      const base = row.data_json && typeof row.data_json === 'object' ? row.data_json : {};
+      return Object.assign({}, base, {
+        _cloudId: row.id,
+        routineId: base.routineId || row.routine_id,
+        routineName: base.routineName || row.routine_name,
+        date: base.date || row.date
+      });
+    }));
+  }
+
+  async function insertMissingToCloud(sessions){
+    if (!currentUser || !sessions || !sessions.length) return 0;
+
+    const existing = await supabaseClient
+      .from('sessions')
+      .select('id, routine_name, date')
+      .eq('user_id', currentUser.id);
+    if (existing.error) throw existing.error;
+
+    const existingKeys = new Set((existing.data || []).map(function(row){ return String(row.routine_name) + '__' + String(row.date); }));
+    const rows = dedupeSessionsSafe(sessions)
+      .filter(function(session){ return !existingKeys.has(sessionKey(session)); })
+      .map(function(session){
+        const clean = typeof stripCloudMeta === 'function' ? stripCloudMeta(session) : session;
+        return {
+          user_id: currentUser.id,
+          routine_id: clean.routineId,
+          routine_name: clean.routineName,
+          date: clean.date,
+          data_json: clean
+        };
+      });
+
+    if (!rows.length) return 0;
+    const inserted = await supabaseClient.from('sessions').insert(rows);
+    if (inserted.error) throw inserted.error;
+    return rows.length;
+  }
+
+  async function autoSyncForja(reason){
+    try {
+      backupLocal(reason || 'autosync');
+      const local = dedupeSessionsSafe(discoverLocalSessions());
+      writeLocalSessions(local, false);
+
+      if (!currentUser) {
+        window.__forjaAutoSyncState = { ok:true, reason:reason || 'autosync', local:local.length, cloud:null, final:local.length, user:false };
+        return window.__forjaAutoSyncState;
+      }
+
+      const cloud = await fetchCloudSessions();
+      const mergedBeforeUpload = dedupeSessionsSafe([].concat(local, cloud));
+      writeLocalSessions(mergedBeforeUpload, false);
+
+      let uploaded = 0;
+      try { uploaded = await insertMissingToCloud(mergedBeforeUpload); } catch(uploadError) { throw uploadError; }
+
+      let finalCloud = cloud;
+      try { finalCloud = await fetchCloudSessions(); } catch(e) {}
+      cloudSessions = dedupeSessionsSafe(finalCloud);
+      const finalSessions = writeLocalSessions(dedupeSessionsSafe([].concat(mergedBeforeUpload, cloudSessions)), false);
+
+      window.__forjaAutoSyncState = {
+        ok:true,
+        reason:reason || 'autosync',
+        local:local.length,
+        cloud:cloud.length,
+        uploaded:uploaded,
+        final:finalSessions.length,
+        user:true
+      };
+      return window.__forjaAutoSyncState;
+    } catch(error) {
+      console.error('FORJA autosync error', error);
+      const local = dedupeSessionsSafe(discoverLocalSessions());
+      writeLocalSessions(local, false);
+      window.__forjaAutoSyncState = { ok:false, error:error && error.message ? error.message : String(error), local:local.length, user:!!currentUser };
+      return window.__forjaAutoSyncState;
+    }
   }
 
   const originalGetSessionsLocal = typeof getSessionsLocal === 'function' ? getSessionsLocal : null;
   const originalSetSessionsLocal = typeof setSessionsLocal === 'function' ? setSessionsLocal : null;
+  const originalGetSessions = typeof getSessions === 'function' ? getSessions : null;
+  const originalLoadCloudSessions = typeof loadCloudSessions === 'function' ? loadCloudSessions : null;
   const originalSyncLocalSessionsToCloud = typeof syncLocalSessionsToCloud === 'function' ? syncLocalSessionsToCloud : null;
   const originalInitApp = typeof initApp === 'function' ? initApp : null;
-  const originalOpenExportMenu = typeof openExportMenu === 'function' ? openExportMenu : null;
 
   getSessionsLocal = window.getSessionsLocal = function(){
     const direct = originalGetSessionsLocal ? originalGetSessionsLocal() : [];
-    return dedupeForjaSessionsSafe([...direct, ...discoverStoredForjaSessions()]);
+    return dedupeSessionsSafe([].concat(direct || [], discoverLocalSessions()));
   };
 
   setSessionsLocal = window.setSessionsLocal = function(sessions){
-    const incoming = dedupeForjaSessionsSafe(sessions || []);
-    const existing = dedupeForjaSessionsSafe(discoverStoredForjaSessions());
-    let finalSessions = incoming;
-
-    if (!window.__forjaAllowHistoryShrink && existing.length > incoming.length) {
-      finalSessions = dedupeForjaSessionsSafe([...existing, ...incoming]);
-      console.warn('FORJA protegió el historial: intento de guardar menos sesiones bloqueado', {
-        existentes: existing.length,
-        entrantes: incoming.length,
-        finales: finalSessions.length
-      });
-    }
-
-    try {
-      localStorage.setItem(CANONICAL_SESSION_KEY, JSON.stringify(finalSessions.map(stripCloudMeta)));
-      localStorage.setItem('forja_sessions', JSON.stringify(finalSessions.map(stripCloudMeta)));
-      localStorage.setItem('forja_last_history_count', String(finalSessions.length));
-      localStorage.setItem('forja_last_history_write', new Date().toISOString());
-    } catch(e) {
+    try { return writeLocalSessions(sessions || [], false); }
+    catch(e) {
       console.warn('FORJA setSessionsLocal seguro falló', e);
-      if (originalSetSessionsLocal) originalSetSessionsLocal(finalSessions);
+      if (originalSetSessionsLocal) return originalSetSessionsLocal(sessions);
+    }
+  };
+
+  getSessions = window.getSessions = function(){
+    const local = dedupeSessionsSafe(discoverLocalSessions());
+    const cloud = dedupeSessionsSafe(cloudSessions || []);
+    return dedupeSessionsSafe([].concat(cloud, local));
+  };
+
+  loadCloudSessions = window.loadCloudSessions = async function(){
+    if (!currentUser) { cloudSessions = []; return []; }
+    try {
+      const cloud = await fetchCloudSessions();
+      cloudSessions = dedupeSessionsSafe(cloud);
+      const merged = dedupeSessionsSafe([].concat(discoverLocalSessions(), cloudSessions));
+      writeLocalSessions(merged, false);
+      return cloudSessions;
+    } catch(error) {
+      console.error('FORJA loadCloudSessions seguro falló', error);
+      if (originalLoadCloudSessions) return originalLoadCloudSessions();
+      return [];
     }
   };
 
   syncLocalSessionsToCloud = window.syncLocalSessionsToCloud = async function(){
-    const localSessions = dedupeForjaSessionsSafe(discoverStoredForjaSessions());
-    setSessionsLocal(localSessions);
-
-    if (!currentUser) return false;
-
-    let existingRows = [];
-    try {
-      const { data, error } = await supabaseClient
-        .from('sessions')
-        .select('id, routine_id, routine_name, date, data_json')
-        .eq('user_id', currentUser.id)
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-      existingRows = data || [];
-    } catch(error) {
-      console.error('FORJA sync lectura nube falló', error);
-      showToast('⚠️ Nube no disponible. Historial local protegido.');
-      return false;
+    const state = await autoSyncForja('syncLocalSessionsToCloud');
+    if (!state.ok && originalSyncLocalSessionsToCloud) {
+      try { return await originalSyncLocalSessionsToCloud(); } catch(e) {}
     }
-
-    const cloud = dedupeForjaSessionsSafe(existingRows.map(row => ({
-      ...(row.data_json || {}),
-      _cloudId: row.id,
-      routineId: row.data_json?.routineId || row.routine_id,
-      routineName: row.data_json?.routineName || row.routine_name,
-      date: row.data_json?.date || row.date
-    })));
-
-    cloudSessions = cloud;
-    const merged = dedupeForjaSessionsSafe([...cloud, ...localSessions]);
-    setSessionsLocal(merged);
-
-    const existingKeys = new Set(existingRows.map(row => `${row.routine_name}__${row.date}`));
-    const rowsToInsert = merged
-      .filter(session => !existingKeys.has(stableSessionKey(session)))
-      .map(session => ({
-        user_id: currentUser.id,
-        routine_id: session.routineId,
-        routine_name: session.routineName,
-        date: session.date,
-        data_json: stripCloudMeta(session)
-      }));
-
-    if (rowsToInsert.length) {
-      try {
-        const { error } = await supabaseClient.from('sessions').insert(rowsToInsert);
-        if (error) throw error;
-      } catch(error) {
-        console.error('FORJA sync inserción nube falló', error);
-        showToast('⚠️ Historial local guardado; faltó subir a nube.');
-        return false;
-      }
-    }
-
-    try {
-      const { data, error } = await supabaseClient
-        .from('sessions')
-        .select('id, routine_id, routine_name, date, data_json')
-        .eq('user_id', currentUser.id)
-        .order('date', { ascending: false });
-      if (!error) {
-        cloudSessions = dedupeForjaSessionsSafe((data || []).map(row => ({
-          ...(row.data_json || {}),
-          _cloudId: row.id,
-          routineId: row.data_json?.routineId || row.routine_id,
-          routineName: row.data_json?.routineName || row.routine_name,
-          date: row.data_json?.date || row.date
-        })));
-        setSessionsLocal(dedupeForjaSessionsSafe([...cloudSessions, ...merged]));
-      }
-    } catch(e) {}
-
-    return true;
+    return !!state.ok;
   };
 
   initApp = window.initApp = async function(){
-    makeLocalStorageBackup('antes_de_iniciar_app');
+    backupLocal('antes_de_init');
     await renderAuthStatus();
-
-    const recoveredLocal = dedupeForjaSessionsSafe(discoverStoredForjaSessions());
-    setSessionsLocal(recoveredLocal);
-
-    if (currentUser) {
-      await syncLocalSessionsToCloud();
-    }
-
+    await autoSyncForja('init');
     renderHome();
     renderHistory();
     await renderProfile();
     showScreen(currentUser ? 'home' : 'auth');
+    setTimeout(function(){ autoSyncForja('post_init').then(function(){ try { renderHome(); renderHistory(); } catch(e) {} }); }, 800);
   };
 
-  window.forjaRescatarHistorialReal = async function(){
-    makeLocalStorageBackup('rescate_manual');
-    const before = getSessions().length;
-    const recovered = dedupeForjaSessionsSafe(discoverStoredForjaSessions());
-    setSessionsLocal(recovered);
-    if (currentUser) await syncLocalSessionsToCloud();
-    renderHome();
-    renderHistory();
-    const after = getSessions().length;
-    showToast(`✅ Rescate Forja: ${after} sesiones`);
-    return { before, after, currentUser: !!currentUser };
+  window.forjaDiagnosticoAutomatico = async function(){
+    const state = await autoSyncForja('diagnostico');
+    alert([
+      'FORJA AUTOSYNC',
+      'Visible: ' + (typeof getSessions === 'function' ? getSessions().length : discoverLocalSessions().length),
+      'Local: ' + discoverLocalSessions().length,
+      'Nube: ' + (state.cloud == null ? 'sin sesión' : state.cloud),
+      'Subidas ahora: ' + (state.uploaded || 0),
+      'Usuario: ' + (currentUser ? 'sí' : 'no'),
+      state.error ? 'Error: ' + state.error : ''
+    ].filter(Boolean).join('\n'));
+    return state;
   };
 
-  window.forjaDiagnosticoHistorial = async function(){
-    const local = dedupeForjaSessionsSafe(discoverStoredForjaSessions());
-    let cloud = [];
-    let cloudError = '';
-    if (currentUser) {
-      try {
-        const { data, error } = await supabaseClient
-          .from('sessions')
-          .select('id, routine_id, routine_name, date, data_json')
-          .eq('user_id', currentUser.id)
-          .order('date', { ascending: false });
-        if (error) throw error;
-        cloud = dedupeForjaSessionsSafe((data || []).map(row => ({
-          ...(row.data_json || {}),
-          _cloudId: row.id,
-          routineId: row.data_json?.routineId || row.routine_id,
-          routineName: row.data_json?.routineName || row.routine_name,
-          date: row.data_json?.date || row.date
-        })));
-      } catch(error) {
-        cloudError = error.message || String(error);
-      }
-    }
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
-    const text = [
-      `FORJA diagnóstico`,
-      `Sesiones visibles: ${getSessions().length}`,
-      `Sesiones locales encontradas: ${local.length}`,
-      `Sesiones en nube: ${currentUser ? cloud.length : 'sin sesión iniciada'}`,
-      `Usuario activo: ${currentUser ? 'sí' : 'no'}`,
-      cloudError ? `Error nube: ${cloudError}` : '',
-      `Claves revisadas: ${keys.join(', ')}`
-    ].filter(Boolean).join('\n');
-    alert(text);
-    return { visible: getSessions().length, local: local.length, cloud: cloud.length, currentUser: !!currentUser, cloudError, keys };
-  };
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden) autoSyncForja('visibility').then(function(){ try { renderHistory(); renderHome(); } catch(e) {} });
+  });
 
-  window.forjaExportarRespaldoTotal = function(){
-    const dump = {
-      app: 'FORJA',
-      patch: PATCH_VERSION,
-      href: location.href,
-      createdAt: new Date().toISOString(),
-      visibleSessions: getSessions().length,
-      discoveredSessions: dedupeForjaSessionsSafe(discoverStoredForjaSessions()).map(stripCloudMeta),
-      localStorage: {}
-    };
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      dump.localStorage[key] = localStorage.getItem(key);
-    }
-    downloadText('forja-respaldo-total-localstorage.json', JSON.stringify(dump, null, 2), 'application/json;charset=utf-8;');
-    showToast('✅ Respaldo total exportado');
-  };
-
-  if (originalOpenExportMenu) {
-    openExportMenu = window.openExportMenu = function(){
-      originalOpenExportMenu();
-      setTimeout(() => {
-        const grid = document.querySelector('#exportMenuOverlay .action-sheet-grid');
-        const subtitle = document.querySelector('#exportMenuOverlay .action-sheet-sub');
-        if (subtitle) subtitle.textContent = 'Exporta o rescata sesiones reales de Forja. No importa CSV de Hevy.';
-        if (!grid || grid.querySelector('[data-forja-rescate]')) return;
-        const rescue = document.createElement('button');
-        rescue.className = 'mini-btn primary';
-        rescue.dataset.forjaRescate = '1';
-        rescue.textContent = 'Restaurar historial Forja';
-        rescue.onclick = async () => { closeExportMenu(); await window.forjaRescatarHistorialReal(); };
-
-        const diag = document.createElement('button');
-        diag.className = 'mini-btn';
-        diag.dataset.forjaRescate = '1';
-        diag.textContent = 'Diagnóstico';
-        diag.onclick = async () => { closeExportMenu(); await window.forjaDiagnosticoHistorial(); };
-
-        const backup = document.createElement('button');
-        backup.className = 'mini-btn';
-        backup.dataset.forjaRescate = '1';
-        backup.textContent = 'Respaldo total';
-        backup.onclick = () => { closeExportMenu(); window.forjaExportarRespaldoTotal(); };
-
-        const cancel = grid.querySelector('.mini-btn.danger');
-        grid.insertBefore(rescue, cancel || null);
-        grid.insertBefore(diag, cancel || null);
-        grid.insertBefore(backup, cancel || null);
-      }, 0);
-    };
-  }
+  window.addEventListener('pageshow', function(){
+    setTimeout(function(){ autoSyncForja('pageshow').then(function(){ try { renderHistory(); renderHome(); } catch(e) {} }); }, 250);
+  });
 })();
-
 
 initApp();
 </script>
