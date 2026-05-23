@@ -3060,7 +3060,7 @@ body.training-active .sets-header.bodyweight-header{
 }
 </style>
 </head>
-<body style="background-color:#12051f">
+<body>
 <div class="header">
 <div class="brand">
 <div>
@@ -7890,6 +7890,174 @@ initApp();
   }, true);
 })();
 </script>
+
+
+
+<!-- === FORJA DEFINITIVO CONSOLIDADO: layout, fondo y scroll === -->
+<style id="forja-definitivo-consolidado-layout">
+  :root{
+    color-scheme: dark;
+    --forja-final-bg:
+      radial-gradient(circle at 50% -12%, rgba(96,42,143,.26), transparent 35%),
+      radial-gradient(circle at 12% 2%, rgba(216,184,102,.055), transparent 27%),
+      linear-gradient(180deg,#07010d 0%,#12051e 48%,#07010d 100%);
+  }
+
+  html,
+  body{
+    min-height:100dvh !important;
+    background:var(--forja-final-bg) !important;
+    background-color:#07010d !important;
+    color-scheme:dark !important;
+    overscroll-behavior-y:none !important;
+  }
+
+  body::before{
+    content:"" !important;
+    position:fixed !important;
+    inset:0 !important;
+    z-index:-1 !important;
+    background:var(--forja-final-bg) !important;
+    pointer-events:none !important;
+  }
+
+  input,
+  textarea,
+  select,
+  button{
+    color-scheme:dark !important;
+  }
+
+  input,
+  textarea,
+  select{
+    background-color:#10041c !important;
+    color:#f7f2ea !important;
+    caret-color:#f0d78a !important;
+  }
+
+  /* Pantallas normales: el scroll pertenece al documento para que la barra inferior no tape la última tarjeta. */
+  body:not(.training-active){
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+  }
+
+  body:not(.training-active) .screen.active{
+    height:auto !important;
+    min-height:calc(100dvh - 118px) !important;
+    overflow:visible !important;
+    padding-bottom:calc(214px + env(safe-area-inset-bottom,0px)) !important;
+    background:transparent !important;
+  }
+
+  #historyScreen.screen.active{
+    padding-bottom:calc(236px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  #historyList{
+    padding-bottom:calc(170px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  #historyList > .history-card:last-child,
+  #historyList > .clean-history-card:last-child{
+    margin-bottom:calc(150px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  .nav{
+    bottom:calc(14px + env(safe-area-inset-bottom,0px)) !important;
+    z-index:7000 !important;
+  }
+
+  /* Modo entrenamiento: fondo uniforme hasta el borde inferior, sin franja rectangular. */
+  body.training-active{
+    overflow:hidden !important;
+    background:var(--forja-final-bg) !important;
+    background-color:#07010d !important;
+  }
+
+  body.training-active #sessionScreen.screen.active{
+    position:fixed !important;
+    inset:0 !important;
+    left:50% !important;
+    right:auto !important;
+    width:min(100vw,480px) !important;
+    max-width:480px !important;
+    min-height:100dvh !important;
+    height:100dvh !important;
+    transform:translateX(-50%) !important;
+    margin:0 !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior-y:contain !important;
+    background:var(--forja-final-bg) !important;
+    background-color:#07010d !important;
+    padding-top:calc(env(safe-area-inset-top,0px) + 46px) !important;
+    padding-bottom:calc(122px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  body.training-active.timer-active #sessionScreen.screen.active{
+    padding-bottom:calc(122px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  body.training-active #sessionScreen.screen.active::after{
+    content:"" !important;
+    display:block !important;
+    height:calc(28px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  body.training-active .header,
+  body.training-active .nav{
+    display:none !important;
+  }
+
+  body.timer-active > .timer-wrap{
+    bottom:calc(12px + env(safe-area-inset-bottom,0px)) !important;
+    width:min(calc(100vw - 42px),420px) !important;
+    background:rgba(17,5,29,.96) !important;
+    border-color:rgba(226,194,125,.24) !important;
+    box-shadow:0 16px 34px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,245,214,.08) !important;
+  }
+
+  body.training-active.timer-active > .timer-wrap{
+    bottom:calc(12px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  body.timer-active::after{
+    content:"" !important;
+    position:fixed !important;
+    left:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+    height:calc(96px + env(safe-area-inset-bottom,0px)) !important;
+    z-index:-1 !important;
+    background:linear-gradient(180deg, rgba(18,5,30,0), #07010d 72%) !important;
+    pointer-events:none !important;
+  }
+
+  .forja-add-exercise-shell{
+    padding:0 18px !important;
+    margin:18px 0 calc(140px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  .forja-add-exercise-btn{
+    display:flex !important;
+  }
+
+  /* Evita que Safari pinte blanco alrededor del área editable al abrir teclado. */
+  body.forja-input-active,
+  body.forja-input-active #sessionScreen.screen.active{
+    background:var(--forja-final-bg) !important;
+    background-color:#07010d !important;
+  }
+
+  @supports (-webkit-touch-callout:none){
+    input,
+    textarea,
+    select{
+      font-size:16px !important;
+    }
+  }
+</style>
 
 </body>
 </html>
