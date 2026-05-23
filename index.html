@@ -2745,322 +2745,197 @@ body{
 }
 
 </style>
-<style id="forja-final-stable-css">
-/* === FORJA FINAL INTEGRADO — navegación baja + entrenamiento estable + temporizador compacto === */
-.history-summary-grid,
-.history-stats,
-.history-compact-stats,
-.day-badge,
-.hero-badge,
-.hero-grid,
-.hero-stat,
-.profile-badge,
-.detail-badge,
-.history-date-badge,
-.clean-history-card button,
-.clean-home button:not(.nav-btn){
-  display:none!important;
-}
 
-/* Barra inferior restaurada: baja, sin corte y sin depender de subirla con todo el safe-area. */
-.nav{
-  display:grid!important;
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  gap:7px!important;
-  position:fixed!important;
-  left:50%!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:max(8px, calc(env(safe-area-inset-bottom,0px) - 22px))!important;
-  transform:translateX(-50%)!important;
-  width:calc(100% - 32px)!important;
-  max-width:448px!important;
-  margin:0!important;
-  padding:7px!important;
-  z-index:9000!important;
-  border-radius:28px!important;
-  background:rgba(15,4,27,.74)!important;
-  border:1px solid rgba(226,194,125,.16)!important;
-  box-shadow:0 18px 46px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,245,214,.10)!important;
-  -webkit-backdrop-filter:blur(32px) saturate(1.28)!important;
-  backdrop-filter:blur(32px) saturate(1.28)!important;
-}
-.nav-btn{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  min-width:0!important;
-  height:50px!important;
-  padding:0 6px!important;
-  border-radius:20px!important;
-  font-family:'DM Sans',sans-serif!important;
-  font-size:14px!important;
-  font-weight:800!important;
-  letter-spacing:-.02em!important;
-  text-transform:none!important;
-  color:rgba(205,193,216,.62)!important;
-  background:transparent!important;
-  border:0!important;
-  transform:none!important;
-}
-.nav-btn.active{
-  color:#130515!important;
-  background:linear-gradient(180deg,#f1da8f 0%,#d5af57 58%,#bd9138 100%)!important;
-  border:1px solid rgba(255,255,255,.44)!important;
-  box-shadow:0 12px 26px rgba(217,183,100,.23),inset 0 1px 0 rgba(255,255,255,.50)!important;
-}
-
-/* Pantallas normales con espacio real para la barra baja. */
-.screen.active{
-  height:100dvh!important;
-  overflow-y:auto!important;
-  -webkit-overflow-scrolling:touch!important;
-  padding-bottom:calc(96px + max(8px, calc(env(safe-area-inset-bottom,0px) - 22px)))!important;
-}
-
-/* Temporizador: no puede estirarse. Oculto por defecto, sin caja vacía. */
-body > .timer-wrap{
-  display:none!important;
-  visibility:hidden!important;
-  opacity:0!important;
-  position:fixed!important;
-  top:auto!important;
-  right:auto!important;
-  bottom:auto!important;
-  left:50%!important;
-  width:auto!important;
-  height:0!important;
-  min-height:0!important;
-  max-height:0!important;
-  margin:0!important;
-  padding:0!important;
-  border:0!important;
-  overflow:hidden!important;
-  pointer-events:none!important;
-  transform:translateX(-50%)!important;
-  z-index:9950!important;
-}
-body.timer-active > .timer-wrap{
-  display:grid!important;
-  visibility:visible!important;
-  opacity:1!important;
-  grid-template-columns:minmax(84px,1fr) auto!important;
-  align-items:center!important;
-  gap:10px!important;
-  top:auto!important;
-  right:auto!important;
-  bottom:calc(max(8px, calc(env(safe-area-inset-bottom,0px) - 22px)) + 74px)!important;
-  left:50%!important;
-  width:min(calc(100vw - 42px),420px)!important;
-  height:68px!important;
-  min-height:68px!important;
-  max-height:68px!important;
-  padding:8px 12px!important;
-  border-radius:24px!important;
-  border:1px solid rgba(226,194,125,.20)!important;
-  background:rgba(12,3,22,.94)!important;
-  box-shadow:0 14px 30px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,245,214,.08)!important;
-  overflow:hidden!important;
-  pointer-events:auto!important;
-  transform:translateX(-50%)!important;
-  -webkit-backdrop-filter:blur(14px) saturate(1.08)!important;
-  backdrop-filter:blur(14px) saturate(1.08)!important;
-}
-body.training-active.timer-active > .timer-wrap{
-  bottom:max(10px, calc(env(safe-area-inset-bottom,0px) - 22px))!important;
-}
-body:not(.timer-active) > .timer-wrap,
-body.training-active:not(.timer-active) > .timer-wrap{
-  display:none!important;
-  visibility:hidden!important;
-  opacity:0!important;
-  height:0!important;
-  min-height:0!important;
-  max-height:0!important;
-  padding:0!important;
-  border:0!important;
-  box-shadow:none!important;
-  overflow:hidden!important;
-  pointer-events:none!important;
-}
-body > .timer-wrap .rest-timer,
-body > .timer-wrap .rest-timer.visible{
-  display:block!important;
-  margin:0!important;
-  padding:0!important;
-  color:#a970ff!important;
-  font-family:'Bebas Neue',sans-serif!important;
-  font-size:42px!important;
-  line-height:.9!important;
-  letter-spacing:.02em!important;
-  text-shadow:0 0 18px rgba(169,112,255,.46), 0 0 34px rgba(169,112,255,.22)!important;
-}
-body > .timer-wrap .timer-controls,
-body > .timer-wrap .timer-controls.visible{
-  display:grid!important;
-  grid-template-columns:repeat(2,48px)!important;
-  gap:6px!important;
-  justify-content:end!important;
-  margin:0!important;
-}
-body > .timer-wrap .timer-control-btn{
-  width:48px!important;
-  height:26px!important;
-  min-height:0!important;
-  padding:0!important;
-  border-radius:12px!important;
-  color:#f0d78a!important;
-  font-family:'DM Sans',sans-serif!important;
-  font-size:10px!important;
-  font-weight:900!important;
-  background:rgba(255,244,212,.058)!important;
-  border:1px solid rgba(226,194,125,.24)!important;
-  box-shadow:none!important;
-  transform:none!important;
-  transition:none!important;
-}
-
-/* Modo entrenamiento: layout estable y sin temblores. */
-body.training-active{
-  overflow:hidden!important;
-  background:linear-gradient(180deg,#0d0418 0%,#12051f 28%,#09000f 100%)!important;
-}
-body.training-active .header,
-body.training-active .nav{
-  display:none!important;
-}
-body.training-active #sessionScreen.screen.active{
-  display:block!important;
-  position:fixed!important;
-  inset:0!important;
-  width:min(100vw,480px)!important;
-  max-width:480px!important;
-  height:100dvh!important;
-  margin:0 auto!important;
-  padding:calc(env(safe-area-inset-top,0px) + 68px) 0 calc(env(safe-area-inset-bottom,0px) + 30px)!important;
-  overflow-y:auto!important;
-  overscroll-behavior-y:contain!important;
-  -webkit-overflow-scrolling:touch!important;
-  background:linear-gradient(180deg,#0d0418 0%,#12051f 30%,#09000f 100%)!important;
-  z-index:3000!important;
-  transform:none!important;
-}
-body.training-active.timer-active #sessionScreen.screen.active{
-  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 98px)!important;
-}
-
-body.training-active #sessionScreen .session-legacy-actions{
-  display:flex!important;
-  position:fixed!important;
-  top:calc(env(safe-area-inset-top,0px) + 12px)!important;
-  left:50%!important;
-  right:auto!important;
-  z-index:4600!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  width:min(100vw,480px)!important;
-  max-width:480px!important;
-  height:48px!important;
-  margin:0!important;
-  padding:0 18px!important;
-  background:transparent!important;
-  border:0!important;
-  box-shadow:none!important;
-  transform:translateX(-50%) translateZ(0)!important;
-  transition:none!important;
-  -webkit-backdrop-filter:none!important;
-  backdrop-filter:none!important;
-  pointer-events:none!important;
-}
-body.training-active #sessionScreen .session-hide-btn,
-body.training-active #sessionScreen .session-discard-btn{
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  flex:0 0 auto!important;
-  transform:none!important;
-  transition:none!important;
-  will-change:auto!important;
-  font-family:'DM Sans',sans-serif!important;
-  cursor:pointer!important;
-  pointer-events:auto!important;
-}
-body.training-active #sessionScreen .session-hide-btn{
-  width:42px!important;
-  height:42px!important;
-  padding:0!important;
-  border-radius:999px!important;
-  background:rgba(255,244,212,.065)!important;
-  border:1px solid rgba(226,194,125,.28)!important;
-  color:#f0d78a!important;
-  font-size:26px!important;
-  font-weight:900!important;
-  line-height:1!important;
-  box-shadow:none!important;
-}
-body.training-active #sessionScreen .session-discard-btn{
-  min-height:42px!important;
-  padding:0 18px!important;
-  border-radius:999px!important;
-  background:rgba(255,93,104,.12)!important;
-  border:1px solid rgba(255,93,104,.42)!important;
-  color:#ff7b86!important;
-  font-size:12px!important;
-  font-weight:900!important;
-  letter-spacing:.16em!important;
-  box-shadow:none!important;
-}
-body.training-active .session-header{
-  margin:0 18px 18px!important;
-  padding:24px 24px 22px!important;
-  border-radius:30px!important;
-  border:1px solid rgba(226,194,125,.16)!important;
-  background:linear-gradient(135deg,rgba(74,32,98,.72),rgba(22,5,38,.94))!important;
-  overflow:hidden!important;
-}
-body.training-active .session-title{
-  font-size:42px!important;
-  line-height:.94!important;
-}
-body.training-active .exercise-card.training-card{
-  margin:0 18px 18px!important;
-  border-radius:30px!important;
-  overflow:hidden!important;
-}
-body.training-active .finish-btn{
-  position:static!important;
-  width:calc(100% - 36px)!important;
-  max-width:none!important;
-  margin:24px 18px 28px!important;
-  transform:none!important;
-}
-
-.set-row.bodyweight-set,
-body.training-active .set-row.bodyweight-set{
-  grid-template-columns:44px 1fr 58px!important;
-}
-.sets-header.bodyweight-header,
-body.training-active .sets-header.bodyweight-header{
-  grid-template-columns:44px 1fr 58px!important;
-}
-.set-row.bodyweight-set .bodyweight-reps-label{
-  text-align:center!important;
-}
-
-@media(max-width:390px){
-  .screen{padding-left:18px!important;padding-right:18px!important;}
-  .routine-card,.history-card{border-radius:25px!important;padding:16px!important;}
-  .routine-emoji.routine-mark,.history-symbol{width:54px!important;height:54px!important;min-width:54px!important;font-size:28px!important;}
-  .nav{width:calc(100% - 28px)!important;}
-  .nav-btn{font-size:13px!important;}
-  body.training-active #sessionScreen .session-legacy-actions{padding-left:14px!important;padding-right:14px!important;}
-  body.training-active .session-header,
-  body.training-active .exercise-card.training-card{margin-left:14px!important;margin-right:14px!important;}
-  body.timer-active > .timer-wrap{width:min(calc(100vw - 28px),420px)!important;}
-}
-</style>
 </head>
-<body>
+
+<style id="forja-clean-final-2026-05-23">
+  :root{
+    color-scheme:dark;
+    --forja-bg:
+      radial-gradient(circle at 50% -12%, rgba(94,42,138,.26), transparent 36%),
+      radial-gradient(circle at 10% 4%, rgba(215,180,95,.055), transparent 27%),
+      linear-gradient(180deg,#07010d 0%,#12051f 48%,#06000a 100%);
+  }
+
+  html,
+  body{
+    background:var(--forja-bg) !important;
+    background-color:#07010d !important;
+    color-scheme:dark !important;
+    overscroll-behavior:none !important;
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:-2px;
+    z-index:-1;
+    background:var(--forja-bg) !important;
+    pointer-events:none;
+  }
+
+  input, textarea, select, button{ color-scheme:dark !important; }
+
+  /* El encabezado ya no flota encima de tarjetas al hacer scroll. */
+  body:not(.training-active) .header{
+    position:relative !important;
+    top:auto !important;
+    z-index:10 !important;
+    background:transparent !important;
+    border-bottom:0 !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+
+  body:not(.training-active) .screen.active{
+    height:calc(100dvh - 94px) !important;
+    min-height:0 !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    padding-bottom:calc(190px + env(safe-area-inset-bottom,0px)) !important;
+    background:transparent !important;
+  }
+
+  #historyScreen.active,
+  #homeScreen.active{
+    padding-bottom:calc(210px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  .routine-grid,
+  #historyList{
+    padding-bottom:calc(70px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  /* Barra inferior: no se mueve; solo se asegura que nada quede debajo de ella. */
+  .nav{
+    z-index:9000 !important;
+    transform:translateX(-50%) translateZ(0) !important;
+  }
+  body.training-active .nav{ display:none !important; }
+
+  /* Entrenamiento: fondo uniforme, sin franja blanca/negra y sin header encima. */
+  body.training-active{
+    overflow:hidden !important;
+    background:var(--forja-bg) !important;
+  }
+  body.training-active .header{ display:none !important; }
+  body.training-active #sessionScreen.screen.active{
+    display:block !important;
+    position:fixed !important;
+    inset:0 !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    width:min(100vw,480px) !important;
+    max-width:480px !important;
+    height:100dvh !important;
+    margin:0 !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior-y:contain !important;
+    padding-top:calc(env(safe-area-inset-top,0px) + 48px) !important;
+    padding-bottom:calc(150px + env(safe-area-inset-bottom,0px)) !important;
+    background:var(--forja-bg) !important;
+    background-color:#07010d !important;
+  }
+
+  body.training-active #sessionScreen .session-legacy-actions{
+    position:fixed !important;
+    top:calc(env(safe-area-inset-top,0px) + 8px) !important;
+    left:50% !important;
+    transform:translate3d(-50%,0,0) !important;
+    width:min(100vw,480px) !important;
+    max-width:480px !important;
+    height:42px !important;
+    padding:0 18px !important;
+    margin:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    z-index:9600 !important;
+    pointer-events:none !important;
+    transition:none !important;
+    animation:none !important;
+    will-change:auto !important;
+  }
+
+  body.training-active #sessionScreen .session-hide-btn,
+  body.training-active #sessionScreen .session-discard-btn{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    transform:none !important;
+    transition:none !important;
+    animation:none !important;
+    will-change:auto !important;
+    pointer-events:auto !important;
+    box-shadow:none !important;
+  }
+
+  body.training-active #sessionScreen .session-hide-btn{
+    width:40px !important;
+    height:40px !important;
+    padding:0 !important;
+    border-radius:999px !important;
+    background:rgba(255,244,212,.07) !important;
+    border:1px solid rgba(226,194,125,.30) !important;
+    color:#f0d78a !important;
+    font-size:26px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+  }
+
+  body.training-active #sessionScreen .session-discard-btn{
+    min-height:40px !important;
+    padding:0 16px !important;
+    border-radius:999px !important;
+    background:rgba(255,42,63,.17) !important;
+    border:1px solid rgba(255,42,63,.62) !important;
+    color:#ff4f62 !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+    letter-spacing:.14em !important;
+  }
+
+  body.training-active #sessionScreen .session-hide-btn:active,
+  body.training-active #sessionScreen .session-discard-btn:active{
+    transform:none !important;
+  }
+
+  body.training-active .session-header,
+  body.training-active .exercise-card,
+  body.training-active .session-overview,
+  body.training-active .analysis-box,
+  body.training-active .sets-table,
+  body.training-active .notes-shell,
+  body.training-active .forja-add-exercise-shell{
+    transform:none !important;
+    animation:none !important;
+  }
+
+  .forja-add-exercise-shell{ padding:0 18px; margin:18px 0 8px; }
+  .forja-add-exercise-btn{
+    width:100%; min-height:56px; border-radius:18px;
+    border:1px solid rgba(201,164,76,.28);
+    background:rgba(201,164,76,.10);
+    color:#f1d47d;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:24px; letter-spacing:1.2px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:none; transform:none;
+  }
+  .forja-cardio-badge{font-size:11px;letter-spacing:.08em;color:#f1d47d;text-transform:uppercase;}
+  .sets-header.cardio-header{grid-template-columns:42px 1fr 1fr 54px !important;}
+
+  @media(max-width:390px){
+    body:not(.training-active) .screen.active{padding-bottom:calc(215px + env(safe-area-inset-bottom,0px)) !important;}
+    body.training-active #sessionScreen.screen.active{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px)) !important;}
+  }
+</style>
+<body style="background-color:#12051f">
 <div class="header">
 <div class="brand">
 <div>
@@ -3525,18 +3400,22 @@ function getLegacyLocalSessionsForCloudMigration() {
 }
 
 function setSessionsLocal(sessions) {
-  /* Solo caché de lectura rápida / respaldo. El historial oficial vive en Supabase. */
-  localStorage.setItem('gymlog_sessions', JSON.stringify(dedupeSessions(sessions).map(stripCloudMeta)));
+  /* Respaldo local de seguridad. Nunca permite que una lista menor borre una mayor. */
+  try {
+    const existing = readSessionsArrayFromStorageKey('gymlog_sessions');
+    const merged = dedupeSessions([...(existing || []), ...((sessions || []).map(stripCloudMeta))]);
+    localStorage.setItem('gymlog_sessions', JSON.stringify(merged.map(stripCloudMeta)));
+  } catch (e) {
+    console.warn('setSessionsLocal', e);
+  }
 }
 
 function getSessions() {
-  /* Supabase es la fuente oficial. La sesión en curso también vive en Supabase
-     y debe verse en Historial en cualquier navegador con la misma cuenta. */
-  if (currentUser) {
-    const live = currentSession && isActiveCloudSession(currentSession) ? [currentSession] : [];
-    return dedupeSessions([...(cloudSessions || []), ...live]);
-  }
-  return getSessionsLocal();
+  /* Historial real: Supabase + recuperación local + sesión activa. Nunca una fuente pequeña sustituye a otra mayor. */
+  const live = currentSession && isActiveCloudSession(currentSession) ? [currentSession] : [];
+  const legacy = getLegacyLocalSessionsForCloudMigration ? getLegacyLocalSessionsForCloudMigration() : getSessionsLocal();
+  if (currentUser) return dedupeSessions([...(cloudSessions || []), ...(legacy || []), ...live]);
+  return dedupeSessions([...(legacy || []), ...live]);
 }
 
 function getFinishedSessions() {
@@ -3580,7 +3459,7 @@ async function loadCloudSessions() {
     date: row.data_json?.date || row.date,
   })));
 
-  setSessionsLocal(cloudSessions);
+  setSessionsLocal([...(cloudSessions || []), ...getLegacyLocalSessionsForCloudMigration()]);
   return cloudSessions;
 }
 
@@ -4463,7 +4342,7 @@ function showScreen(name) {
 
   if (name === 'history') {
     renderHistory();
-    if (currentUser) loadCloudSessions().then(renderHistory);
+    if (currentUser) loadCloudSessions().then(function(){ syncLocalSessionsToCloud().then(renderHistory); });
   }
   if (name === 'home') {
     renderHome();
@@ -6982,7 +6861,7 @@ function minimizeSession() {
   if (home) home.classList.add('active');
   const firstNav = document.querySelectorAll('.nav-btn')[0];
   if (firstNav) firstNav.classList.add('active');
-  setSessionsLocal(getSessionsLocal());
+  setSessionsLocal(getSessions());
   renderHome();
   renderHistory();
   showToast('✅ Entrenamiento oculto');
@@ -7002,1062 +6881,206 @@ restartTimerInterval();
 initApp();
 </script>
 <!-- === FORJA PATCH FINAL 2026-05-22: fondo uniforme, sesión sin barra inferior, entrenamiento compacto === -->
-<style id="forja-user-fixes-2026-05-22">
-  /* 1) FORJA sin franja oscura: encabezado transparente sobre el mismo fondo */
-  html,
-  body{
-    background:
-      radial-gradient(circle at 50% -10%, rgba(96,42,143,.26), transparent 34%),
-      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
-      linear-gradient(180deg,#07010d 0%,#12051e 48%,#050009 100%) !important;
-  }
 
-  .header{
-    background:transparent !important;
-    border-bottom:0 !important;
-    box-shadow:none !important;
-    backdrop-filter:none !important;
-    -webkit-backdrop-filter:none !important;
-  }
 
-  /* 2) Al seleccionar una rutina, la barra inferior se oculta para no tapar INICIAR SESIÓN. */
-  body.session-preview-active:not(.training-active) .nav{
-    display:none !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
-    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 34px) !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
-    position:static !important;
-    left:auto !important;
-    right:auto !important;
-    bottom:auto !important;
-    transform:none !important;
-    width:calc(100% - 36px) !important;
-    max-width:none !important;
-    margin:22px 18px calc(env(safe-area-inset-bottom,0px) + 20px) !important;
-    display:block !important;
-    z-index:auto !important;
-  }
-
-  /* 3) Entrenamiento iniciado: menos aire arriba, botón rojo estable y flecha visible. */
-  body.training-active #sessionScreen.screen.active{
-    padding-top:calc(env(safe-area-inset-top,0px) + 46px) !important;
-  }
-
-  body.training-active #sessionScreen .session-legacy-actions{
-    position:fixed !important;
-    top:calc(env(safe-area-inset-top,0px) + 8px) !important;
-    left:50% !important;
-    transform:translate3d(-50%,0,0) !important;
-    width:min(100vw,480px) !important;
-    max-width:480px !important;
-    height:42px !important;
-    padding:0 18px !important;
-    margin:0 !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:space-between !important;
-    background:transparent !important;
-    border:0 !important;
-    box-shadow:none !important;
-    z-index:4600 !important;
-    pointer-events:none !important;
-    transition:none !important;
-    will-change:auto !important;
-  }
-
-  body.training-active #sessionScreen .session-hide-btn{
-    display:inline-flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    width:40px !important;
-    height:40px !important;
-    padding:0 !important;
-    border-radius:999px !important;
-    background:rgba(255,244,212,.07) !important;
-    border:1px solid rgba(226,194,125,.30) !important;
-    color:#f0d78a !important;
-    font-size:26px !important;
-    font-weight:900 !important;
-    line-height:1 !important;
-    box-shadow:none !important;
-    transform:none !important;
-    transition:none !important;
-    animation:none !important;
-    pointer-events:auto !important;
-  }
-
-  body.training-active #sessionScreen .session-discard-btn{
-    display:inline-flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    min-height:40px !important;
-    padding:0 16px !important;
-    border-radius:999px !important;
-    background:rgba(255,42,63,.16) !important;
-    border:1px solid rgba(255,42,63,.58) !important;
-    color:#ff4f62 !important;
-    font-size:12px !important;
-    font-weight:900 !important;
-    letter-spacing:.14em !important;
-    box-shadow:none !important;
-    transform:none !important;
-    transition:none !important;
-    animation:none !important;
-    pointer-events:auto !important;
-  }
-
-  body.training-active #sessionScreen .session-hide-btn:active,
-  body.training-active #sessionScreen .session-discard-btn:active{
-    transform:none !important;
-  }
-
-  body.training-active .session-header{
-    margin:0 18px 18px !important;
-  }
-
-  @media(max-width:390px){
-    body.training-active #sessionScreen.screen.active{
-      padding-top:calc(env(safe-area-inset-top,0px) + 44px) !important;
-    }
-    body.training-active #sessionScreen .session-legacy-actions{
-      padding-left:14px !important;
-      padding-right:14px !important;
-    }
-  }
-</style>
-<script id="forja-user-fixes-2026-05-22">
-(function(){
-  function syncSessionPreviewClass(){
-    var session = document.getElementById('sessionScreen');
-    var isSessionOpen = !!(session && session.classList.contains('active'));
-    var isTraining = document.body.classList.contains('training-active');
-    var hasCurrentSession = !!window.currentSession;
-    document.body.classList.toggle('session-preview-active', isSessionOpen && !isTraining && !hasCurrentSession);
-  }
-
-  var oldViewRoutine = window.viewRoutine;
-  if (typeof oldViewRoutine === 'function') {
-    window.viewRoutine = function(){
-      var result = oldViewRoutine.apply(this, arguments);
-      document.body.classList.add('session-preview-active');
-      return result;
-    };
-  }
-
-  var oldStartSession = window.startSession;
-  if (typeof oldStartSession === 'function') {
-    window.startSession = function(){
-      document.body.classList.remove('session-preview-active');
-      return oldStartSession.apply(this, arguments);
-    };
-  }
-
-  var oldShowScreen = window.showScreen;
-  if (typeof oldShowScreen === 'function') {
-    window.showScreen = function(name){
-      var result = oldShowScreen.apply(this, arguments);
-      if (name !== 'session') document.body.classList.remove('session-preview-active');
-      else setTimeout(syncSessionPreviewClass, 0);
-      return result;
-    };
-  }
-
-  var oldEnterTrainingMode = window.enterTrainingMode;
-  if (typeof oldEnterTrainingMode === 'function') {
-    window.enterTrainingMode = function(){
-      document.body.classList.remove('session-preview-active');
-      return oldEnterTrainingMode.apply(this, arguments);
-    };
-  }
-
-  var oldExitTrainingMode = window.exitTrainingMode;
-  if (typeof oldExitTrainingMode === 'function') {
-    window.exitTrainingMode = function(){
-      var result = oldExitTrainingMode.apply(this, arguments);
-      setTimeout(syncSessionPreviewClass, 0);
-      return result;
-    };
-  }
-
-  document.addEventListener('DOMContentLoaded', syncSessionPreviewClass);
-  window.addEventListener('pageshow', syncSessionPreviewClass, {passive:true});
-})();
-</script>
 <!-- === FORJA PATCH 2026-05-22 V2: regreso en vista previa + botón inicio completo + timer por símbolos === -->
-<style id="forja-user-fixes-2026-05-22-v2">
-  /* Vista previa de rutina: permite regresar y mantiene el botón de inicio completo dentro de pantalla. */
-  body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
-    height:calc(100dvh - var(--forja-header-h, 104px)) !important;
-    max-height:calc(100dvh - var(--forja-header-h, 104px)) !important;
-    padding:0 0 calc(env(safe-area-inset-bottom,0px) + 112px) !important;
-    overflow-y:auto !important;
-    -webkit-overflow-scrolling:touch !important;
-  }
 
-  body.session-preview-active:not(.training-active) #sessionScreen .session-legacy-actions{
-    display:flex !important;
-    position:sticky !important;
-    top:0 !important;
-    left:auto !important;
-    right:auto !important;
-    transform:none !important;
-    z-index:120 !important;
-    width:100% !important;
-    max-width:none !important;
-    height:50px !important;
-    margin:0 !important;
-    padding:6px 18px 4px !important;
-    align-items:center !important;
-    justify-content:flex-start !important;
-    gap:0 !important;
-    background:linear-gradient(180deg, rgba(7,1,13,.96) 0%, rgba(7,1,13,.74) 72%, rgba(7,1,13,0) 100%) !important;
-    border:0 !important;
-    box-shadow:none !important;
-    pointer-events:none !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen .session-hide-btn{
-    display:inline-flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    width:40px !important;
-    height:40px !important;
-    min-width:40px !important;
-    padding:0 !important;
-    border-radius:999px !important;
-    background:rgba(255,244,212,.07) !important;
-    border:1px solid rgba(226,194,125,.30) !important;
-    color:#f0d78a !important;
-    font-size:28px !important;
-    font-weight:900 !important;
-    line-height:1 !important;
-    box-shadow:none !important;
-    transform:none !important;
-    transition:none !important;
-    animation:none !important;
-    pointer-events:auto !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen .session-discard-btn{
-    display:none !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen .session-header{
-    margin:0 18px 18px !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
-    position:fixed !important;
-    left:50% !important;
-    right:auto !important;
-    bottom:calc(env(safe-area-inset-bottom,0px) + 14px) !important;
-    transform:translate3d(-50%,0,0) !important;
-    width:min(calc(100vw - 36px),444px) !important;
-    max-width:444px !important;
-    height:64px !important;
-    min-height:64px !important;
-    margin:0 !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    z-index:5000 !important;
-    box-shadow:0 16px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.48) !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn:active{
-    transform:translate3d(-50%,0,0) !important;
-  }
-
-  /* Temporizador: mismos lugar y caja; solo controles compactos por símbolo. */
-  body > .timer-wrap .timer-control-btn{
-    font-size:16px !important;
-    line-height:1 !important;
-    letter-spacing:0 !important;
-  }
-
-  #timerPauseBtn{
-    font-size:15px !important;
-  }
-</style>
-<script id="forja-user-fixes-2026-05-22-v2">
-(function(){
-  function hasCurrentTrainingSession(){
-    try { return typeof currentSession !== 'undefined' && !!currentSession; }
-    catch(e) { return false; }
-  }
-
-  function setHeaderHeightVar(){
-    var header = document.querySelector('.header');
-    var h = header ? Math.ceil(header.getBoundingClientRect().height) : 104;
-    document.documentElement.style.setProperty('--forja-header-h', h + 'px');
-  }
-
-  function goHomeFromPreview(){
-    document.body.classList.remove('session-preview-active');
-    if (typeof showScreen === 'function') showScreen('home');
-  }
-
-  function normalizeSessionButtons(){
-    var actions = document.querySelector('#sessionScreen .session-legacy-actions');
-    if (!actions) return;
-    var hide = actions.querySelector('.session-hide-btn');
-    var discard = actions.querySelector('.session-discard-btn');
-    var isTraining = document.body.classList.contains('training-active');
-    var isPreview = document.body.classList.contains('session-preview-active') && !isTraining;
-
-    if (hide) {
-      if (isPreview) {
-        hide.textContent = '‹';
-        hide.setAttribute('aria-label', 'Volver a rutinas');
-        hide.setAttribute('title', 'Volver a rutinas');
-        hide.onclick = goHomeFromPreview;
-      } else {
-        hide.textContent = '⌄';
-        hide.setAttribute('aria-label', 'Ocultar entrenamiento');
-        hide.setAttribute('title', 'Ocultar entrenamiento');
-        if (typeof minimizeSession === 'function') hide.onclick = minimizeSession;
-      }
-    }
-
-    if (discard && typeof discardSession === 'function') discard.onclick = discardSession;
-  }
-
-  function normalizeStartButton(){
-    var isPreview = document.body.classList.contains('session-preview-active');
-    var btn = document.querySelector('#sessionScreen .finish-btn');
-    if (isPreview && btn && btn.textContent.trim() === 'INICIAR SESIÓN') {
-      btn.textContent = 'INICIAR ENTRENAMIENTO';
-    }
-  }
-
-  function syncSessionPreviewClass(){
-    setHeaderHeightVar();
-    var session = document.getElementById('sessionScreen');
-    var isSessionOpen = !!(session && session.classList.contains('active'));
-    var isTraining = document.body.classList.contains('training-active');
-    var isPreview = isSessionOpen && !isTraining && !hasCurrentTrainingSession();
-    document.body.classList.toggle('session-preview-active', isPreview);
-    normalizeSessionButtons();
-    normalizeStartButton();
-  }
-
-  function patchTimerButtons(){
-    var controls = document.getElementById('timerControls');
-    if (!controls) return;
-    var buttons = controls.querySelectorAll('button');
-    if (buttons[0]) {
-      buttons[0].textContent = '−';
-      buttons[0].setAttribute('onclick', 'adjustTimer(-15)');
-      buttons[0].setAttribute('aria-label', 'Quitar 15 segundos');
-      buttons[0].setAttribute('title', 'Quitar 15 segundos');
-    }
-    if (buttons[1]) {
-      buttons[1].textContent = '+';
-      buttons[1].setAttribute('onclick', 'adjustTimer(15)');
-      buttons[1].setAttribute('aria-label', 'Agregar 15 segundos');
-      buttons[1].setAttribute('title', 'Agregar 15 segundos');
-    }
-    if (buttons[2]) {
-      buttons[2].textContent = '⏸';
-      buttons[2].setAttribute('aria-label', 'Pausar o continuar');
-      buttons[2].setAttribute('title', 'Pausar o continuar');
-    }
-    if (buttons[3]) {
-      buttons[3].textContent = '⏹';
-      buttons[3].setAttribute('aria-label', 'Detener temporizador');
-      buttons[3].setAttribute('title', 'Detener temporizador');
-    }
-  }
-
-  var previousRenderTimer = (typeof renderTimer === 'function') ? renderTimer : null;
-  if (previousRenderTimer) {
-    renderTimer = window.renderTimer = function(){
-      var result = previousRenderTimer.apply(this, arguments);
-      patchTimerButtons();
-      var pauseBtn = document.getElementById('timerPauseBtn');
-      try {
-        if (pauseBtn && typeof forjaTimerState !== 'undefined') {
-          pauseBtn.textContent = forjaTimerState.pausedMs !== null ? '▶' : '⏸';
-        }
-      } catch(e) {}
-      return result;
-    };
-  }
-
-  var previousViewRoutine = (typeof viewRoutine === 'function') ? viewRoutine : null;
-  if (previousViewRoutine) {
-    viewRoutine = window.viewRoutine = function(){
-      var result = previousViewRoutine.apply(this, arguments);
-      setTimeout(syncSessionPreviewClass, 0);
-      setTimeout(syncSessionPreviewClass, 80);
-      return result;
-    };
-  }
-
-  var previousStartSession = (typeof startSession === 'function') ? startSession : null;
-  if (previousStartSession) {
-    startSession = window.startSession = function(){
-      document.body.classList.remove('session-preview-active');
-      var result = previousStartSession.apply(this, arguments);
-      setTimeout(syncSessionPreviewClass, 0);
-      return result;
-    };
-  }
-
-  var previousShowScreen = (typeof showScreen === 'function') ? showScreen : null;
-  if (previousShowScreen) {
-    showScreen = window.showScreen = function(name){
-      var result = previousShowScreen.apply(this, arguments);
-      setTimeout(syncSessionPreviewClass, 0);
-      return result;
-    };
-  }
-
-  var previousEnterTrainingMode = (typeof enterTrainingMode === 'function') ? enterTrainingMode : null;
-  if (previousEnterTrainingMode) {
-    enterTrainingMode = window.enterTrainingMode = function(){
-      document.body.classList.remove('session-preview-active');
-      var result = previousEnterTrainingMode.apply(this, arguments);
-      setTimeout(syncSessionPreviewClass, 0);
-      return result;
-    };
-  }
-
-  var previousExitTrainingMode = (typeof exitTrainingMode === 'function') ? exitTrainingMode : null;
-  if (previousExitTrainingMode) {
-    exitTrainingMode = window.exitTrainingMode = function(){
-      var result = previousExitTrainingMode.apply(this, arguments);
-      setTimeout(syncSessionPreviewClass, 0);
-      return result;
-    };
-  }
-
-  patchTimerButtons();
-  syncSessionPreviewClass();
-  document.addEventListener('DOMContentLoaded', function(){ patchTimerButtons(); syncSessionPreviewClass(); });
-  window.addEventListener('resize', syncSessionPreviewClass, {passive:true});
-  window.addEventListener('orientationchange', syncSessionPreviewClass, {passive:true});
-  window.addEventListener('pageshow', syncSessionPreviewClass, {passive:true});
-})();
-</script>
 
 <!-- === FORJA CORRECCIÓN LIMPIA: teclado oscuro + agregar ejercicio + cardio === -->
-<style id="forja-final-correccion-ejercicios-cardio">
-  :root{
-    color-scheme: dark;
-    --forja-bg-fixed:
-      radial-gradient(circle at 50% -10%, rgba(96,42,143,.26), transparent 34%),
-      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
-      linear-gradient(180deg,#07010d 0%,#12051e 48%,#050009 100%);
-  }
 
-  html,
-  body{
-    background:var(--forja-bg-fixed) !important;
-    background-color:#07010d !important;
-    color-scheme:dark !important;
-  }
 
-  body::before{
-    content:"";
-    position:fixed;
-    inset:-2px;
-    z-index:-1;
-    background:var(--forja-bg-fixed) !important;
-    pointer-events:none;
-  }
 
-  #sessionScreen,
-  #sessionScreen.screen,
-  #sessionScreen.screen.active,
-  .screen,
-  .screen.active{
-    background:transparent !important;
-    background-color:transparent !important;
-  }
-
-  input,
-  textarea,
-  select,
-  button{
-    color-scheme:dark !important;
-  }
-
-  .forja-add-exercise-shell{
-    padding:0 18px;
-    margin:18px 0 8px;
-  }
-
-  .forja-add-exercise-btn{
-    width:100%;
-    min-height:56px;
-    border-radius:18px;
-    border:1px solid rgba(201,164,76,.28);
-    background:rgba(201,164,76,.10);
-    color:#f1d47d;
-    font-family:'Bebas Neue', sans-serif;
-    font-size:24px;
-    letter-spacing:1.2px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    box-shadow:none;
-  }
-
-  .forja-add-exercise-btn:active{
-    transform:scale(.99);
-  }
-
-  .forja-cardio-badge{
-    font-size:11px;
-    letter-spacing:.08em;
-    color:#f1d47d;
-    text-transform:uppercase;
-  }
-
-  .sets-header.cardio-header{
-    grid-template-columns:42px 1fr 1fr 54px !important;
-  }
-</style>
-<script id="forja-final-correccion-ejercicios-cardio">
+<script id="forja-clean-final-data-ui-2026-05-23">
 (function(){
-  const CARDIO_EXERCISES = [
-    { name: 'Elíptica', sets: 1, cardio: true },
-    { name: 'Cinta caminadora', sets: 1, cardio: true },
-    { name: 'Caminadora', sets: 1, cardio: true },
-    { name: 'Escaladora', sets: 1, cardio: true },
-    { name: 'Bicicleta estática', sets: 1, cardio: true },
-    { name: 'Remo cardio', sets: 1, cardio: true }
+  const CARDIO = [
+    { name:'Elíptica', sets:1, cardio:true },
+    { name:'Cinta caminadora', sets:1, cardio:true },
+    { name:'Caminadora', sets:1, cardio:true },
+    { name:'Escaladora', sets:1, cardio:true },
+    { name:'Bicicleta estática', sets:1, cardio:true }
   ];
 
-  function cleanTextForja(value){
-    return String(value || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
+  function clean(value){
+    return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  }
+  function isCardioName(name){
+    const n = clean(name);
+    return n.includes('eliptica') || n.includes('cinta') || n.includes('caminadora') || n.includes('escaladora') || n.includes('bicicleta estatica');
+  }
+  window.isCardioExerciseName = isCardioName;
+  function isCardio(ex){ return !!(ex && (ex.cardio === true || isCardioName(ex.name))); }
+  function isBody(ex){
+    try { if (typeof isBodyweightExercise === 'function') return isBodyweightExercise(ex); } catch(e) {}
+    const n = clean(ex && ex.name);
+    return !!(ex && (ex.bodyweight === true || n.includes('fondo') || n.includes('dominada') || n === 'plancha'));
   }
 
-  function isCardioExerciseNameForja(name){
-    const clean = cleanTextForja(name);
-    return clean.includes('eliptica') || clean.includes('cinta') || clean.includes('caminadora') || clean.includes('escaladora') || clean.includes('bicicleta estatica') || clean === 'remo cardio';
-  }
-
-  window.isCardioExerciseName = isCardioExerciseNameForja;
-
-  function isCardioExerciseForja(ex){
-    return !!(ex && (ex.cardio === true || isCardioExerciseNameForja(ex.name)));
-  }
-
-  function isBodyweightForja(ex){
-    try {
-      if (typeof isBodyweightExercise === 'function') return isBodyweightExercise(ex);
-    } catch(e) {}
-    const clean = cleanTextForja(ex?.name);
-    return !!(ex && (ex.bodyweight === true || clean === 'fondo de triceps' || clean === 'fondos de triceps' || clean.includes('dominada') || clean === 'plancha'));
-  }
-
-  function exerciseLibraryForja(){
-    const base = [];
-    try { if (Array.isArray(CARDIO_EXERCISES)) base.push(...CARDIO_EXERCISES); } catch(e) {}
-    try { if (Array.isArray(ROUTINES)) base.push(...ROUTINES.flatMap(r => r.exercises || [])); } catch(e) {}
-    try { if (Array.isArray(DEFAULT_ROUTINES)) base.push(...DEFAULT_ROUTINES.flatMap(r => r.exercises || [])); } catch(e) {}
-
-    const extras = [
-      { name: 'Press de Banca Inclinado (Mancuerna)' },
-      { name: 'Press de Banca Inclinado (Barra)' },
-      { name: 'Press de Banca (Barra)' },
-      { name: 'Press de Banca (Mancuerna)' },
-      { name: 'Press de Pecho en Máquina' },
-      { name: 'Press Declinado en Máquina' },
-      { name: 'Aperturas (Máquina)' },
-      { name: 'Aperturas con Mancuerna' },
-      { name: 'Cruce de Poleas' },
-      { name: 'Fondos de Tríceps', bodyweight: true },
-      { name: 'Fondo de Tríceps', bodyweight: true },
-      { name: 'Press de Hombros Sentado (Barra)' },
-      { name: 'Press de Hombros (Mancuerna)' },
-      { name: 'Press de Hombros en Máquina' },
-      { name: 'Elevacion Laterales (Mancuerna)' },
-      { name: 'Elevación Lateral en Cable' },
-      { name: 'Elevación Frontal' },
-      { name: 'Vuelos Invertidos en Máquina' },
-      { name: 'Vuelos invertidos para deltoides posteriores (mancuerna)' },
-      { name: 'Tirón a la Cara' },
-      { name: 'Encogimientos para Trapecio' },
-      { name: 'Jalón al Pecho (Cable)' },
-      { name: 'Jalón al Pecho - Agarre Cerrado (Cable)' },
-      { name: 'Dominadas Asistidas', bodyweight: true },
-      { name: 'Remo Inclinado (Barra)' },
-      { name: 'Remo Sentado con Agarre en V (Cable)' },
-      { name: 'Remo con Mancuerna' },
-      { name: 'Remo en Máquina' },
-      { name: 'Pullover en Polea' },
-      { name: 'Curl de Bíceps (Barra)' },
-      { name: 'Curl de Bíceps (Mancuerna)' },
-      { name: 'Curl Martillo (Mancuerna)' },
-      { name: 'Curl Predicador' },
-      { name: 'Curl en Polea' },
-      { name: 'Tríceps con Polea' },
-      { name: 'Extensión de Tríceps por Encima de la Cabeza' },
-      { name: 'Extensión de Tríceps con Mancuerna' },
-      { name: 'Press Cerrado' },
-      { name: 'Sentadilla Hack (Máquina)' },
-      { name: 'Press de Piernas' },
-      { name: 'Sentadilla Búlgara' },
-      { name: 'Extensión de Pierna' },
-      { name: 'Peso Muerto Rumano (Barra)' },
-      { name: 'Peso Muerto Rumano (Mancuerna)' },
-      { name: 'Curl de Pierna Sentado' },
-      { name: 'Curl de Pierna Acostado' },
-      { name: 'Hip Thrust' },
-      { name: 'Zancadas Caminando' },
-      { name: 'Sentadilla Goblet' },
-      { name: 'Elevación de Gemelos Sentado' },
-      { name: 'Elevación de Gemelos de Pie (Máquina)' },
-      { name: 'Elevación de Gemelos en Prensa' },
-      { name: 'Plancha', bodyweight: true },
-      { name: 'Crunch en Máquina' },
-      { name: 'Elevación de Piernas' },
-      { name: 'Crunch en Polea' }
-    ];
-    base.push(...extras);
-
+  function lib(){
+    const out = [];
+    out.push(...CARDIO);
+    try { if (Array.isArray(ROUTINES)) out.push(...ROUTINES.flatMap(r => r.exercises || [])); } catch(e) {}
+    try { if (Array.isArray(DEFAULT_ROUTINES)) out.push(...DEFAULT_ROUTINES.flatMap(r => r.exercises || [])); } catch(e) {}
+    [
+      'Press de Banca Inclinado (Mancuerna)','Press de Banca Inclinado (Barra)','Press de Banca (Barra)','Press de Banca (Mancuerna)',
+      'Press de Pecho en Máquina','Press Declinado en Máquina','Aperturas (Máquina)','Aperturas con Mancuerna','Cruce de Poleas',
+      'Fondos de Tríceps','Fondo de Tríceps','Press de Hombros Sentado (Barra)','Press de Hombros (Mancuerna)','Press de Hombros en Máquina',
+      'Elevacion Laterales (Mancuerna)','Elevación Lateral en Cable','Elevación Frontal','Vuelos Invertidos en Máquina','Vuelos invertidos para deltoides posteriores (mancuerna)',
+      'Tirón a la Cara','Encogimientos para Trapecio','Jalón al Pecho (Cable)','Jalón al Pecho - Agarre Cerrado (Cable)','Dominadas Asistidas',
+      'Remo Inclinado (Barra)','Remo Sentado con Agarre en V (Cable)','Remo con Mancuerna','Remo en Máquina','Pullover en Polea',
+      'Curl de Bíceps (Barra)','Curl de Bíceps (Mancuerna)','Curl Martillo (Mancuerna)','Curl Predicador','Curl en Polea',
+      'Tríceps con Polea','Extensión de Tríceps por Encima de la Cabeza','Extensión de Tríceps con Mancuerna','Press Cerrado',
+      'Sentadilla Hack (Máquina)','Press de Piernas','Sentadilla Búlgara','Extensión de Pierna','Peso Muerto Rumano (Barra)','Peso Muerto Rumano (Mancuerna)',
+      'Curl de Pierna Sentado','Curl de Pierna Acostado','Hip Thrust','Zancadas Caminando','Sentadilla Goblet','Elevación de Gemelos Sentado','Elevación de Gemelos de Pie (Máquina)','Elevación de Gemelos en Prensa',
+      'Plancha','Crunch en Máquina','Elevación de Piernas','Crunch en Polea'
+    ].forEach(name => out.push({name, bodyweight: clean(name).includes('fondo') || clean(name).includes('dominada') || clean(name)==='plancha'}));
     const map = new Map();
-    for (const ex of base) {
-      if (!ex || !ex.name) continue;
-      const key = cleanTextForja(ex.name);
-      if (!map.has(key)) {
-        const cardio = ex.cardio === true || isCardioExerciseNameForja(ex.name);
-        map.set(key, { ...ex, cardio, sets: ex.sets || (cardio ? 1 : 3) });
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => String(a.name).localeCompare(String(b.name), 'es'));
-  }
-
-  function setTemplateForja(ex, count, previousExercise){
-    const total = Math.max(1, Number(count) || Number(ex?.sets) || (isCardioExerciseForja(ex) ? 1 : 3));
-    return Array.from({ length: total }, (_, i) => {
-      const old = previousExercise?.sets?.[i] || null;
-      if (isCardioExerciseForja(ex)) return { weight: old?.weight || '', reps: old?.reps || '', done: false, cardio: true };
-      if (isBodyweightForja(ex)) return { weight: '0', reps: old?.reps || '', done: false };
-      return { weight: old?.weight || '', reps: old?.reps || '', done: false };
-    });
-  }
-
-  function chooseExerciseOverlayForja(title, onApply){
-    const uniqueExercises = exerciseLibraryForja();
-    const oldOverlay = document.getElementById('exerciseChangeOverlay');
-    if (oldOverlay) oldOverlay.remove();
-
-    const overlay = document.createElement('div');
-    overlay.id = 'exerciseChangeOverlay';
-    overlay.style.cssText = `
-      position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center;
-      padding:18px; background:rgba(0,0,0,.72); color:#f7f2ea; font-family:'DM Sans',sans-serif;`;
-
-    overlay.innerHTML = `
-      <div style="width:100%;max-width:430px;background:#241238;border:1px solid rgba(205,180,120,.22);border-radius:22px;padding:18px;box-shadow:0 18px 48px rgba(0,0,0,.45);">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1.5px;color:#c9a44c;margin-bottom:12px;">${escapeHtml(title)}</div>
-        <label style="font-size:12px;color:#a89cb8;text-transform:uppercase;letter-spacing:1px;">Selecciona uno de la lista</label>
-        <select id="exerciseSelect" style="width:100%;margin-top:8px;margin-bottom:14px;padding:13px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#12051f;color:#f7f2ea;font-size:14px;font-family:'DM Sans',sans-serif;color-scheme:dark;">
-          ${uniqueExercises.map((ex, i) => `<option value="${i}">${escapeHtml(ex.name)}${ex.cardio ? ' · cardio' : ''}</option>`).join('')}
-        </select>
-        <label style="font-size:12px;color:#a89cb8;text-transform:uppercase;letter-spacing:1px;">O escribe uno nuevo</label>
-        <input id="customExerciseInput" type="text" placeholder="Ejemplo: Elíptica" style="width:100%;margin-top:8px;margin-bottom:16px;padding:13px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#12051f;color:#f7f2ea;font-size:14px;font-family:'DM Sans',sans-serif;color-scheme:dark;">
-        <div style="display:flex;gap:10px;">
-          <button id="cancelExerciseChange" style="flex:1;padding:13px;border-radius:12px;border:1px solid rgba(205,180,120,.18);background:rgba(255,255,255,.04);color:#c9a44c;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;">Cancelar</button>
-          <button id="applyExerciseChange" style="flex:1;padding:13px;border-radius:12px;border:none;background:#c9a44c;color:#12051f;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;">Aplicar</button>
-        </div>
-      </div>`;
-
-    document.body.appendChild(overlay);
-    overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
-    document.getElementById('cancelExerciseChange').onclick = () => overlay.remove();
-    document.getElementById('applyExerciseChange').onclick = () => {
-      const selectedIndex = parseInt(document.getElementById('exerciseSelect').value, 10);
-      const customName = document.getElementById('customExerciseInput').value.trim();
-      const selected = customName
-        ? { name: customName, sets: isCardioExerciseNameForja(customName) ? 1 : 3, cardio: isCardioExerciseNameForja(customName) }
-        : uniqueExercises[selectedIndex];
-      if (!selected || !selected.name) { showToast('⚠️ Selecciona o escribe un ejercicio'); return; }
-      onApply(selected);
-      overlay.remove();
-    };
+    for (const e of out) if (e && e.name && !map.has(clean(e.name))) map.set(clean(e.name), e);
+    return Array.from(map.values());
   }
 
   window.addExercise = function(){
-    if (!currentSession) return;
-    chooseExerciseOverlayForja('Agregar ejercicio', (selected) => {
-      const ex = {
-        name: selected.name,
-        originalName: selected.name,
-        replaced: false,
-        note: selected.note || null,
-        notes: '',
-        cardio: selected.cardio === true || isCardioExerciseNameForja(selected.name),
-        bodyweight: selected.bodyweight === true,
-        sets: setTemplateForja(selected, selected.sets, null)
-      };
-      currentSession.exercises.push(ex);
-      saveCurrentDraft();
-      renderExercises();
-      showToast('✅ Ejercicio agregado');
-    });
+    if (!window.currentSession && typeof currentSession === 'undefined') return;
+    const list = lib();
+    const old = document.getElementById('exerciseAddOverlay'); if (old) old.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'exerciseAddOverlay'; overlay.className = 'edit-overlay';
+    overlay.innerHTML = `<div class="edit-overlay-card"><div class="edit-title">Agregar ejercicio</div>
+      <label class="form-label">Selecciona uno</label><select id="addExerciseSelect" class="form-select">${list.map((e,i)=>`<option value="${i}">${escapeHtml(e.name)}</option>`).join('')}</select>
+      <label class="form-label">O escribe uno nuevo</label><input id="addExerciseCustom" class="form-input" type="text" placeholder="Nombre del ejercicio">
+      <div class="routine-inline-actions"><button class="mini-btn" id="cancelAddExercise">Cancelar</button><button class="mini-btn primary" id="applyAddExercise">Agregar</button></div></div>`;
+    document.body.appendChild(overlay);
+    document.getElementById('cancelAddExercise').onclick = () => overlay.remove();
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+    document.getElementById('applyAddExercise').onclick = () => {
+      const idx = parseInt(document.getElementById('addExerciseSelect').value,10);
+      const custom = document.getElementById('addExerciseCustom').value.trim();
+      const selected = custom ? {name:custom, sets:3} : list[idx];
+      if (!selected || !selected.name) return showToast('⚠️ Selecciona o escribe un ejercicio');
+      const cardio = isCardio(selected);
+      const body = !cardio && isBody(selected);
+      const setCount = cardio ? 1 : Math.max(1, Number(selected.sets) || 3);
+      currentSession.exercises.push({
+        name:selected.name, originalName:selected.name, replaced:false, cardio:cardio || undefined, bodyweight:body || undefined,
+        note:selected.note || null, notes:'', sets:Array.from({length:setCount},()=>({weight:body?'0':'', reps:'', done:false, cardio:cardio || undefined}))
+      });
+      overlay.remove(); saveCurrentDraft(); renderExercises(); renderHistory(); showToast('✅ Ejercicio agregado');
+    };
   };
 
+  const baseReplace = typeof replaceExercise === 'function' ? replaceExercise : null;
   window.replaceExercise = function(ei){
-    if (!currentSession || !currentSession.exercises?.[ei]) return;
-    chooseExerciseOverlayForja('Cambiar ejercicio', (selected) => {
-      const previousExercise = currentSession.exercises[ei];
-      const originalName = previousExercise.originalName || previousExercise.name;
-      const selectedEx = { ...selected, cardio: selected.cardio === true || isCardioExerciseNameForja(selected.name) };
-      const lastEx = getLastExerciseData(currentSession.routineId, selectedEx.name);
-      const count = previousExercise.sets?.length || selectedEx.sets || (selectedEx.cardio ? 1 : 3);
-      let sets = setTemplateForja(selectedEx, count, previousExercise);
-      if (lastEx?.sets?.length && !selectedEx.cardio && !isBodyweightForja(selectedEx)) {
-        sets = sets.map((set, i) => ({
-          ...set,
-          weight: lastEx.sets[i]?.weight || set.weight || '',
-          reps: lastEx.sets[i]?.reps || set.reps || ''
-        }));
-      }
-      currentSession.exercises[ei] = {
-        name: selectedEx.name,
-        originalName,
-        replaced: selectedEx.name !== originalName,
-        note: selectedEx.note || null,
-        notes: previousExercise.notes || '',
-        cardio: selectedEx.cardio === true,
-        bodyweight: selectedEx.bodyweight === true,
-        sets
+    const list = lib();
+    const old = document.getElementById('exerciseChangeOverlay'); if (old) old.remove();
+    const overlay = document.createElement('div');
+    overlay.id='exerciseChangeOverlay'; overlay.className='edit-overlay';
+    overlay.innerHTML = `<div class="edit-overlay-card"><div class="edit-title">Cambiar ejercicio</div>
+      <label class="form-label">Selecciona uno</label><select id="exerciseSelect" class="form-select">${list.map((e,i)=>`<option value="${i}">${escapeHtml(e.name)}</option>`).join('')}</select>
+      <label class="form-label">O escribe uno nuevo</label><input id="customExerciseInput" class="form-input" type="text" placeholder="Ejemplo: Press declinado en máquina">
+      <div class="routine-inline-actions"><button class="mini-btn" id="cancelExerciseChange">Cancelar</button><button class="mini-btn primary" id="applyExerciseChange">Aplicar</button></div></div>`;
+    document.body.appendChild(overlay);
+    document.getElementById('cancelExerciseChange').onclick=()=>overlay.remove();
+    overlay.onclick=e=>{ if(e.target===overlay) overlay.remove(); };
+    document.getElementById('applyExerciseChange').onclick=()=>{
+      if (!currentSession?.exercises?.[ei]) return;
+      const idx=parseInt(document.getElementById('exerciseSelect').value,10);
+      const custom=document.getElementById('customExerciseInput').value.trim();
+      const selected=custom?{name:custom,sets:currentSession.exercises[ei].sets.length}:list[idx];
+      const prev=currentSession.exercises[ei];
+      const cardio=isCardio(selected), body=!cardio && isBody(selected);
+      currentSession.exercises[ei]={
+        name:selected.name, originalName:prev.originalName || prev.name, replaced:selected.name !== (prev.originalName || prev.name),
+        cardio:cardio || undefined, bodyweight:body || undefined, note:selected.note || null, notes:prev.notes || '',
+        sets:(prev.sets || []).map(st=>({weight:body?'0':(st.weight||''), reps:st.reps||'', done:false, cardio:cardio || undefined}))
       };
-      saveCurrentDraft();
-      renderExercises();
-      showToast('✅ Ejercicio cambiado');
-    });
+      overlay.remove(); saveCurrentDraft(); renderExercises(); renderHistory(); showToast('✅ Ejercicio cambiado');
+    };
   };
 
-  renderExercises = window.renderExercises = function(){
-    const list = document.getElementById('exerciseList');
-    if (!list || !currentSession) return;
-
-    list.innerHTML = `
-      <div class="session-overview">
-        <div class="session-overview-top">
-          <div>
-            <div class="session-overview-title">${escapeHtml(currentSession.routineName)}</div>
-            <div class="session-overview-sub">Registra tus series, cambia o agrega ejercicios y guarda todo en Supabase.</div>
-          </div>
-          <div class="session-progress-ring">${currentSession.exercises.length}</div>
-        </div>
-        <div class="session-stats-grid">
-          <div class="session-stat-card"><div class="session-stat-label">Ejercicios</div><div class="session-stat-value">${currentSession.exercises.length}</div></div>
-          <div class="session-stat-card"><div class="session-stat-label">Series planeadas</div><div class="session-stat-value">${currentSession.exercises.reduce((acc, ex) => acc + (ex.sets?.length || 0), 0)}</div></div>
-          <div class="session-stat-card"><div class="session-stat-label">Completadas</div><div id="completedSetsCounter" class="session-stat-value">${currentSession.exercises.reduce((acc, ex) => acc + (ex.sets || []).filter(st => st.done).length, 0)}</div></div>
-        </div>
-      </div>
-      ${currentSession.exercises.map((ex, ei) => {
-        const cardio = isCardioExerciseForja(ex);
-        const bodyweight = !cardio && isBodyweightForja(ex);
-        const lastEx = getLastExerciseData(currentSession.routineId, ex.name);
-        const prevHtml = lastEx ? `<div class="prev-info">📊 Anterior: <span>${escapeHtml(getSummaryForExercise(lastEx.sets, ex.name))}</span></div>` : '';
-        const insightHtml = cardio ? `<div class="analysis-box"><div class="analysis-title">Objetivo de hoy</div><div class="analysis-text">Registra tiempo y distancia/nivel. Mantén el dato limpio para comparar tu cardio después.</div></div>` : getExerciseInsight(lastEx, ex);
-        const replacementHtml = ex.replaced && ex.originalName ? `<div class="prev-info">↔ Sustituye a: <span>${escapeHtml(ex.originalName)}</span></div>` : '';
-        const setsHtml = (ex.sets || []).map((set, si) => {
-          if (bodyweight) {
-            return `<div class="set-row bodyweight-set" id="setrow-${ei}-${si}"><div class="set-num">${si + 1}</div><input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="${lastEx?.sets?.[si]?.reps || 'reps'}" value="${set.reps || ''}" oninput="updateSet(${ei},${si},'reps',this.value)" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="numeric"><button class="set-check ${set.done ? 'done' : ''}" onclick="toggleSet(${ei},${si})">${set.done ? '✓' : ''}</button></div>`;
-          }
-          const leftLabel = cardio ? 'min' : (lastEx?.sets?.[si]?.weight || 'lbs');
-          const rightLabel = cardio ? 'km/nivel' : (lastEx?.sets?.[si]?.reps || 'reps');
-          return `<div class="set-row ${cardio ? 'cardio-set' : ''}" id="setrow-${ei}-${si}"><div class="set-num">${si + 1}</div><input type="number" class="set-input ${set.done ? 'completed' : ''}" id="weight-${ei}-${si}" placeholder="${leftLabel}" value="${set.weight || ''}" oninput="updateSet(${ei},${si},'weight',this.value)" onchange="updateSet(${ei},${si},'weight',this.value)" inputmode="decimal"><input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="${rightLabel}" value="${set.reps || ''}" oninput="updateSet(${ei},${si},'reps',this.value)" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="decimal"><button class="set-check ${set.done ? 'done' : ''}" onclick="toggleSet(${ei},${si})">${set.done ? '✓' : ''}</button></div>`;
-        }).join('');
-
-        return `<div class="exercise-card training-card">
-          <div class="exercise-header">
-            <div class="exercise-topline"><div class="exercise-index">${ei + 1}</div><div class="exercise-title-block"><div class="exercise-name">${escapeHtml(ex.name)}</div><div class="exercise-submeta">${(ex.sets || []).length} series activas${cardio ? ' · cardio' : bodyweight ? ' · peso corporal' : ''}</div></div></div>
-            ${lastEx ? '<div class="prev-badge">ANTERIOR ↑</div>' : ''}
-          </div>
-          ${ex.note ? `<div class="prev-info">⚠️ ${escapeHtml(ex.note)}</div>` : ''}
-          <div class="exercise-tools"><div>${cardio ? '<span class="forja-cardio-badge">Cardio</span>' : ''}</div><button class="ghost-link" onclick="replaceExercise(${ei})">✏️ Cambiar ejercicio</button></div>
-          ${replacementHtml}${prevHtml}${insightHtml}
-          <div class="sets-table">
-            <div class="sets-header ${bodyweight ? 'bodyweight-header' : cardio ? 'cardio-header' : ''}">
-              <div></div>${bodyweight ? '<div class="bodyweight-reps-label">REPS</div>' : cardio ? '<div style="text-align:center">TIEMPO</div><div style="text-align:center">DIST./NIVEL</div>' : '<div style="text-align:center">PESO</div><div style="text-align:center">REPS</div>'}<div></div>
-            </div>
-            ${setsHtml}
-            <button class="add-set-btn" onclick="addSet(${ei})">+ Agregar serie</button>
-          </div>
-          <div class="notes-shell"><textarea class="notes-input" rows="2" placeholder="Notas técnicas, sensación, tiempo, RIR..." oninput="updateNotes(${ei}, this.value)" onchange="updateNotes(${ei}, this.value)">${escapeHtml(ex.notes || '')}</textarea></div>
-        </div>`;
-      }).join('')}
-      <div class="forja-add-exercise-shell"><button class="forja-add-exercise-btn" onclick="addExercise()">+ Agregar ejercicio</button></div>
-    `;
+  window.renderExercises = function(){
+    const listEl = document.getElementById('exerciseList'); if (!listEl || !currentSession) return;
+    listEl.innerHTML = currentSession.exercises.map((ex, ei)=>{
+      const cardio = isCardio(ex); const body = !cardio && isBody(ex);
+      const lastEx = (typeof getLastExerciseData === 'function') ? getLastExerciseData(currentSession.routineId, ex.name) : null;
+      const prevHtml = lastEx ? `<div class="prev-info">📊 Anterior: <span>${getSummary(lastEx.sets)}</span></div>` : '';
+      const insightHtml = (typeof getExerciseInsight === 'function') ? getExerciseInsight(lastEx, ex) : '';
+      const replacementHtml = ex.replaced && ex.originalName ? `<div class="prev-info">↔ Sustituye a: <span>${escapeHtml(ex.originalName)}</span></div>` : '';
+      const setsHtml = (ex.sets || []).map((set, si)=>{
+        const wPlaceholder = cardio ? 'min' : body ? '' : (lastEx?.sets?.[si]?.weight || 'lbs');
+        const rPlaceholder = cardio ? 'km/nivel' : (lastEx?.sets?.[si]?.reps || 'reps');
+        return `<div class="set-row" id="setrow-${ei}-${si}"><div class="set-num">${si+1}</div>
+          ${body ? '' : `<input type="number" class="set-input ${set.done?'completed':''}" id="weight-${ei}-${si}" placeholder="${wPlaceholder}" value="${escapeHtml(set.weight || '')}" oninput="updateSet(${ei},${si},'weight',this.value)" onchange="updateSet(${ei},${si},'weight',this.value)" inputmode="decimal">`}
+          <input type="number" class="set-input ${set.done?'completed':''}" id="reps-${ei}-${si}" placeholder="${rPlaceholder}" value="${escapeHtml(set.reps || '')}" oninput="updateSet(${ei},${si},'reps',this.value)" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="decimal">
+          <button class="set-check ${set.done?'done':''}" onclick="toggleSet(${ei},${si})">${set.done?'✓':''}</button></div>`;
+      }).join('');
+      return `<div class="exercise-card training-card"><div class="exercise-header"><div class="exercise-topline"><div class="exercise-index">${ei+1}</div><div class="exercise-title-block"><div class="exercise-name">${escapeHtml(ex.name)}</div><div class="exercise-submeta">${(ex.sets||[]).length} series activas</div></div></div>${lastEx?'<div class="prev-badge">ANTERIOR ↑</div>':''}</div>
+        ${ex.note ? `<div class="prev-info">⚠️ ${escapeHtml(ex.note)}</div>` : ''}
+        <div class="exercise-tools"><div>${cardio?'<span class="forja-cardio-badge">Cardio</span>':''}</div><button class="ghost-link" onclick="replaceExercise(${ei})">✏️ Cambiar ejercicio</button></div>
+        ${replacementHtml}${prevHtml}${insightHtml}<div class="sets-table"><div class="sets-header ${body?'bodyweight-header':cardio?'cardio-header':''}"><div></div>${body?'<div class="bodyweight-reps-label">REPS</div>':cardio?'<div style="text-align:center">TIEMPO</div><div style="text-align:center">DIST./NIVEL</div>':'<div style="text-align:center">PESO</div><div style="text-align:center">REPS</div>'}<div></div></div>${setsHtml}<button class="add-set-btn" onclick="addSet(${ei})">+ Agregar serie</button></div>
+        <div class="notes-shell"><textarea class="notes-input" rows="2" placeholder="Notas técnicas, sensación, tempo, RIR..." oninput="updateNotes(${ei}, this.value)" onchange="updateNotes(${ei}, this.value)">${escapeHtml(ex.notes || '')}</textarea></div></div>`;
+    }).join('') + `<div class="forja-add-exercise-shell"><button class="forja-add-exercise-btn" onclick="addExercise()">+ Agregar ejercicio</button></div>`;
   };
 
   const oldAddSet = typeof addSet === 'function' ? addSet : null;
-  addSet = window.addSet = function(ei){
+  window.addSet = function(ei){
     if (!currentSession?.exercises?.[ei]) return;
-    const ex = currentSession.exercises[ei];
-    const lastSet = ex.sets?.[ex.sets.length - 1] || {};
-    if (!Array.isArray(ex.sets)) ex.sets = [];
-    ex.sets.push({
-      weight: isBodyweightForja(ex) ? '0' : (lastSet.weight || ''),
-      reps: lastSet.reps || '',
-      done: false,
-      cardio: isCardioExerciseForja(ex) || undefined
-    });
-    saveCurrentDraft();
-    renderExercises();
+    const ex = currentSession.exercises[ei]; if (!Array.isArray(ex.sets)) ex.sets=[];
+    const last = ex.sets[ex.sets.length-1] || {};
+    ex.sets.push({weight:isBody(ex)?'0':(last.weight||''), reps:last.reps||'', done:false, cardio:isCardio(ex)||undefined});
+    saveCurrentDraft(); renderExercises(); renderHistory();
   };
 
-  const oldToggleSet = typeof toggleSet === 'function' ? toggleSet : null;
-  toggleSet = window.toggleSet = function(ei, si){
+  const oldToggle = typeof toggleSet === 'function' ? toggleSet : null;
+  window.toggleSet = function(ei, si){
     if (!currentSession?.exercises?.[ei]?.sets?.[si]) return;
-    const ex = currentSession.exercises[ei];
-    const cardio = isCardioExerciseForja(ex);
-    const bodyweight = !cardio && isBodyweightForja(ex);
-    const set = ex.sets[si];
-    const wEl = document.getElementById(`weight-${ei}-${si}`);
-    const rEl = document.getElementById(`reps-${ei}-${si}`);
-    if (!rEl && !wEl) return;
-
-    if (!set.done) {
-      if (bodyweight) {
-        set.weight = '0';
-        set.reps = rEl ? (rEl.value || rEl.placeholder) : '';
-      } else {
-        set.weight = wEl ? (wEl.value || '') : '';
-        set.reps = rEl ? (rEl.value || '') : '';
-      }
-      if (wEl) wEl.value = set.weight;
-      if (rEl) rEl.value = set.reps;
-    }
-
-    set.done = !set.done;
-    if (wEl) wEl.className = `set-input ${set.done ? 'completed' : ''}`;
-    if (rEl) rEl.className = `set-input ${set.done ? 'completed' : ''}`;
-    const btn = document.querySelector(`#setrow-${ei}-${si} .set-check`);
-    if (btn) { btn.className = `set-check ${set.done ? 'done' : ''}`; btn.textContent = set.done ? '✓' : ''; }
-
-    updateSessionCounters();
-    saveCurrentDraft();
-
-    if (set.done && !cardio) {
-      const t = {
-        'Elevacion Laterales (Mancuerna)': 75,
-        'Tirón a la Cara': 75,
-        'Elevación de Gemelos Sentado': 75,
-        'Elevación de Gemelos de Pie (Máquina)': 75,
-        'Extensión de Pierna': 90,
-        'Curl de Bíceps (Barra)': 90,
-        'Curl Martillo (Mancuerna)': 90,
-        'Aperturas (Máquina)': 90,
-        'Fondo de Tríceps': 90,
-        'Fondos de Tríceps': 90,
-        'Tríceps con Polea': 90,
-        'Vuelos invertidos para deltoides posteriores (mancuerna)': 90,
-        'Sentadilla Búlgara': 120,
-        'Curl de Pierna Sentado': 120,
-        'Jalón al Pecho (Cable)': 120,
-        'Jalón al Pecho - Agarre Cerrado (Cable)': 120,
-        'Remo Sentado con Agarre en V (Cable)': 120,
-        'Press de Hombros Sentado (Barra)': 120,
-        'Press de Hombros (Mancuerna)': 120,
-        'Press de Banca Inclinado (Mancuerna)': 150,
-        'Remo Inclinado (Barra)': 150,
-        'Press de Piernas': 150,
-        'Sentadilla Hack (Máquina)': 180,
-        'Peso Muerto Rumano (Barra)': 180,
-        'Press de Banca (Barra)': 180
-      };
+    const ex=currentSession.exercises[ei], set=ex.sets[si], cardio=isCardio(ex), body=!cardio && isBody(ex);
+    const wEl=document.getElementById(`weight-${ei}-${si}`), rEl=document.getElementById(`reps-${ei}-${si}`);
+    if (!set.done){ set.weight=body?'0':(wEl?wEl.value:''); set.reps=rEl?rEl.value:''; }
+    set.done=!set.done;
+    if (wEl) wEl.className=`set-input ${set.done?'completed':''}`;
+    if (rEl) rEl.className=`set-input ${set.done?'completed':''}`;
+    const btn=document.querySelector(`#setrow-${ei}-${si} .set-check`); if(btn){btn.className=`set-check ${set.done?'done':''}`;btn.textContent=set.done?'✓':'';}
+    updateSessionCounters(); saveCurrentDraft(); renderHistory();
+    if (set.done && !cardio && typeof startTimer === 'function') {
+      const t={'Elevacion Laterales (Mancuerna)':75,'Tirón a la Cara':75,'Elevación de Gemelos Sentado':75,'Elevación de Gemelos de Pie (Máquina)':75,'Extensión de Pierna':90,'Curl de Bíceps (Barra)':90,'Curl Martillo (Mancuerna)':90,'Aperturas (Máquina)':90,'Fondo de Tríceps':90,'Fondos de Tríceps':90,'Tríceps con Polea':90,'Vuelos invertidos para deltoides posteriores (mancuerna)':90,'Sentadilla Búlgara':120,'Curl de Pierna Sentado':120,'Jalón al Pecho (Cable)':120,'Jalón al Pecho - Agarre Cerrado (Cable)':120,'Remo Sentado con Agarre en V (Cable)':120,'Press de Hombros Sentado (Barra)':120,'Press de Hombros (Mancuerna)':120,'Press de Banca Inclinado (Mancuerna)':150,'Remo Inclinado (Barra)':150,'Press de Piernas':150,'Sentadilla Hack (Máquina)':180,'Peso Muerto Rumano (Barra)':180,'Press de Banca (Barra)':180};
       startTimer(t[ex.name] || 120);
     }
   };
 
-  document.addEventListener('focusin', function(event){
-    if (event.target && event.target.matches('input, textarea, select')) document.body.classList.add('forja-input-active');
-  }, true);
-  document.addEventListener('focusout', function(){
-    setTimeout(function(){
-      if (!document.activeElement || !document.activeElement.matches('input, textarea, select')) document.body.classList.remove('forja-input-active');
-    }, 80);
-  }, true);
+  const oldMin = typeof minimizeSession === 'function' ? minimizeSession : null;
+  window.minimizeSession = function(){
+    if (!currentSession) return showScreen('home');
+    if (!editingSessionKey) saveCurrentDraft();
+    exitTrainingMode();
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('homeScreen')?.classList.add('active');
+    document.querySelectorAll('.nav-btn')[0]?.classList.add('active');
+    renderHome(); renderHistory(); showToast('✅ Entrenamiento oculto');
+  };
+
+  const oldEnter = typeof enterTrainingMode === 'function' ? enterTrainingMode : null;
+  window.enterTrainingMode = function(){
+    document.body.classList.add('training-active');
+    const actions=document.querySelector('#sessionScreen .session-legacy-actions');
+    if(actions){
+      const hide=actions.querySelector('.session-hide-btn'), discard=actions.querySelector('.session-discard-btn');
+      if(hide){ hide.textContent='⌄'; hide.onclick=minimizeSession; hide.style.animation='none'; }
+      if(discard){ discard.onclick=discardSession; discard.style.animation='none'; }
+    }
+    if (typeof renderTimer === 'function') renderTimer();
+  };
+
+  const oldExit = typeof exitTrainingMode === 'function' ? exitTrainingMode : null;
+  window.exitTrainingMode = function(){ document.body.classList.remove('training-active'); if (typeof renderTimer === 'function') renderTimer(); };
+
+  function refreshSafe(){
+    try { if (currentSession && document.getElementById('sessionScreen')?.classList.contains('active')) renderExercises(); } catch(e) {}
+    try { if (document.getElementById('historyScreen')?.classList.contains('active')) renderHistory(); } catch(e) {}
+  }
+  window.addEventListener('pageshow', function(){ if (currentUser) { syncLocalSessionsToCloud().then(()=>loadCloudSessions()).then(refreshSafe); }}, {passive:true});
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(refreshSafe, 120); });
+  setTimeout(refreshSafe, 250);
 })();
 </script>
-
-
-
-<!-- === FORJA DEFINITIVO CONSOLIDADO: layout, fondo y scroll === -->
-<style id="forja-definitivo-consolidado-layout">
-  :root{
-    color-scheme: dark;
-    --forja-final-bg:
-      radial-gradient(circle at 50% -12%, rgba(96,42,143,.26), transparent 35%),
-      radial-gradient(circle at 12% 2%, rgba(216,184,102,.055), transparent 27%),
-      linear-gradient(180deg,#07010d 0%,#12051e 48%,#07010d 100%);
-  }
-
-  html,
-  body{
-    min-height:100dvh !important;
-    background:var(--forja-final-bg) !important;
-    background-color:#07010d !important;
-    color-scheme:dark !important;
-    overscroll-behavior-y:none !important;
-  }
-
-  body::before{
-    content:"" !important;
-    position:fixed !important;
-    inset:0 !important;
-    z-index:-1 !important;
-    background:var(--forja-final-bg) !important;
-    pointer-events:none !important;
-  }
-
-  input,
-  textarea,
-  select,
-  button{
-    color-scheme:dark !important;
-  }
-
-  input,
-  textarea,
-  select{
-    background-color:#10041c !important;
-    color:#f7f2ea !important;
-    caret-color:#f0d78a !important;
-  }
-
-  /* Pantallas normales: el scroll pertenece al documento para que la barra inferior no tape la última tarjeta. */
-  body:not(.training-active){
-    overflow-x:hidden !important;
-    overflow-y:auto !important;
-  }
-
-  body:not(.training-active) .screen.active{
-    height:auto !important;
-    min-height:calc(100dvh - 118px) !important;
-    overflow:visible !important;
-    padding-bottom:calc(214px + env(safe-area-inset-bottom,0px)) !important;
-    background:transparent !important;
-  }
-
-  #historyScreen.screen.active{
-    padding-bottom:calc(236px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  #historyList{
-    padding-bottom:calc(170px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  #historyList > .history-card:last-child,
-  #historyList > .clean-history-card:last-child{
-    margin-bottom:calc(150px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  .nav{
-    bottom:calc(14px + env(safe-area-inset-bottom,0px)) !important;
-    z-index:7000 !important;
-  }
-
-  /* Modo entrenamiento: fondo uniforme hasta el borde inferior, sin franja rectangular. */
-  body.training-active{
-    overflow:hidden !important;
-    background:var(--forja-final-bg) !important;
-    background-color:#07010d !important;
-  }
-
-  body.training-active #sessionScreen.screen.active{
-    position:fixed !important;
-    inset:0 !important;
-    left:50% !important;
-    right:auto !important;
-    width:min(100vw,480px) !important;
-    max-width:480px !important;
-    min-height:100dvh !important;
-    height:100dvh !important;
-    transform:translateX(-50%) !important;
-    margin:0 !important;
-    overflow-y:auto !important;
-    -webkit-overflow-scrolling:touch !important;
-    overscroll-behavior-y:contain !important;
-    background:var(--forja-final-bg) !important;
-    background-color:#07010d !important;
-    padding-top:calc(env(safe-area-inset-top,0px) + 46px) !important;
-    padding-bottom:calc(122px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  body.training-active.timer-active #sessionScreen.screen.active{
-    padding-bottom:calc(122px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  body.training-active #sessionScreen.screen.active::after{
-    content:"" !important;
-    display:block !important;
-    height:calc(28px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  body.training-active .header,
-  body.training-active .nav{
-    display:none !important;
-  }
-
-  body.timer-active > .timer-wrap{
-    bottom:calc(12px + env(safe-area-inset-bottom,0px)) !important;
-    width:min(calc(100vw - 42px),420px) !important;
-    background:rgba(17,5,29,.96) !important;
-    border-color:rgba(226,194,125,.24) !important;
-    box-shadow:0 16px 34px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,245,214,.08) !important;
-  }
-
-  body.training-active.timer-active > .timer-wrap{
-    bottom:calc(12px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  body.timer-active::after{
-    content:"" !important;
-    position:fixed !important;
-    left:0 !important;
-    right:0 !important;
-    bottom:0 !important;
-    height:calc(96px + env(safe-area-inset-bottom,0px)) !important;
-    z-index:-1 !important;
-    background:linear-gradient(180deg, rgba(18,5,30,0), #07010d 72%) !important;
-    pointer-events:none !important;
-  }
-
-  .forja-add-exercise-shell{
-    padding:0 18px !important;
-    margin:18px 0 calc(140px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  .forja-add-exercise-btn{
-    display:flex !important;
-  }
-
-  /* Evita que Safari pinte blanco alrededor del área editable al abrir teclado. */
-  body.forja-input-active,
-  body.forja-input-active #sessionScreen.screen.active{
-    background:var(--forja-final-bg) !important;
-    background-color:#07010d !important;
-  }
-
-  @supports (-webkit-touch-callout:none){
-    input,
-    textarea,
-    select{
-      font-size:16px !important;
-    }
-  }
-</style>
-
 </body>
 </html>
