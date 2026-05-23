@@ -3066,10 +3066,10 @@ body.training-active .sets-header.bodyweight-header{
 <div class="timer-wrap" aria-live="polite">
   <div id="timerDisplay" class="rest-timer"></div>
   <div id="timerControls" class="timer-controls">
-    <button class="timer-control-btn" onclick="adjustTimer(-30)">-30</button>
-    <button class="timer-control-btn" onclick="adjustTimer(30)">+30</button>
-    <button id="timerPauseBtn" class="timer-control-btn" onclick="toggleTimerPause()">Pausar</button>
-    <button class="timer-control-btn" onclick="stopTimer()">Saltar</button>
+    <button class="timer-control-btn" onclick="adjustTimer(-15)" aria-label="Quitar 15 segundos" title="Quitar 15 segundos">−</button>
+    <button class="timer-control-btn" onclick="adjustTimer(15)" aria-label="Agregar 15 segundos" title="Agregar 15 segundos">+</button>
+    <button id="timerPauseBtn" class="timer-control-btn" onclick="toggleTimerPause()" aria-label="Pausar o continuar" title="Pausar o continuar">⏸</button>
+    <button class="timer-control-btn" onclick="stopTimer()" aria-label="Detener temporizador" title="Detener temporizador">⏹</button>
   </div>
 </div>
 
@@ -4450,7 +4450,7 @@ function viewRoutine(routineId) {
       </div>
     `).join('')}
   `;
-  document.querySelector('.finish-btn').textContent = 'INICIAR SESIÓN';
+  document.querySelector('.finish-btn').textContent = 'INICIAR ENTRENAMIENTO';
   document.querySelector('.finish-btn').onclick = () => { startSession(routineId); };
 }
 
@@ -4471,7 +4471,7 @@ function startSession(routineId) {
     if (!replace) return;
     clearCurrentDraft();
     stopTimer();
-  } else if (!confirm('¿Iniciar sesión de ' + routine.name + '?')) {
+  } else if (!confirm('¿Iniciar entrenamiento de ' + routine.name + '?')) {
     return;
   }
 
@@ -5188,7 +5188,7 @@ function startTimer(seconds) {
   const el = document.getElementById('timerDisplay');
   const controls = document.getElementById('timerControls');
   const pauseBtn = document.getElementById('timerPauseBtn');
-  if (pauseBtn) pauseBtn.textContent = 'Pausar';
+  if (pauseBtn) pauseBtn.textContent = '⏸';
   if (el) el.classList.add('visible');
   if (controls) controls.classList.add('visible');
   updateTimerDisplay();
@@ -5218,13 +5218,13 @@ function toggleTimerPause() {
     timerPausedRemainingMs = null;
     clearInterval(timerInterval);
     timerInterval = setInterval(handleTimerTick, 250);
-    if (pauseBtn) pauseBtn.textContent = 'Pausar';
+    if (pauseBtn) pauseBtn.textContent = '⏸';
   } else {
     timerPausedRemainingMs = Math.max(timerEndTime - Date.now(), 0);
     clearInterval(timerInterval);
     timerInterval = null;
     timerEndTime = null;
-    if (pauseBtn) pauseBtn.textContent = 'Seguir';
+    if (pauseBtn) pauseBtn.textContent = '▶';
   }
 
   updateTimerDisplay();
@@ -6575,7 +6575,7 @@ function renderTimer() {
     document.body.classList.remove('timer-active');
     if (display) { display.textContent = ''; display.classList.remove('visible'); }
     if (controls) controls.classList.remove('visible');
-    if (pauseBtn) pauseBtn.textContent = 'Pausar';
+    if (pauseBtn) pauseBtn.textContent = '⏸';
     return;
   }
 
@@ -6587,7 +6587,7 @@ function renderTimer() {
     display.classList.add('visible');
   }
   if (controls) controls.classList.add('visible');
-  if (pauseBtn) pauseBtn.textContent = forjaTimerState.pausedMs !== null ? 'Seguir' : 'Pausar';
+  if (pauseBtn) pauseBtn.textContent = forjaTimerState.pausedMs !== null ? '▶' : '⏸';
   document.body.classList.add('timer-active');
 }
 
@@ -6950,6 +6950,267 @@ initApp();
   }
 
   document.addEventListener('DOMContentLoaded', syncSessionPreviewClass);
+  window.addEventListener('pageshow', syncSessionPreviewClass, {passive:true});
+})();
+</script>
+
+
+
+<!-- === FORJA PATCH 2026-05-22 V2: regreso en vista previa + botón inicio completo + timer por símbolos === -->
+<style id="forja-user-fixes-2026-05-22-v2">
+  /* Vista previa de rutina: permite regresar y mantiene el botón de inicio completo dentro de pantalla. */
+  body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
+    height:calc(100dvh - var(--forja-header-h, 104px)) !important;
+    max-height:calc(100dvh - var(--forja-header-h, 104px)) !important;
+    padding:0 0 calc(env(safe-area-inset-bottom,0px) + 112px) !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .session-legacy-actions{
+    display:flex !important;
+    position:sticky !important;
+    top:0 !important;
+    left:auto !important;
+    right:auto !important;
+    transform:none !important;
+    z-index:120 !important;
+    width:100% !important;
+    max-width:none !important;
+    height:50px !important;
+    margin:0 !important;
+    padding:6px 18px 4px !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:0 !important;
+    background:linear-gradient(180deg, rgba(7,1,13,.96) 0%, rgba(7,1,13,.74) 72%, rgba(7,1,13,0) 100%) !important;
+    border:0 !important;
+    box-shadow:none !important;
+    pointer-events:none !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .session-hide-btn{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:40px !important;
+    height:40px !important;
+    min-width:40px !important;
+    padding:0 !important;
+    border-radius:999px !important;
+    background:rgba(255,244,212,.07) !important;
+    border:1px solid rgba(226,194,125,.30) !important;
+    color:#f0d78a !important;
+    font-size:28px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+    box-shadow:none !important;
+    transform:none !important;
+    transition:none !important;
+    animation:none !important;
+    pointer-events:auto !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .session-discard-btn{
+    display:none !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .session-header{
+    margin:0 18px 18px !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
+    position:fixed !important;
+    left:50% !important;
+    right:auto !important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 14px) !important;
+    transform:translate3d(-50%,0,0) !important;
+    width:min(calc(100vw - 36px),444px) !important;
+    max-width:444px !important;
+    height:64px !important;
+    min-height:64px !important;
+    margin:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    z-index:5000 !important;
+    box-shadow:0 16px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.48) !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn:active{
+    transform:translate3d(-50%,0,0) !important;
+  }
+
+  /* Temporizador: mismos lugar y caja; solo controles compactos por símbolo. */
+  body > .timer-wrap .timer-control-btn{
+    font-size:16px !important;
+    line-height:1 !important;
+    letter-spacing:0 !important;
+  }
+
+  #timerPauseBtn{
+    font-size:15px !important;
+  }
+</style>
+
+<script id="forja-user-fixes-2026-05-22-v2">
+(function(){
+  function hasCurrentTrainingSession(){
+    try { return typeof currentSession !== 'undefined' && !!currentSession; }
+    catch(e) { return false; }
+  }
+
+  function setHeaderHeightVar(){
+    var header = document.querySelector('.header');
+    var h = header ? Math.ceil(header.getBoundingClientRect().height) : 104;
+    document.documentElement.style.setProperty('--forja-header-h', h + 'px');
+  }
+
+  function goHomeFromPreview(){
+    document.body.classList.remove('session-preview-active');
+    if (typeof showScreen === 'function') showScreen('home');
+  }
+
+  function normalizeSessionButtons(){
+    var actions = document.querySelector('#sessionScreen .session-legacy-actions');
+    if (!actions) return;
+    var hide = actions.querySelector('.session-hide-btn');
+    var discard = actions.querySelector('.session-discard-btn');
+    var isTraining = document.body.classList.contains('training-active');
+    var isPreview = document.body.classList.contains('session-preview-active') && !isTraining;
+
+    if (hide) {
+      if (isPreview) {
+        hide.textContent = '‹';
+        hide.setAttribute('aria-label', 'Volver a rutinas');
+        hide.setAttribute('title', 'Volver a rutinas');
+        hide.onclick = goHomeFromPreview;
+      } else {
+        hide.textContent = '⌄';
+        hide.setAttribute('aria-label', 'Ocultar entrenamiento');
+        hide.setAttribute('title', 'Ocultar entrenamiento');
+        if (typeof minimizeSession === 'function') hide.onclick = minimizeSession;
+      }
+    }
+
+    if (discard && typeof discardSession === 'function') discard.onclick = discardSession;
+  }
+
+  function normalizeStartButton(){
+    var isPreview = document.body.classList.contains('session-preview-active');
+    var btn = document.querySelector('#sessionScreen .finish-btn');
+    if (isPreview && btn && btn.textContent.trim() === 'INICIAR SESIÓN') {
+      btn.textContent = 'INICIAR ENTRENAMIENTO';
+    }
+  }
+
+  function syncSessionPreviewClass(){
+    setHeaderHeightVar();
+    var session = document.getElementById('sessionScreen');
+    var isSessionOpen = !!(session && session.classList.contains('active'));
+    var isTraining = document.body.classList.contains('training-active');
+    var isPreview = isSessionOpen && !isTraining && !hasCurrentTrainingSession();
+    document.body.classList.toggle('session-preview-active', isPreview);
+    normalizeSessionButtons();
+    normalizeStartButton();
+  }
+
+  function patchTimerButtons(){
+    var controls = document.getElementById('timerControls');
+    if (!controls) return;
+    var buttons = controls.querySelectorAll('button');
+    if (buttons[0]) {
+      buttons[0].textContent = '−';
+      buttons[0].setAttribute('onclick', 'adjustTimer(-15)');
+      buttons[0].setAttribute('aria-label', 'Quitar 15 segundos');
+      buttons[0].setAttribute('title', 'Quitar 15 segundos');
+    }
+    if (buttons[1]) {
+      buttons[1].textContent = '+';
+      buttons[1].setAttribute('onclick', 'adjustTimer(15)');
+      buttons[1].setAttribute('aria-label', 'Agregar 15 segundos');
+      buttons[1].setAttribute('title', 'Agregar 15 segundos');
+    }
+    if (buttons[2]) {
+      buttons[2].textContent = '⏸';
+      buttons[2].setAttribute('aria-label', 'Pausar o continuar');
+      buttons[2].setAttribute('title', 'Pausar o continuar');
+    }
+    if (buttons[3]) {
+      buttons[3].textContent = '⏹';
+      buttons[3].setAttribute('aria-label', 'Detener temporizador');
+      buttons[3].setAttribute('title', 'Detener temporizador');
+    }
+  }
+
+  var previousRenderTimer = (typeof renderTimer === 'function') ? renderTimer : null;
+  if (previousRenderTimer) {
+    renderTimer = window.renderTimer = function(){
+      var result = previousRenderTimer.apply(this, arguments);
+      patchTimerButtons();
+      var pauseBtn = document.getElementById('timerPauseBtn');
+      try {
+        if (pauseBtn && typeof forjaTimerState !== 'undefined') {
+          pauseBtn.textContent = forjaTimerState.pausedMs !== null ? '▶' : '⏸';
+        }
+      } catch(e) {}
+      return result;
+    };
+  }
+
+  var previousViewRoutine = (typeof viewRoutine === 'function') ? viewRoutine : null;
+  if (previousViewRoutine) {
+    viewRoutine = window.viewRoutine = function(){
+      var result = previousViewRoutine.apply(this, arguments);
+      setTimeout(syncSessionPreviewClass, 0);
+      setTimeout(syncSessionPreviewClass, 80);
+      return result;
+    };
+  }
+
+  var previousStartSession = (typeof startSession === 'function') ? startSession : null;
+  if (previousStartSession) {
+    startSession = window.startSession = function(){
+      document.body.classList.remove('session-preview-active');
+      var result = previousStartSession.apply(this, arguments);
+      setTimeout(syncSessionPreviewClass, 0);
+      return result;
+    };
+  }
+
+  var previousShowScreen = (typeof showScreen === 'function') ? showScreen : null;
+  if (previousShowScreen) {
+    showScreen = window.showScreen = function(name){
+      var result = previousShowScreen.apply(this, arguments);
+      setTimeout(syncSessionPreviewClass, 0);
+      return result;
+    };
+  }
+
+  var previousEnterTrainingMode = (typeof enterTrainingMode === 'function') ? enterTrainingMode : null;
+  if (previousEnterTrainingMode) {
+    enterTrainingMode = window.enterTrainingMode = function(){
+      document.body.classList.remove('session-preview-active');
+      var result = previousEnterTrainingMode.apply(this, arguments);
+      setTimeout(syncSessionPreviewClass, 0);
+      return result;
+    };
+  }
+
+  var previousExitTrainingMode = (typeof exitTrainingMode === 'function') ? exitTrainingMode : null;
+  if (previousExitTrainingMode) {
+    exitTrainingMode = window.exitTrainingMode = function(){
+      var result = previousExitTrainingMode.apply(this, arguments);
+      setTimeout(syncSessionPreviewClass, 0);
+      return result;
+    };
+  }
+
+  patchTimerButtons();
+  syncSessionPreviewClass();
+  document.addEventListener('DOMContentLoaded', function(){ patchTimerButtons(); syncSessionPreviewClass(); });
+  window.addEventListener('resize', syncSessionPreviewClass, {passive:true});
+  window.addEventListener('orientationchange', syncSessionPreviewClass, {passive:true});
   window.addEventListener('pageshow', syncSessionPreviewClass, {passive:true});
 })();
 </script>
