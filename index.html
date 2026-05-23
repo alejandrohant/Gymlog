@@ -3135,48 +3135,91 @@ body.training-active #sessionScreen.screen.active{
 
 
 /* FORJA consolidated training layout and bodyweight sets */
+
+/* Temporizador: oculto por defecto. No reserva espacio y nunca se monta dentro de tarjetas. */
 body > .timer-wrap {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
+  position: fixed !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
   pointer-events: none !important;
+  transform: translateX(-50%) !important;
+  z-index: 9950 !important;
 }
 
 body.timer-active > .timer-wrap {
   display: grid !important;
   visibility: visible !important;
   opacity: 1 !important;
-  position: fixed !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
   left: 50% !important;
-  bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
-  transform: translateX(-50%) !important;
-  width: min(calc(100vw - 32px), 448px) !important;
-  grid-template-columns: minmax(90px, 1fr) auto !important;
-  gap: 10px !important;
+  width: min(calc(100vw - 28px), 452px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  grid-template-columns: minmax(96px, 1fr) auto !important;
   align-items: center !important;
+  gap: 10px !important;
   padding: 10px 12px !important;
   border-radius: 24px !important;
-  border: 1px solid rgba(226,194,125,.24) !important;
-  background: rgba(12,3,22,.96) !important;
-  box-shadow: 0 16px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.10) !important;
-  z-index: 9950 !important;
+  border: 1px solid rgba(226,194,125,.22) !important;
+  background: rgba(12,3,22,.94) !important;
+  box-shadow: 0 14px 30px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,245,214,.08) !important;
   pointer-events: auto !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
-  backdrop-filter: blur(18px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.08) !important;
+  backdrop-filter: blur(14px) saturate(1.08) !important;
 }
 
-body.training-active.timer-active > .timer-wrap {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+/* Importante: anula reglas viejas que le ponían top y bottom al temporizador y lo estiraban. */
+body.training-active.timer-active > .timer-wrap,
+body.training-active > .timer-wrap {
+  top: auto !important;
+  right: auto !important;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  left: 50% !important;
+  width: min(calc(100vw - 28px), 452px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  transform: translateX(-50%) !important;
+}
+
+body:not(.timer-active) > .timer-wrap,
+body.training-active:not(.timer-active) > .timer-wrap {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
 }
 
 body > .timer-wrap .rest-timer.visible {
   display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
   color: #a970ff !important;
   font-family: 'Bebas Neue', sans-serif !important;
   font-size: 50px !important;
   line-height: .9 !important;
   letter-spacing: .02em !important;
-  text-shadow: 0 0 18px rgba(169,112,255,.46), 0 0 34px rgba(169,112,255,.24) !important;
+  text-shadow: 0 0 18px rgba(169,112,255,.46), 0 0 34px rgba(169,112,255,.22) !important;
 }
 
 body > .timer-wrap .timer-controls.visible {
@@ -3184,11 +3227,13 @@ body > .timer-wrap .timer-controls.visible {
   grid-template-columns: repeat(2, 50px) !important;
   gap: 6px !important;
   justify-content: end !important;
+  margin: 0 !important;
 }
 
 body > .timer-wrap .timer-control-btn {
   width: 50px !important;
   height: 32px !important;
+  min-height: 0 !important;
   padding: 0 !important;
   border-radius: 13px !important;
   color: #f0d78a !important;
@@ -3197,8 +3242,11 @@ body > .timer-wrap .timer-control-btn {
   font-weight: 900 !important;
   background: rgba(255,244,212,.058) !important;
   border: 1px solid rgba(226,194,125,.24) !important;
+  transform: none !important;
+  transition: none !important;
 }
 
+/* Modo entrenamiento: solo pantalla de sesión; no se toca la barra inferior fuera del entrenamiento. */
 body.training-active {
   overflow: hidden !important;
   background: linear-gradient(180deg, #0d0418 0%, #12051f 28%, #09000f 100%) !important;
@@ -3217,7 +3265,7 @@ body.training-active #sessionScreen.screen.active {
   max-width: 480px !important;
   height: 100dvh !important;
   margin: 0 auto !important;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 0 calc(env(safe-area-inset-bottom, 0px) + 34px) !important;
+  padding: calc(env(safe-area-inset-top, 0px) + 66px) 0 calc(env(safe-area-inset-bottom, 0px) + 34px) !important;
   overflow-y: auto !important;
   overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch !important;
@@ -3226,23 +3274,33 @@ body.training-active #sessionScreen.screen.active {
   transform: none !important;
 }
 
+body.training-active.timer-active #sessionScreen.screen.active {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 96px) !important;
+}
+
+/* Botones superiores: fijos y estables; no sticky, no blur, no transform. */
 body.training-active #sessionScreen .session-legacy-actions {
   display: flex !important;
-  position: sticky !important;
-  top: 0 !important;
+  position: fixed !important;
+  top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+  left: 0 !important;
+  right: 0 !important;
   z-index: 4600 !important;
   align-items: center !important;
   justify-content: space-between !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 8px 18px 12px !important;
-  background: linear-gradient(180deg, rgba(13,4,24,.98) 0%, rgba(13,4,24,.86) 72%, rgba(13,4,24,0) 100%) !important;
+  width: min(100vw, 480px) !important;
+  max-width: 480px !important;
+  height: 48px !important;
+  margin: 0 auto !important;
+  padding: 0 18px !important;
+  background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
   transform: none !important;
   transition: none !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+  pointer-events: none !important;
 }
 
 body.training-active #sessionScreen .session-hide-btn,
@@ -3257,6 +3315,7 @@ body.training-active #sessionScreen .session-discard-btn {
   box-shadow: none !important;
   font-family: 'DM Sans', sans-serif !important;
   cursor: pointer !important;
+  pointer-events: auto !important;
 }
 
 body.training-active #sessionScreen .session-hide-btn {
@@ -3285,7 +3344,7 @@ body.training-active #sessionScreen .session-discard-btn {
 }
 
 body.training-active .session-header {
-  margin: 8px 18px 18px !important;
+  margin: 0 18px 18px !important;
   padding: 24px 24px 22px !important;
   border-radius: 30px !important;
   border: 1px solid rgba(226,194,125,.16) !important;
@@ -3328,7 +3387,7 @@ body.training-active .sets-header.bodyweight-header {
 
 @media (max-width: 390px) {
   body.training-active #sessionScreen.screen.active {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 6px) !important;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 62px) !important;
   }
   body.training-active #sessionScreen .session-legacy-actions {
     padding-left: 14px !important;
@@ -3339,144 +3398,10 @@ body.training-active .sets-header.bodyweight-header {
     margin-left: 14px !important;
     margin-right: 14px !important;
   }
-  body > .timer-wrap {
-    width: min(calc(100vw - 28px), 452px) !important;
-  }
-}
-
-
-/* FORJA HOTFIX: temporizador compacto y estable */
-body > .timer-wrap,
-body.training-active > .timer-wrap {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  position: fixed !important;
-  top: auto !important;
-  right: auto !important;
-  left: 50% !important;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px) !important;
-  transform: translate3d(-50%, 0, 0) !important;
-  box-sizing: border-box !important;
-}
-
-body.timer-active > .timer-wrap,
-body.training-active.timer-active > .timer-wrap {
-  display: grid !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  grid-template-columns: minmax(96px, 1fr) auto !important;
-  align-items: center !important;
-  gap: 12px !important;
-  width: min(calc(100vw - 28px), 336px) !important;
-  min-height: 72px !important;
-  max-height: 84px !important;
-  padding: 10px 12px 10px 16px !important;
-  border-radius: 24px !important;
-  background: rgba(12, 3, 22, .985) !important;
-  border: 1px solid rgba(226, 194, 125, .24) !important;
-  box-shadow: 0 14px 34px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,245,214,.08) !important;
-  z-index: 99990 !important;
-  pointer-events: auto !important;
-  overflow: hidden !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  transition: none !important;
-  contain: layout paint style !important;
-  isolation: isolate !important;
-}
-
-body.timer-active > .timer-wrap .rest-timer.visible,
-body.training-active.timer-active > .timer-wrap .rest-timer.visible {
-  display: block !important;
-  min-width: 96px !important;
-  max-width: 110px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  color: #a970ff !important;
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  font-size: 42px !important;
-  font-weight: 900 !important;
-  line-height: 1 !important;
-  letter-spacing: -.04em !important;
-  font-variant-numeric: tabular-nums !important;
-  text-align: left !important;
-  text-shadow: 0 0 16px rgba(169,112,255,.38) !important;
-  transform: translateZ(0) !important;
-  transition: none !important;
-}
-
-body.timer-active > .timer-wrap .timer-controls.visible,
-body.training-active.timer-active > .timer-wrap .timer-controls.visible {
-  display: grid !important;
-  grid-template-columns: repeat(2, 52px) !important;
-  gap: 7px !important;
-  width: 111px !important;
-  max-width: 111px !important;
-  justify-content: end !important;
-  align-items: center !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  transition: none !important;
-}
-
-body.timer-active > .timer-wrap .timer-control-btn,
-body.training-active.timer-active > .timer-wrap .timer-control-btn {
-  width: 52px !important;
-  height: 31px !important;
-  min-width: 52px !important;
-  min-height: 31px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border-radius: 13px !important;
-  background: rgba(255,244,212,.060) !important;
-  border: 1px solid rgba(226,194,125,.25) !important;
-  color: #f0d78a !important;
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  font-size: 11px !important;
-  font-weight: 900 !important;
-  line-height: 1 !important;
-  transform: none !important;
-  transition: none !important;
-  will-change: auto !important;
-  box-shadow: none !important;
-  -webkit-tap-highlight-color: transparent !important;
-}
-
-body.timer-active > .timer-wrap .timer-control-btn:active,
-body.training-active.timer-active > .timer-wrap .timer-control-btn:active {
-  transform: none !important;
-}
-
-body.training-active.timer-active #sessionScreen.screen.active {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 122px) !important;
-}
-
-@media (max-width: 390px) {
+  body > .timer-wrap,
   body.timer-active > .timer-wrap,
   body.training-active.timer-active > .timer-wrap {
-    width: min(calc(100vw - 24px), 324px) !important;
-    min-height: 70px !important;
-    padding-left: 14px !important;
-    padding-right: 10px !important;
-  }
-  body.timer-active > .timer-wrap .rest-timer.visible,
-  body.training-active.timer-active > .timer-wrap .rest-timer.visible {
-    min-width: 88px !important;
-    max-width: 96px !important;
-    font-size: 39px !important;
-  }
-  body.timer-active > .timer-wrap .timer-controls.visible,
-  body.training-active.timer-active > .timer-wrap .timer-controls.visible {
-    grid-template-columns: repeat(2, 49px) !important;
-    width: 105px !important;
-    max-width: 105px !important;
-  }
-  body.timer-active > .timer-wrap .timer-control-btn,
-  body.training-active.timer-active > .timer-wrap .timer-control-btn {
-    width: 49px !important;
-    min-width: 49px !important;
+    width: min(calc(100vw - 28px), 452px) !important;
   }
 }
 
@@ -6839,10 +6764,7 @@ async function initApp() {
 
 function isBodyweightExerciseName(name) {
   const clean = normalizeText(name || '');
-  return (clean.includes('fondo') && clean.includes('triceps'))
-    || clean.includes('dominada')
-    || clean === 'plancha'
-    || clean.includes('peso corporal');
+  return clean === 'fondo de triceps' || clean === 'fondos de triceps' || clean.includes('dominada') || clean === 'plancha';
 }
 
 function isBodyweightExercise(ex) {
@@ -7015,9 +6937,8 @@ function renderTimer() {
   const totalSeconds = Math.ceil(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  const nextTimerText = `${minutes}:${String(seconds).padStart(2, '0')}`;
   if (display) {
-    if (display.textContent !== nextTimerText) display.textContent = nextTimerText;
+    display.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
     display.classList.add('visible');
   }
   if (controls) controls.classList.add('visible');
