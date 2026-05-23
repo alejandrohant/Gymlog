@@ -7573,5 +7573,396 @@ body > .timer-wrap .timer-control-btn {
 })();
 </script>
 
+
+
+<!-- FORJA: cierre visual limpio, sin tocar datos ni sincronización -->
+<style id="forja-visual-limpio-final">
+  :root{
+    --forja-bg-final:#0b0314;
+    --forja-bg-final-2:#12051f;
+    --forja-bg-final-3:#050009;
+    --forja-bottom-gap:max(10px, calc(env(safe-area-inset-bottom, 0px) - 16px));
+  }
+
+  html,
+  body{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    min-height:100dvh!important;
+    margin:0!important;
+    overflow-x:hidden!important;
+    background-color:var(--forja-bg-final)!important;
+    background:
+      radial-gradient(circle at 52% -10%, rgba(96,42,143,.25), transparent 34%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
+      linear-gradient(180deg,var(--forja-bg-final) 0%,var(--forja-bg-final-2) 48%,var(--forja-bg-final-3) 100%)!important;
+    color-scheme:dark!important;
+  }
+
+  body{
+    position:relative!important;
+    color:#f7f2ea!important;
+  }
+
+  input,
+  textarea,
+  select{
+    color-scheme:dark!important;
+    background-color:#11041e!important;
+  }
+
+  body:not(.training-active) .header{
+    width:min(100%,480px)!important;
+    max-width:480px!important;
+    margin:0 auto!important;
+    position:relative!important;
+    top:auto!important;
+    left:auto!important;
+    right:auto!important;
+    z-index:100!important;
+    padding:calc(env(safe-area-inset-top,0px) + 34px) 24px 26px!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+
+  body:not(.training-active) .header-title{
+    font-size:38px!important;
+    line-height:.88!important;
+    letter-spacing:.18em!important;
+  }
+
+  body:not(.training-active) .header-sub{
+    margin-top:10px!important;
+    font-size:11px!important;
+    letter-spacing:.16em!important;
+    white-space:nowrap!important;
+  }
+
+  body:not(.training-active) .screen.active{
+    display:block!important;
+    width:min(100%,480px)!important;
+    max-width:480px!important;
+    margin:0 auto!important;
+    height:calc(100dvh - 128px)!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    padding:18px 22px calc(152px + env(safe-area-inset-bottom,0px))!important;
+    background:transparent!important;
+  }
+
+  body:not(.training-active) .nav{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:8px!important;
+    position:fixed!important;
+    left:50%!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:var(--forja-bottom-gap)!important;
+    width:min(calc(100vw - 32px),448px)!important;
+    max-width:448px!important;
+    margin:0!important;
+    padding:7px!important;
+    transform:translate3d(-50%,0,0)!important;
+    z-index:9000!important;
+    border-radius:28px!important;
+    background:rgba(15,4,27,.82)!important;
+    border:1px solid rgba(226,194,125,.18)!important;
+    box-shadow:0 18px 46px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,245,214,.10)!important;
+    -webkit-backdrop-filter:blur(28px) saturate(1.22)!important;
+    backdrop-filter:blur(28px) saturate(1.22)!important;
+  }
+
+  body:not(.training-active) .nav-btn{
+    height:50px!important;
+    min-height:50px!important;
+    border-radius:20px!important;
+    transform:none!important;
+    transition:none!important;
+  }
+
+  body:not(.training-active) .nav-btn.active{
+    color:#130515!important;
+    background:linear-gradient(180deg,#f1da8f 0%,#d5af57 58%,#bd9138 100%)!important;
+    border:1px solid rgba(255,255,255,.44)!important;
+    box-shadow:0 12px 26px rgba(217,183,100,.22), inset 0 1px 0 rgba(255,255,255,.50)!important;
+  }
+
+  body.training-active{
+    width:100%!important;
+    max-width:none!important;
+    overflow:hidden!important;
+    background-color:var(--forja-bg-final)!important;
+    background:
+      radial-gradient(circle at 52% -10%, rgba(96,42,143,.25), transparent 34%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
+      linear-gradient(180deg,var(--forja-bg-final) 0%,var(--forja-bg-final-2) 48%,var(--forja-bg-final-3) 100%)!important;
+  }
+
+  body.training-active .header,
+  body.training-active .nav{
+    display:none!important;
+  }
+
+  body.training-active #sessionScreen.screen.active{
+    display:block!important;
+    position:fixed!important;
+    top:0!important;
+    bottom:0!important;
+    left:50%!important;
+    right:auto!important;
+    width:min(100vw,480px)!important;
+    max-width:480px!important;
+    height:100dvh!important;
+    margin:0!important;
+    padding:calc(env(safe-area-inset-top,0px) + 78px) 0 calc(env(safe-area-inset-bottom,0px) + 42px)!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+    transform:translate3d(-50%,0,0)!important;
+    background:transparent!important;
+    background-color:transparent!important;
+    z-index:3000!important;
+  }
+
+  body.training-active.timer-active #sessionScreen.screen.active{
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 124px)!important;
+  }
+
+  body.training-active #sessionScreen .session-legacy-actions{
+    display:flex!important;
+    position:fixed!important;
+    top:calc(env(safe-area-inset-top,0px) + 14px)!important;
+    left:50%!important;
+    right:auto!important;
+    width:min(100vw,480px)!important;
+    max-width:480px!important;
+    height:44px!important;
+    margin:0!important;
+    padding:0 22px!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:12px!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    transform:translate3d(-50%,0,0)!important;
+    transition:none!important;
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+    z-index:4700!important;
+    pointer-events:none!important;
+  }
+
+  body.training-active #sessionScreen .session-hide-btn,
+  body.training-active #sessionScreen .session-discard-btn{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 auto!important;
+    transform:none!important;
+    transition:none!important;
+    animation:none!important;
+    will-change:auto!important;
+    pointer-events:auto!important;
+    box-shadow:none!important;
+    font-family:'DM Sans',sans-serif!important;
+  }
+
+  body.training-active #sessionScreen .session-hide-btn{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+    min-height:42px!important;
+    padding:0!important;
+    border-radius:999px!important;
+    background:rgba(255,244,212,.065)!important;
+    border:1px solid rgba(226,194,125,.28)!important;
+    color:#f0d78a!important;
+    font-size:26px!important;
+    font-weight:900!important;
+    line-height:1!important;
+  }
+
+  body.training-active #sessionScreen .session-discard-btn{
+    width:auto!important;
+    min-width:124px!important;
+    height:42px!important;
+    min-height:42px!important;
+    padding:0 18px!important;
+    border-radius:999px!important;
+    background:rgba(255,93,104,.14)!important;
+    border:1px solid rgba(255,93,104,.48)!important;
+    color:#ff7b86!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    letter-spacing:.16em!important;
+    line-height:1!important;
+  }
+
+  body.training-active .session-header{
+    margin:0 18px 18px!important;
+    padding:24px 24px 22px!important;
+    border-radius:30px!important;
+    overflow:hidden!important;
+    border:1px solid rgba(226,194,125,.16)!important;
+    background:linear-gradient(135deg,rgba(74,32,98,.72),rgba(22,5,38,.94))!important;
+    box-shadow:0 22px 48px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,245,210,.10)!important;
+  }
+
+  body.training-active .session-title{
+    font-size:42px!important;
+    line-height:.94!important;
+    letter-spacing:.14em!important;
+    word-break:normal!important;
+  }
+
+  body.training-active .exercise-card.training-card{
+    width:auto!important;
+    max-width:none!important;
+    margin:0 18px 18px!important;
+    border-radius:30px!important;
+    overflow:hidden!important;
+    background:
+      linear-gradient(145deg,rgba(255,244,210,.075) 0%,rgba(255,255,255,.018) 42%,rgba(0,0,0,.12) 100%),
+      radial-gradient(circle at 18% 0%,rgba(255,238,190,.080),transparent 31%),
+      radial-gradient(circle at 95% 0%,rgba(113,52,164,.120),transparent 36%),
+      linear-gradient(180deg,rgba(25,8,43,.70),rgba(42,19,60,.42))!important;
+    border:1px solid rgba(224,190,118,.18)!important;
+  }
+
+  body > .timer-wrap{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    position:fixed!important;
+    left:50%!important;
+    top:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:0!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+    transform:translate3d(-50%,0,0)!important;
+    z-index:9950!important;
+  }
+
+  body.timer-active > .timer-wrap{
+    display:grid!important;
+    visibility:visible!important;
+    opacity:1!important;
+    grid-template-columns:minmax(92px,1fr) auto!important;
+    align-items:center!important;
+    gap:10px!important;
+    left:50%!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:calc(var(--forja-bottom-gap) + 76px)!important;
+    width:min(calc(100vw - 42px),420px)!important;
+    height:68px!important;
+    min-height:68px!important;
+    max-height:68px!important;
+    margin:0!important;
+    padding:8px 12px!important;
+    border-radius:24px!important;
+    border:1px solid rgba(226,194,125,.20)!important;
+    background:rgba(12,3,22,.94)!important;
+    box-shadow:0 14px 30px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.08)!important;
+    overflow:hidden!important;
+    pointer-events:auto!important;
+    transform:translate3d(-50%,0,0)!important;
+    -webkit-backdrop-filter:blur(14px) saturate(1.08)!important;
+    backdrop-filter:blur(14px) saturate(1.08)!important;
+  }
+
+  body.training-active.timer-active > .timer-wrap{
+    bottom:var(--forja-bottom-gap)!important;
+  }
+
+  body > .timer-wrap .rest-timer,
+  body > .timer-wrap .rest-timer.visible{
+    display:block!important;
+    margin:0!important;
+    padding:0!important;
+    color:#a970ff!important;
+    font-family:'Bebas Neue',sans-serif!important;
+    font-size:42px!important;
+    line-height:.9!important;
+    letter-spacing:.02em!important;
+    text-shadow:0 0 18px rgba(169,112,255,.46),0 0 34px rgba(169,112,255,.22)!important;
+  }
+
+  body > .timer-wrap .timer-controls,
+  body > .timer-wrap .timer-controls.visible{
+    display:grid!important;
+    grid-template-columns:repeat(2,48px)!important;
+    gap:6px!important;
+    justify-content:end!important;
+    margin:0!important;
+  }
+
+  body > .timer-wrap .timer-control-btn{
+    width:48px!important;
+    height:26px!important;
+    min-height:0!important;
+    padding:0!important;
+    border-radius:12px!important;
+    color:#f0d78a!important;
+    font-family:'DM Sans',sans-serif!important;
+    font-size:10px!important;
+    font-weight:900!important;
+    background:rgba(255,244,212,.058)!important;
+    border:1px solid rgba(226,194,125,.24)!important;
+    box-shadow:none!important;
+    transform:none!important;
+    transition:none!important;
+  }
+
+  body.training-active .finish-btn{
+    position:static!important;
+    width:calc(100% - 36px)!important;
+    max-width:none!important;
+    margin:24px 18px 30px!important;
+    transform:none!important;
+  }
+
+  @media (max-width:390px){
+    body:not(.training-active) .screen.active{padding-left:18px!important;padding-right:18px!important;}
+    body:not(.training-active) .nav{width:calc(100vw - 28px)!important;}
+    body.training-active #sessionScreen .session-legacy-actions{padding-left:14px!important;padding-right:14px!important;}
+    body.training-active .session-header,
+    body.training-active .exercise-card.training-card{margin-left:14px!important;margin-right:14px!important;}
+    body.timer-active > .timer-wrap{width:min(calc(100vw - 28px),420px)!important;}
+  }
+</style>
+<script id="forja-visual-limpio-final-script">
+  (function(){
+    document.documentElement.style.backgroundColor = '#0b0314';
+    document.body.style.backgroundColor = '#0b0314';
+    const bad = document.getElementById('forjaMobilePatchStyles');
+    if (bad) bad.remove();
+    const repaint = function(){
+      const sessionActive = !!(document.getElementById('sessionScreen')?.classList.contains('active') && window.currentSession);
+      document.body.classList.toggle('training-active', sessionActive);
+    };
+    window.addEventListener('pageshow', repaint, {passive:true});
+    window.addEventListener('resize', repaint, {passive:true});
+    setTimeout(repaint, 0);
+    setTimeout(repaint, 300);
+  })();
+</script>
+
 </body>
 </html>
