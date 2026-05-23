@@ -6764,5 +6764,195 @@ restartTimerInterval();
 
 initApp();
 </script>
+
+
+<!-- === FORJA PATCH FINAL 2026-05-22: fondo uniforme, sesión sin barra inferior, entrenamiento compacto === -->
+<style id="forja-user-fixes-2026-05-22">
+  /* 1) FORJA sin franja oscura: encabezado transparente sobre el mismo fondo */
+  html,
+  body{
+    background:
+      radial-gradient(circle at 50% -10%, rgba(96,42,143,.26), transparent 34%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
+      linear-gradient(180deg,#07010d 0%,#12051e 48%,#050009 100%) !important;
+  }
+
+  .header{
+    background:transparent !important;
+    border-bottom:0 !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+
+  /* 2) Al seleccionar una rutina, la barra inferior se oculta para no tapar INICIAR SESIÓN. */
+  body.session-preview-active:not(.training-active) .nav{
+    display:none !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 34px) !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
+    position:static !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    transform:none !important;
+    width:calc(100% - 36px) !important;
+    max-width:none !important;
+    margin:22px 18px calc(env(safe-area-inset-bottom,0px) + 20px) !important;
+    display:block !important;
+    z-index:auto !important;
+  }
+
+  /* 3) Entrenamiento iniciado: menos aire arriba, botón rojo estable y flecha visible. */
+  body.training-active #sessionScreen.screen.active{
+    padding-top:calc(env(safe-area-inset-top,0px) + 46px) !important;
+  }
+
+  body.training-active #sessionScreen .session-legacy-actions{
+    position:fixed !important;
+    top:calc(env(safe-area-inset-top,0px) + 8px) !important;
+    left:50% !important;
+    transform:translate3d(-50%,0,0) !important;
+    width:min(100vw,480px) !important;
+    max-width:480px !important;
+    height:42px !important;
+    padding:0 18px !important;
+    margin:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    z-index:4600 !important;
+    pointer-events:none !important;
+    transition:none !important;
+    will-change:auto !important;
+  }
+
+  body.training-active #sessionScreen .session-hide-btn{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:40px !important;
+    height:40px !important;
+    padding:0 !important;
+    border-radius:999px !important;
+    background:rgba(255,244,212,.07) !important;
+    border:1px solid rgba(226,194,125,.30) !important;
+    color:#f0d78a !important;
+    font-size:26px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+    box-shadow:none !important;
+    transform:none !important;
+    transition:none !important;
+    animation:none !important;
+    pointer-events:auto !important;
+  }
+
+  body.training-active #sessionScreen .session-discard-btn{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    min-height:40px !important;
+    padding:0 16px !important;
+    border-radius:999px !important;
+    background:rgba(255,42,63,.16) !important;
+    border:1px solid rgba(255,42,63,.58) !important;
+    color:#ff4f62 !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+    letter-spacing:.14em !important;
+    box-shadow:none !important;
+    transform:none !important;
+    transition:none !important;
+    animation:none !important;
+    pointer-events:auto !important;
+  }
+
+  body.training-active #sessionScreen .session-hide-btn:active,
+  body.training-active #sessionScreen .session-discard-btn:active{
+    transform:none !important;
+  }
+
+  body.training-active .session-header{
+    margin:0 18px 18px !important;
+  }
+
+  @media(max-width:390px){
+    body.training-active #sessionScreen.screen.active{
+      padding-top:calc(env(safe-area-inset-top,0px) + 44px) !important;
+    }
+    body.training-active #sessionScreen .session-legacy-actions{
+      padding-left:14px !important;
+      padding-right:14px !important;
+    }
+  }
+</style>
+
+<script id="forja-user-fixes-2026-05-22">
+(function(){
+  function syncSessionPreviewClass(){
+    var session = document.getElementById('sessionScreen');
+    var isSessionOpen = !!(session && session.classList.contains('active'));
+    var isTraining = document.body.classList.contains('training-active');
+    var hasCurrentSession = !!window.currentSession;
+    document.body.classList.toggle('session-preview-active', isSessionOpen && !isTraining && !hasCurrentSession);
+  }
+
+  var oldViewRoutine = window.viewRoutine;
+  if (typeof oldViewRoutine === 'function') {
+    window.viewRoutine = function(){
+      var result = oldViewRoutine.apply(this, arguments);
+      document.body.classList.add('session-preview-active');
+      return result;
+    };
+  }
+
+  var oldStartSession = window.startSession;
+  if (typeof oldStartSession === 'function') {
+    window.startSession = function(){
+      document.body.classList.remove('session-preview-active');
+      return oldStartSession.apply(this, arguments);
+    };
+  }
+
+  var oldShowScreen = window.showScreen;
+  if (typeof oldShowScreen === 'function') {
+    window.showScreen = function(name){
+      var result = oldShowScreen.apply(this, arguments);
+      if (name !== 'session') document.body.classList.remove('session-preview-active');
+      else setTimeout(syncSessionPreviewClass, 0);
+      return result;
+    };
+  }
+
+  var oldEnterTrainingMode = window.enterTrainingMode;
+  if (typeof oldEnterTrainingMode === 'function') {
+    window.enterTrainingMode = function(){
+      document.body.classList.remove('session-preview-active');
+      return oldEnterTrainingMode.apply(this, arguments);
+    };
+  }
+
+  var oldExitTrainingMode = window.exitTrainingMode;
+  if (typeof oldExitTrainingMode === 'function') {
+    window.exitTrainingMode = function(){
+      var result = oldExitTrainingMode.apply(this, arguments);
+      setTimeout(syncSessionPreviewClass, 0);
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', syncSessionPreviewClass);
+  window.addEventListener('pageshow', syncSessionPreviewClass, {passive:true});
+})();
+</script>
+
 </body>
 </html>
