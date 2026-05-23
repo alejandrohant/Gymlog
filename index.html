@@ -7891,5 +7891,176 @@ initApp();
 })();
 </script>
 
+
+<style id="forja-solo-correcciones-puntuales-2026-05-23">
+/* Correcciones puntuales: no rediseña inicio, barra ni tarjetas. */
+html, body{
+  background:#12051f !important;
+}
+body:not(.training-active){
+  background:
+    radial-gradient(circle at top left, rgba(201,164,76,0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(143,90,47,0.10), transparent 24%),
+    linear-gradient(180deg,#0d0418 0%,#12051f 20%,#18092b 100%) !important;
+}
+
+/* Historial: permitir desplazamiento real y espacio final para la barra. */
+body:not(.training-active) #historyScreen.screen.active{
+  display:block !important;
+  height:calc(100dvh - 104px) !important;
+  max-height:calc(100dvh - 104px) !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior-y:contain !important;
+  padding-bottom:calc(150px + env(safe-area-inset-bottom,0px)) !important;
+}
+body:not(.training-active) #historyList{
+  padding-bottom:calc(120px + env(safe-area-inset-bottom,0px)) !important;
+}
+
+/* Entrenamiento: quitar franja negra inferior sin mover la lógica del temporizador. */
+body.training-active{
+  background:
+    radial-gradient(circle at top, rgba(201,164,76,.05), transparent 26%),
+    linear-gradient(180deg,#0d0418 0%,#12051f 30%,#170826 100%) !important;
+}
+body.training-active #sessionScreen.screen.active{
+  background:
+    radial-gradient(circle at top, rgba(201,164,76,.05), transparent 26%),
+    linear-gradient(180deg,#0d0418 0%,#12051f 30%,#170826 100%) !important;
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 112px) !important;
+}
+body.training-active.timer-active #sessionScreen.screen.active{
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 132px) !important;
+}
+body.training-active.timer-active > .timer-wrap{
+  bottom:calc(env(safe-area-inset-bottom,0px) + 10px) !important;
+}
+
+/* El temporizador activo debe seguir visible al cambiar entre inicio / historial / cuenta. */
+body.timer-active:not(.training-active) > .timer-wrap{
+  bottom:calc(max(8px, calc(env(safe-area-inset-bottom,0px) - 22px)) + 74px) !important;
+}
+</style>
+<script id="forja-solo-correcciones-puntuales-2026-05-23">
+(function(){
+  'use strict';
+
+  function isSessionLikeSafe(s){
+    return !!(s && typeof s === 'object' && (s.routineName || s.routine_name) && Array.isArray(s.exercises));
+  }
+
+  function normalizeRecoveredSession(s){
+    try {
+      const raw = stripCloudMeta ? stripCloudMeta(s) : s;
+      return normalizeSession ? normalizeSession(raw) : raw;
+    } catch(e) {
+      return s;
+    }
+  }
+
+  function readArrayKeySafe(key){
+    try {
+      const value = localStorage.getItem(key);
+      if (!value) return [];
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.filter(isSessionLikeSafe).map(normalizeRecoveredSession);
+      if (parsed && Array.isArray(parsed.sessions)) return parsed.sessions.filter(isSessionLikeSafe).map(normalizeRecoveredSession);
+    } catch(e) {}
+    return [];
+  }
+
+  function recoverLocalHistorySafe(){
+    const out = [];
+    const keys = ['gymlog_sessions','forja_sessions'];
+    try {
+      for (let i=0; i<localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        const lk = k.toLowerCase();
+        if (lk.includes('current_session')) continue;
+        if ((lk.includes('sessions') || lk.includes('backup')) && !keys.includes(k)) keys.push(k);
+      }
+    } catch(e) {}
+    keys.forEach(k => out.push(...readArrayKeySafe(k)));
+    return dedupeSessions ? dedupeSessions(out) : out;
+  }
+
+  const previousGetSessions = (typeof getSessions === 'function') ? getSessions : null;
+  getSessions = window.getSessions = function(){
+    const local = recoverLocalHistorySafe();
+    const cloud = (typeof cloudSessions !== 'undefined' && Array.isArray(cloudSessions)) ? cloudSessions : [];
+    const live = (typeof currentSession !== 'undefined' && currentSession && isActiveCloudSession && isActiveCloudSession(currentSession)) ? [currentSession] : [];
+    const base = previousGetSessions ? previousGetSessions() : [];
+    return dedupeSessions ? dedupeSessions([...base, ...cloud, ...local, ...live]) : [...base, ...cloud, ...local, ...live];
+  };
+
+  const previousLoadCloudSessions = (typeof loadCloudSessions === 'function') ? loadCloudSessions : null;
+  if (previousLoadCloudSessions) {
+    loadCloudSessions = window.loadCloudSessions = async function(){
+      const beforeLocal = recoverLocalHistorySafe();
+      const loaded = await previousLoadCloudSessions.apply(this, arguments);
+      const afterLocal = recoverLocalHistorySafe();
+      const merged = dedupeSessions ? dedupeSessions([...(loaded || []), ...(cloudSessions || []), ...beforeLocal, ...afterLocal]) : [...(loaded || []), ...beforeLocal, ...afterLocal];
+      if (typeof cloudSessions !== 'undefined') cloudSessions = merged;
+      try { localStorage.setItem('gymlog_sessions', JSON.stringify(merged.map(s => stripCloudMeta ? stripCloudMeta(s) : s))); } catch(e) {}
+      return merged;
+    };
+  }
+
+  /* Reemplaza showScreen solo para NO detener el temporizador al navegar. */
+  showScreen = window.showScreen = function(name){
+    if (typeof currentUser !== 'undefined' && !currentUser && name !== 'auth') {
+      name = 'auth';
+      if (typeof showToast === 'function') showToast('🔒 Inicia sesión primero');
+    }
+
+    const goingToSession = name === 'session';
+    if (typeof currentSession !== 'undefined' && currentSession && !goingToSession) {
+      if (typeof editingSessionKey !== 'undefined' && !editingSessionKey && typeof saveCurrentDraft === 'function') saveCurrentDraft();
+      /* No se llama stopTimer(): el descanso debe seguir vivo en historial/cuenta. */
+    }
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+    const targetScreen = document.getElementById(name + 'Screen');
+    if (targetScreen) targetScreen.classList.add('active');
+
+    if (name === 'session' && typeof currentSession !== 'undefined' && currentSession && typeof enterTrainingMode === 'function') enterTrainingMode();
+    else if (typeof exitTrainingMode === 'function') exitTrainingMode();
+
+    const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
+    if (navMap[name] !== undefined) {
+      const navBtn = document.querySelectorAll('.nav-btn')[navMap[name]];
+      if (navBtn) navBtn.classList.add('active');
+    }
+
+    if (name === 'history') {
+      if (typeof renderHistory === 'function') renderHistory();
+      if (typeof currentUser !== 'undefined' && currentUser && typeof loadCloudSessions === 'function') loadCloudSessions().then(() => { if (typeof renderHistory === 'function') renderHistory(); });
+    }
+    if (name === 'home') {
+      if (typeof renderHome === 'function') renderHome();
+      if (typeof currentUser !== 'undefined' && currentUser && typeof loadCloudSessions === 'function') loadCloudSessions().then(() => { if (typeof renderHome === 'function') renderHome(); });
+    }
+    if (name === 'profile' && typeof renderProfile === 'function') renderProfile();
+    if (name === 'auth' && typeof renderAuthStatus === 'function') renderAuthStatus();
+
+    setTimeout(function(){
+      try { if (typeof renderTimer === 'function') renderTimer(); } catch(e) {}
+      if (name === 'history') {
+        const hs = document.getElementById('historyScreen');
+        if (hs) hs.scrollTop = hs.scrollTop;
+      }
+    }, 0);
+  };
+
+  window.addEventListener('pageshow', function(){
+    try { if (typeof renderTimer === 'function') renderTimer(); } catch(e) {}
+  });
+})();
+</script>
+
 </body>
 </html>
