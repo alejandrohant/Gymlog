@@ -6762,6 +6762,375 @@ readStoredTimer();
 renderTimer();
 restartTimerInterval();
 
+
+/* === FORJA RESCATE HISTORIAL REAL - NO HEVY / NO CSV === */
+(function(){
+  const PRIMARY_KEY = 'gymlog_sessions';
+  const MIRROR_KEY = 'forja_sessions';
+  const LAST_BACKUP_KEY = 'forja_sessions_backup_last';
+  const ALLOW_SHRINK_FLAG = '__forjaAllowHistoryShrink';
+
+  const CANDIDATE_KEYS = [
+    'gymlog_sessions',
+    'forja_sessions',
+    'forja_history',
+    'forja_workout_sessions',
+    'workout_sessions',
+    'sessions',
+    'history',
+    'gymlog_history',
+    'forja_sessions_backup_last',
+    'forja_sessions_backup_2026-04-15',
+    'forja_sessions_backup_2026-04-16',
+    'forja_sessions_backup_2026-04-17',
+    'forja_sessions_backup_2026-04-18',
+    'forja_sessions_backup_2026-04-19',
+    'forja_sessions_backup_2026-04-20',
+    'forja_sessions_backup_2026-04-21',
+    'forja_sessions_backup_2026-04-22',
+    'forja_sessions_backup_2026-04-23',
+    'forja_sessions_backup_2026-04-24',
+    'forja_sessions_backup_2026-04-25',
+    'forja_sessions_backup_2026-04-26',
+    'forja_sessions_backup_2026-04-27',
+    'forja_sessions_backup_2026-04-28',
+    'forja_sessions_backup_2026-04-29',
+    'forja_sessions_backup_2026-04-30'
+  ];
+
+  function parseJson(text, fallback=null){
+    if (typeof text !== 'string') return fallback;
+    try { return JSON.parse(text); } catch { return fallback; }
+  }
+
+  function text(v){ return String(v ?? '').trim(); }
+
+  function normalizeTitle(title){
+    const t = text(title).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    if (t.includes('push a')) return { routineId:'push_a', routineName:'Push A' };
+    if (t.includes('pull a')) return { routineId:'pull_a', routineName:'Pull A' };
+    if (t.includes('legs a')) return { routineId:'legs_a', routineName:'Legs A' };
+    if (t.includes('push b')) return { routineId:'push_b', routineName:'Push B' };
+    if (t.includes('pull b')) return { routineId:'pull_b', routineName:'Pull B + Hombros' };
+    if (t.includes('legs b')) return { routineId:'legs_b', routineName:'Legs B' };
+    return { routineId:'custom', routineName:text(title) || 'Entrenamiento' };
+  }
+
+  function isSessionLike(v){
+    return !!(v && typeof v === 'object' && (v.date || v.start_time || v.startTime) && (v.routineName || v.routine_name || v.name || v.title) && Array.isArray(v.exercises));
+  }
+
+  function normalizeSet(st){
+    if (!st || typeof st !== 'object') return null;
+    const out = {
+      done: st.done !== false,
+      reps: text(st.reps ?? st.rep ?? st.repetitions),
+      weight: text(st.weight ?? st.weight_lbs ?? st.lb ?? st.lbs)
+    };
+    if (st.distance_km !== undefined) out.distance_km = text(st.distance_km);
+    if (st.duration_seconds !== undefined) out.duration_seconds = text(st.duration_seconds);
+    if (st.rpe !== undefined) out.rpe = text(st.rpe);
+    if (st.type !== undefined) out.type = text(st.type);
+    if (!out.reps && !out.weight && !out.distance_km && !out.duration_seconds) return null;
+    return out;
+  }
+
+  function normalizeSession(v){
+    if (!isSessionLike(v)) return null;
+    const name = v.routineName || v.routine_name || v.name || v.title || 'Entrenamiento';
+    const r = normalizeTitle(name);
+    const session = {
+      date: v.date || v.start_time || v.startTime || new Date().toISOString(),
+      routineId: v.routineId || v.routine_id || r.routineId,
+      routineName: v.routineName || v.routine_name || r.routineName,
+      exercises: []
+    };
+    if (v.notes) session.notes = v.notes;
+    for (const ex of (v.exercises || [])) {
+      const sets = Array.isArray(ex.sets) ? ex.sets.map(normalizeSet).filter(Boolean) : [];
+      if (!sets.length) continue;
+      session.exercises.push({
+        name: ex.name || ex.exercise_title || ex.title || 'Ejercicio',
+        note: ex.note ?? ex.exercise_notes ?? null,
+        notes: ex.notes,
+        sets,
+        replaced: !!ex.replaced,
+        originalName: ex.originalName || ex.name || ex.exercise_title || ex.title || 'Ejercicio'
+      });
+    }
+    return session.exercises.length ? session : null;
+  }
+
+  function sessionKey(s){
+    return `${s.routineName || ''}__${s.date || ''}`;
+  }
+
+  function dedupe(list){
+    const map = new Map();
+    for (const raw of (list || [])) {
+      const s = normalizeSession(raw);
+      if (!s) continue;
+      const key = sessionKey(s);
+      if (!map.has(key)) map.set(key, s);
+    }
+    return [...map.values()].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  }
+
+  function collectSessionsDeep(value, depth=0, out=[]){
+    if (depth > 5 || value == null) return out;
+    if (typeof value === 'string') {
+      const parsed = parseJson(value, null);
+      if (parsed !== null) collectSessionsDeep(parsed, depth + 1, out);
+      return out;
+    }
+    if (isSessionLike(value)) {
+      const s = normalizeSession(value);
+      if (s) out.push(s);
+      return out;
+    }
+    if (Array.isArray(value)) {
+      const direct = value.map(normalizeSession).filter(Boolean);
+      if (direct.length) out.push(...direct);
+      else value.forEach(item => collectSessionsDeep(item, depth + 1, out));
+      return out;
+    }
+    if (typeof value === 'object') {
+      for (const k of ['sessions','history','workouts','data','items','records','value']) {
+        if (value[k] !== undefined) collectSessionsDeep(value[k], depth + 1, out);
+      }
+      if (depth < 3) {
+        for (const k of Object.keys(value)) {
+          if (!['sessions','history','workouts','data','items','records','value'].includes(k)) collectSessionsDeep(value[k], depth + 1, out);
+        }
+      }
+    }
+    return out;
+  }
+
+  function storageEntries(storage, label){
+    const entries = [];
+    try {
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
+        entries.push({ area: label, key, raw: storage.getItem(key) });
+      }
+    } catch(e) {}
+    return entries;
+  }
+
+  function scanBrowserStorages(){
+    const sources = [];
+    const entries = [
+      ...storageEntries(localStorage, 'localStorage'),
+      ...storageEntries(sessionStorage, 'sessionStorage')
+    ];
+
+    const keys = new Set([...CANDIDATE_KEYS, ...entries.map(e => e.key).filter(Boolean)]);
+    for (const key of keys) {
+      for (const area of ['localStorage','sessionStorage']) {
+        const storage = area === 'localStorage' ? localStorage : sessionStorage;
+        let raw = null;
+        try { raw = storage.getItem(key); } catch(e) {}
+        if (!raw) continue;
+        const parsed = parseJson(raw, raw);
+        const sessions = dedupe(collectSessionsDeep(parsed));
+        if (sessions.length) sources.push({ area, key, count:sessions.length, sessions });
+      }
+    }
+    sources.sort((a,b)=> b.count - a.count);
+    return sources;
+  }
+
+  async function scanIndexedDbForSessions(){
+    const sources = [];
+    if (!indexedDB || !indexedDB.databases) return sources;
+    let dbs = [];
+    try { dbs = await indexedDB.databases(); } catch { return sources; }
+    for (const dbInfo of dbs || []) {
+      if (!dbInfo.name) continue;
+      try {
+        const db = await new Promise((resolve,reject)=>{
+          const req = indexedDB.open(dbInfo.name);
+          req.onerror = () => reject(req.error);
+          req.onsuccess = () => resolve(req.result);
+        });
+        for (const storeName of Array.from(db.objectStoreNames || [])) {
+          try {
+            const items = await new Promise((resolve,reject)=>{
+              const tx = db.transaction(storeName, 'readonly');
+              const store = tx.objectStore(storeName);
+              const req = store.getAll();
+              req.onerror = () => reject(req.error);
+              req.onsuccess = () => resolve(req.result || []);
+            });
+            const sessions = dedupe(collectSessionsDeep(items));
+            if (sessions.length) sources.push({ area:'indexedDB', key:`${dbInfo.name}/${storeName}`, count:sessions.length, sessions });
+          } catch(e) {}
+        }
+        db.close();
+      } catch(e) {}
+    }
+    sources.sort((a,b)=> b.count - a.count);
+    return sources;
+  }
+
+  function saveBackup(sessions){
+    const clean = dedupe(sessions || []);
+    if (!clean.length) return;
+    const payload = JSON.stringify(clean);
+    const today = new Date().toISOString().slice(0,10);
+    try {
+      localStorage.setItem(LAST_BACKUP_KEY, payload);
+      localStorage.setItem(`forja_sessions_backup_${today}`, payload);
+    } catch(e) {}
+  }
+
+  const originalGetSessionsLocal = window.getSessionsLocal || getSessionsLocal;
+  const originalSetSessionsLocal = window.setSessionsLocal || setSessionsLocal;
+  const originalDedupe = window.dedupeSessions || dedupeSessions || dedupe;
+
+  window.getSessionsLocal = getSessionsLocal = function(){
+    const original = typeof originalGetSessionsLocal === 'function' ? originalGetSessionsLocal() : [];
+    const scanned = scanBrowserStorages().flatMap(s => s.sessions);
+    return originalDedupe(dedupe([...original, ...scanned]));
+  };
+
+  window.setSessionsLocal = setSessionsLocal = function(sessions){
+    const before = dedupe(scanBrowserStorages().flatMap(s => s.sessions));
+    const cleanIncoming = dedupe(sessions || []);
+    let finalSessions = cleanIncoming;
+
+    if (!window[ALLOW_SHRINK_FLAG] && before.length && cleanIncoming.length < before.length) {
+      finalSessions = dedupe([...before, ...cleanIncoming]);
+      console.warn('[FORJA RESCATE] Bloqueé reducción accidental de historial:', cleanIncoming.length, '→', finalSessions.length);
+    }
+
+    saveBackup(finalSessions);
+    const payload = JSON.stringify(finalSessions.map(s => {
+      const copy = JSON.parse(JSON.stringify(s));
+      delete copy._cloudId;
+      return copy;
+    }));
+    localStorage.setItem(PRIMARY_KEY, payload);
+    localStorage.setItem(MIRROR_KEY, payload);
+  };
+
+  if (typeof window.deleteSession === 'function') {
+    const originalDeleteSession = window.deleteSession;
+    window.deleteSession = async function(index){
+      window[ALLOW_SHRINK_FLAG] = true;
+      try { return await originalDeleteSession(index); }
+      finally { window[ALLOW_SHRINK_FLAG] = false; }
+    };
+  }
+
+  window.forjaDiagnosticoHistorial = async function(){
+    const storageSources = scanBrowserStorages();
+    const idbSources = await scanIndexedDbForSessions();
+    const sources = [...storageSources, ...idbSources].sort((a,b)=> b.count - a.count);
+    const total = dedupe(sources.flatMap(s => s.sessions)).length;
+    if (!sources.length) {
+      alert('No encontré sesiones guardadas en este origen de Safari. Abre la misma URL/archivo donde ayer sí aparecían y vuelve a intentar.');
+      return;
+    }
+    const lines = sources.slice(0,12).map(s => `${s.area} / ${s.key}: ${s.count}`);
+    alert(`Sesiones únicas visibles aquí: ${total}\n\nFuentes encontradas:\n${lines.join('\n')}`);
+  };
+
+  window.forjaRestaurarMayorHistorial = async function(){
+    const storageSources = scanBrowserStorages();
+    const idbSources = await scanIndexedDbForSessions();
+    const sources = [...storageSources, ...idbSources].sort((a,b)=> b.count - a.count);
+    const current = getSessionsLocal();
+    const merged = dedupe([...current, ...sources.flatMap(s => s.sessions), ...(cloudSessions || [])]);
+
+    if (!merged.length) {
+      alert('No encontré sesiones recuperables en este origen. Tienes que abrir la Forja/URL exacta donde ayer aparecían las 10 u 11 sesiones.');
+      return;
+    }
+
+    setSessionsLocal(merged);
+    if (currentUser && typeof syncLocalSessionsToCloud === 'function') await syncLocalSessionsToCloud();
+    if (typeof renderHome === 'function') renderHome();
+    if (typeof renderHistory === 'function') renderHistory();
+    alert(`Historial restaurado/asegurado: ${merged.length} sesiones visibles.`);
+  };
+
+  window.forjaImportarJsonReal = function(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = async () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const rawText = await file.text();
+      const parsed = parseJson(rawText, null);
+      const imported = dedupe(collectSessionsDeep(parsed));
+      if (!imported.length) {
+        alert('Ese JSON no contiene sesiones Forja válidas.');
+        return;
+      }
+      const before = getSessionsLocal();
+      const merged = dedupe([...imported, ...before, ...(cloudSessions || [])]);
+      setSessionsLocal(merged);
+      if (currentUser && typeof syncLocalSessionsToCloud === 'function') await syncLocalSessionsToCloud();
+      if (typeof renderHome === 'function') renderHome();
+      if (typeof renderHistory === 'function') renderHistory();
+      alert(`Importadas/aseguradas: ${merged.length} sesiones visibles.`);
+    };
+    input.click();
+  };
+
+  window.forjaExportarRespaldoTotal = function(){
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      visibleSessions: getSessionsLocal(),
+      localStorage: {},
+      sessionStorage: {}
+    };
+    for (const area of ['localStorage','sessionStorage']) {
+      const storage = area === 'localStorage' ? localStorage : sessionStorage;
+      try {
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          payload[area][key] = storage.getItem(key);
+        }
+      } catch(e) {}
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `forja-respaldo-total-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  window.openExportMenu = function(){
+    if (typeof closeExportMenu === 'function') closeExportMenu();
+    const overlay = document.createElement('div');
+    overlay.id = 'exportMenuOverlay';
+    overlay.className = 'edit-overlay';
+    overlay.innerHTML = `
+      <div class="edit-overlay-card">
+        <div class="action-sheet-title">Historial Forja</div>
+        <div class="action-sheet-sub">Rescata solo sesiones reales de Forja. No importa CSV de Hevy.</div>
+        <div class="action-sheet-grid">
+          <button class="mini-btn primary" onclick="closeExportMenu(); forjaRestaurarMayorHistorial();">Restaurar historial Forja</button>
+          <button class="mini-btn" onclick="closeExportMenu(); forjaDiagnosticoHistorial();">Diagnóstico</button>
+          <button class="mini-btn primary" onclick="closeExportMenu(); forjaImportarJsonReal();">Importar JSON Forja</button>
+          <button class="mini-btn" onclick="closeExportMenu(); exportSessions();">Exportar JSON visible</button>
+          <button class="mini-btn" onclick="closeExportMenu(); forjaExportarRespaldoTotal();">Respaldo total</button>
+          <button class="mini-btn danger" onclick="closeExportMenu();">Cancelar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.onclick = event => { if (event.target === overlay && typeof closeExportMenu === 'function') closeExportMenu(); };
+  };
+})();
+
 initApp();
 </script>
 
