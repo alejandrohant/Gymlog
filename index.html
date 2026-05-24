@@ -8868,3 +8868,92 @@ initApp();
 
 </body>
 </html>
+
+<!-- === FORJA AJUSTE FINAL PUNTUAL 2026-05-23: teclado/timer + último ejercicio === -->
+<style id="forja-fix-teclado-timer-ultimo-ejercicio">
+  /* Fondo único detrás de todo el modo entrenamiento: evita franjas negras al abrir teclado. */
+  html,
+  body,
+  body.training-active,
+  body.training-active #sessionScreen.screen.active{
+    background:
+      radial-gradient(circle at 50% -10%, rgba(96,42,143,.22), transparent 34%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.05), transparent 26%),
+      linear-gradient(180deg,#07010d 0%,#12051e 48%,#050009 100%) !important;
+    background-color:#0b0314 !important;
+  }
+
+  /* Quita la capa que estaba creando la franja oscura bajo el temporizador. */
+  body.training-active.timer-active::after,
+  body.training-active::after{
+    content:none !important;
+    display:none !important;
+    background:transparent !important;
+  }
+
+  /* Entrenamiento abierto: fondo estable y espacio real al final para que nada quede cortado. */
+  body.training-active #sessionScreen.screen.active{
+    min-height:100dvh !important;
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 132px) !important;
+    box-shadow:none !important;
+  }
+
+  body.training-active.timer-active #sessionScreen.screen.active{
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 150px) !important;
+  }
+
+  /* Vista previa de rutina: el último ejercicio no queda debajo del botón iniciar. */
+  body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 184px) !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 14px) !important;
+  }
+
+  /* Temporizador: caja limpia, sin bloque inferior negro. */
+  body.timer-active > .timer-wrap,
+  body.training-active.timer-active > .timer-wrap{
+    background:linear-gradient(180deg, rgba(16,5,29,.96), rgba(10,2,18,.96)) !important;
+    border:1px solid rgba(226,194,125,.22) !important;
+    box-shadow:0 14px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,245,214,.08) !important;
+    isolation:isolate !important;
+  }
+
+  /* Sin teclado: temporizador abajo, como barra limpia. */
+  body.training-active.timer-active:not(.keyboard-open) > .timer-wrap{
+    bottom:max(10px, calc(env(safe-area-inset-bottom,0px) - 22px)) !important;
+  }
+
+  /* Con teclado: temporizador se coloca sobre el teclado, sin dejar franja negra dentro de la app. */
+  body.training-active.timer-active.keyboard-open > .timer-wrap{
+    bottom:calc(var(--forja-keyboard-offset, 0px) + 10px) !important;
+  }
+</style>
+<script id="forja-fix-teclado-timer-ultimo-ejercicio">
+(function(){
+  function updateKeyboardState(){
+    var vv = window.visualViewport;
+    var active = document.activeElement;
+    var editing = !!(active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName));
+    var keyboardOffset = 0;
+
+    if (vv) {
+      keyboardOffset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    }
+
+    var keyboardOpen = editing && keyboardOffset > 80;
+    document.body.classList.toggle('keyboard-open', keyboardOpen);
+    document.documentElement.style.setProperty('--forja-keyboard-offset', keyboardOpen ? keyboardOffset + 'px' : '0px');
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateKeyboardState, {passive:true});
+    window.visualViewport.addEventListener('scroll', updateKeyboardState, {passive:true});
+  }
+  window.addEventListener('resize', updateKeyboardState, {passive:true});
+  document.addEventListener('focusin', function(){ setTimeout(updateKeyboardState, 60); });
+  document.addEventListener('focusout', function(){ setTimeout(updateKeyboardState, 180); });
+  document.addEventListener('DOMContentLoaded', updateKeyboardState);
+})();
+</script>
