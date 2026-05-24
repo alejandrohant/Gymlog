@@ -8536,5 +8536,295 @@ initApp();
 })();
 </script>
 
+
+
+<!-- === FORJA CORRECCIÓN FINAL PUNTUAL 2026-05-23: solo historial + teclado/timer + espacio inferior === -->
+<style id="forja-final-puntual-historial-teclado">
+  /* No cambiar pantalla de inicio: solo evitar que la barra inferior tape el último entrenamiento. */
+  #homeScreen.screen.active,
+  #historyScreen.screen.active,
+  #profileScreen.screen.active,
+  #authScreen.screen.active{
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior-y:contain !important;
+    padding-bottom:calc(220px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  #homeScreen .routine-grid,
+  #historyList{
+    padding-bottom:calc(180px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  /* Quita la franja negra creada debajo del temporizador. */
+  body.training-active.timer-active::after,
+  body.timer-active::after{
+    content:none !important;
+    display:none !important;
+    height:0 !important;
+    background:transparent !important;
+  }
+
+  html,
+  body,
+  body.training-active,
+  body.training-active #sessionScreen,
+  body.training-active #sessionScreen.screen.active{
+    background-color:#0b0314 !important;
+  }
+
+  body.training-active #sessionScreen.screen.active{
+    min-height:100svh !important;
+    background:
+      radial-gradient(circle at 50% -12%, rgba(96,42,143,.24), transparent 35%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
+      linear-gradient(180deg,#090011 0%,#12051f 42%,#090011 100%) !important;
+  }
+
+  body.training-active.timer-active > .timer-wrap{
+    bottom:calc(8px + env(safe-area-inset-bottom,0px)) !important;
+    background:rgba(12,3,22,.96) !important;
+    overflow:hidden !important;
+  }
+
+  /* Cuando aparece el teclado, no crear bloque negro bajo el temporizador. */
+  body.forja-input-active.training-active.timer-active > .timer-wrap{
+    bottom:max(6px, env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  body.forja-input-active.training-active #sessionScreen.screen.active{
+    padding-bottom:calc(96px + env(safe-area-inset-bottom,0px)) !important;
+  }
+</style>
+<script id="forja-final-puntual-sync-historial">
+(function(){
+  function clone(v){ try { return JSON.parse(JSON.stringify(v)); } catch(e) { return v; } }
+  function norm(v){ return String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim(); }
+  function dayKey(date){
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return String(date || '').slice(0,10);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function normalize(item){
+    try { if (typeof normalizeSession === 'function') { const n = normalizeSession(item); if (n) return n; } } catch(e) {}
+    if (!item || typeof item !== 'object') return null;
+    const src = item.data_json && typeof item.data_json === 'object' ? item.data_json : item;
+    const s = clone(src);
+    s.routineName = s.routineName || s.routine_name || item.routine_name || s.name || '';
+    s.routineId = s.routineId || s.routine_id || item.routine_id || '';
+    s.date = s.date || item.date || s.finishedAt || s.createdAt || s.startedAt || '';
+    if (!s.routineName || !s.date || !Array.isArray(s.exercises)) return null;
+    s.exercises = s.exercises.map(ex => ({ ...ex, sets:Array.isArray(ex.sets) ? ex.sets : [] }));
+    if (item.id && !s._cloudId) s._cloudId = item.id;
+    if (item._cloudId && !s._cloudId) s._cloudId = item._cloudId;
+    return s;
+  }
+  function key(s){
+    const n = normalize(s);
+    if (!n) return '';
+    return `${norm(n.routineId || n.routineName)}__${dayKey(n.date)}`;
+  }
+  function active(s){
+    const n = normalize(s); if (!n) return false;
+    const st = String(n.status || n.sessionStatus || '').toLowerCase();
+    return n.inProgress === true || n.isActive === true || st === 'active' || st === 'in_progress' || st === 'en_curso';
+  }
+  function done(s){
+    const n = normalize(s); if (!n) return 0;
+    return n.exercises.reduce((a,ex) => a + (Array.isArray(ex.sets) ? ex.sets.filter(x => x && x.done).length : 0), 0);
+  }
+  function volume(s){
+    const n = normalize(s); if (!n) return 0;
+    return n.exercises.reduce((a,ex) => a + (Array.isArray(ex.sets) ? ex.sets.filter(x => x && x.done).reduce((b,x) => b + ((parseFloat(x.weight)||0) * (parseFloat(x.reps)||0)), 0) : 0), 0);
+  }
+  function score(s){
+    const n = normalize(s); if (!n) return -1;
+    const finishedBonus = active(n) ? 0 : 10000000000;
+    return finishedBonus + done(n)*10000000 + volume(n)*10 + (n.exercises?.length || 0)*1000 + ((Date.parse(n.updatedAt || n.finishedAt || n.date || 0) || 0) / 1000000);
+  }
+  function valid(s){ const n = normalize(s); return !!n && (active(n) || done(n) > 0); }
+  function dedupe(list){
+    const map = new Map();
+    for (const raw of list || []) {
+      const s = normalize(raw);
+      if (!s || !valid(s)) continue;
+      const k = key(s);
+      if (!k) continue;
+      const prev = map.get(k);
+      if (!prev || score(s) >= score(prev)) map.set(k, s);
+    }
+    return Array.from(map.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
+  }
+  function storageSessions(){
+    const out = [];
+    try {
+      for (let i=0; i<localStorage.length; i++) {
+        const k = localStorage.key(i) || '';
+        if (k === 'gymlog_current_session') continue;
+        if (!/^(gymlog_sessions|forja_sessions|forja_sessions_backup|gymlog_sessions_backup)/.test(k)) continue;
+        try {
+          const v = JSON.parse(localStorage.getItem(k) || '[]');
+          if (Array.isArray(v)) out.push(...v);
+        } catch(e) {}
+      }
+    } catch(e) {}
+    return dedupe(out);
+  }
+  function saveLocalUnion(list){
+    try {
+      const merged = dedupe([...(storageSessions() || []), ...(list || [])]);
+      localStorage.setItem('gymlog_sessions', JSON.stringify(merged.map(s => {
+        try { return typeof stripCloudMeta === 'function' ? stripCloudMeta(s) : s; } catch(e) { return s; }
+      })));
+      return merged;
+    } catch(e) { return dedupe(list || []); }
+  }
+  function draft(){
+    try {
+      const raw = JSON.parse(localStorage.getItem('gymlog_current_session') || 'null');
+      return normalize(raw?.session || raw);
+    } catch(e) { return null; }
+  }
+  window.forjaCanonicalSessionKey = key;
+  window.sessionKey = key;
+  window.dedupeSessions = dedupe;
+  window.doneSetsCount = done;
+  window.isActiveCloudSession = active;
+  window.getSessionsLocal = storageSessions;
+  window.setSessionsLocal = saveLocalUnion;
+  window.getSessions = function(){
+    const all = [];
+    try { all.push(...(cloudSessions || [])); } catch(e) {}
+    try { all.push(...storageSessions()); } catch(e) {}
+    try { if (typeof currentSession !== 'undefined' && currentSession) all.push(currentSession); } catch(e) {}
+    const d = draft();
+    if (d) all.push(d);
+    return dedupe(all);
+  };
+  window.getFinishedSessions = function(){ return getSessions().filter(s => !active(s)); };
+
+  async function fetchRows(){
+    if (typeof currentUser === 'undefined' || !currentUser || typeof supabaseClient === 'undefined') return [];
+    const { data, error } = await supabaseClient.from('sessions').select('id, routine_id, routine_name, date, data_json').eq('user_id', currentUser.id);
+    if (error) throw error;
+    return data || [];
+  }
+  function rowToSession(row){ return normalize({ ...(row.data_json || {}), id:row.id, _cloudId:row.id, routine_id:row.routine_id, routine_name:row.routine_name, date:row.date }); }
+  async function removeStaleActive(rows){
+    try {
+      if (typeof currentUser === 'undefined' || !currentUser || typeof supabaseClient === 'undefined') return;
+      const groups = new Map();
+      for (const row of rows || []) {
+        const s = rowToSession(row);
+        if (!s) continue;
+        const k = key(s);
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push({ row, session:s });
+      }
+      const ids = [];
+      for (const group of groups.values()) {
+        const finished = group.filter(x => !active(x.session));
+        if (!finished.length) continue;
+        const bestFinished = Math.max(...finished.map(x => score(x.session)));
+        for (const a of group.filter(x => active(x.session))) {
+          if (bestFinished >= score(a.session)) ids.push(a.row.id);
+        }
+      }
+      if (ids.length) await supabaseClient.from('sessions').delete().eq('user_id', currentUser.id).in('id', ids);
+    } catch(e) {}
+  }
+  window.loadCloudSessions = async function(){
+    try {
+      if (typeof currentUser === 'undefined' || !currentUser) { cloudSessions = []; return []; }
+      let rows = await fetchRows();
+      await removeStaleActive(rows);
+      rows = await fetchRows();
+      const cloud = dedupe(rows.map(rowToSession));
+      const merged = saveLocalUnion(cloud);
+      cloudSessions = dedupe([...cloud, ...merged]);
+      return cloudSessions;
+    } catch(e) {
+      console.error('loadCloudSessions puntual', e);
+      return cloudSessions || [];
+    }
+  };
+  window.syncLocalSessionsToCloud = async function(){
+    try {
+      if (typeof currentUser === 'undefined' || !currentUser || typeof supabaseClient === 'undefined') return true;
+      let rows = await fetchRows();
+      await removeStaleActive(rows);
+      rows = await fetchRows();
+      const cloudMap = new Map();
+      for (const row of rows) {
+        const s = rowToSession(row);
+        if (!s) continue;
+        const prev = cloudMap.get(key(s));
+        if (!prev || score(s) >= score(prev.session)) cloudMap.set(key(s), { row, session:s });
+      }
+      const local = storageSessions().filter(s => !active(s));
+      for (const raw of local) {
+        const s = normalize(raw);
+        if (!s || !valid(s) || active(s)) continue;
+        const k = key(s);
+        const existing = cloudMap.get(k);
+        const clean = (typeof stripCloudMeta === 'function') ? stripCloudMeta(s) : s;
+        if (!existing) {
+          const { data, error } = await supabaseClient.from('sessions').insert({
+            user_id: currentUser.id,
+            routine_id: clean.routineId,
+            routine_name: clean.routineName,
+            date: clean.date,
+            data_json: clean
+          }).select('id').single();
+          if (error) throw error;
+          cloudMap.set(k, { row:{ id:data?.id }, session:clean });
+        } else if (score(clean) > score(existing.session)) {
+          const { error } = await supabaseClient.from('sessions').update({
+            routine_id: clean.routineId,
+            routine_name: clean.routineName,
+            date: clean.date,
+            data_json: clean
+          }).eq('user_id', currentUser.id).eq('id', existing.row.id);
+          if (error) throw error;
+          cloudMap.set(k, { row:existing.row, session:clean });
+        }
+      }
+      await loadCloudSessions();
+      return true;
+    } catch(e) {
+      console.error('syncLocalSessionsToCloud puntual', e);
+      try { await loadCloudSessions(); } catch(_) {}
+      return false;
+    }
+  };
+  const prevShow = typeof showScreen === 'function' ? showScreen : null;
+  if (prevShow) {
+    window.showScreen = function(name){
+      const result = prevShow.apply(this, arguments);
+      if (name === 'history' || name === 'home') {
+        setTimeout(function(){
+          try { renderHistory(); renderHome(); } catch(e) {}
+          try { if (typeof currentUser !== 'undefined' && currentUser) syncLocalSessionsToCloud().then(function(){ renderHistory(); renderHome(); }); } catch(e) {}
+        }, 0);
+      }
+      return result;
+    };
+  }
+  function run(){
+    try {
+      saveLocalUnion([]);
+      if (typeof currentUser !== 'undefined' && currentUser) {
+        syncLocalSessionsToCloud().then(function(){ try { renderHistory(); renderHome(); } catch(e) {} });
+      } else {
+        try { renderHistory(); renderHome(); } catch(e) {}
+      }
+    } catch(e) {}
+  }
+  window.addEventListener('pageshow', run, { passive:true });
+  window.addEventListener('focus', run, { passive:true });
+  setTimeout(run, 250);
+  setTimeout(run, 1500);
+})();
+</script>
+
 </body>
 </html>
