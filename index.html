@@ -2744,6 +2744,46 @@ body{
   box-shadow: 0 18px 46px rgba(0,0,0,.28), inset 0 1px 0 rgba(243,201,105,.14) !important;
 }
 
+
+
+/* =========================================================
+   CORRECCIÓN PUNTUAL: quitar franja negra bajo temporizador
+   - No toca historial, Supabase, tarjetas, barra inferior ni navegación.
+   - Solo estabiliza el fondo real del modo entrenamiento, incluso con teclado.
+   ========================================================= */
+html,
+body {
+  background: #0d0418 !important;
+}
+body.training-active {
+  background: linear-gradient(180deg,#0d0418 0%,#12051f 36%,#09000f 100%) !important;
+}
+body.training-active #sessionScreen.screen.active {
+  background: linear-gradient(180deg,#0d0418 0%,#12051f 36%,#09000f 100%) !important;
+  min-height: 100svh !important;
+}
+body.training-active.timer-active #sessionScreen.screen.active {
+  padding-bottom: calc(env(safe-area-inset-bottom,0px) + 118px) !important;
+}
+body.training-active.timer-active > .timer-wrap {
+  background: rgba(12,3,22,.96) !important;
+  margin-bottom: 0 !important;
+}
+body.training-active.timer-active::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(env(safe-area-inset-bottom,0px) + 104px);
+  background: linear-gradient(180deg, rgba(9,0,15,0) 0%, #09000f 44%, #09000f 100%);
+  pointer-events: none;
+  z-index: 2999;
+}
+body.training-active.timer-active > .timer-wrap {
+  z-index: 9950 !important;
+}
+
 </style>
 <style id="forja-final-stable-css">
 /* === FORJA FINAL INTEGRADO — navegación baja + entrenamiento estable + temporizador compacto === */
