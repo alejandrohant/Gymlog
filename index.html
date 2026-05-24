@@ -3848,13 +3848,25 @@ function setSessionsLocal(sessions) {
   localStorage.setItem('gymlog_sessions', JSON.stringify(dedupeSessions(sessions).map(stripCloudMeta)));
 }
 
+function isSameSessionIdentity(a, b) {
+  return !!sessionKey(a) && sessionKey(a) === sessionKey(b);
+}
+
+function shouldHideFromHistory(session) {
+  /* El historial debe ser igual en cualquier navegador: Supabase es la fuente oficial.
+     Solo se oculta la sesión activa real de ESTE navegador. Si una fila quedó
+     marcada como active por un guardado viejo, no se pierde del historial. */
+  if (!isActiveCloudSession(session)) return false;
+  const live = currentSession || getActiveDraftSession();
+  return !!live && isSameSessionIdentity(live, session);
+}
+
 function getSessions() {
-  /* Historial oficial: sesiones terminadas. No mete currentSession ni drafts.
-     Con usuario activo, Supabase manda; localStorage queda solo como respaldo si aún no cargó la nube. */
-  const source = currentUser && Array.isArray(cloudSessions) && cloudSessions.length
-    ? cloudSessions
-    : getSessionsLocal();
-  return dedupeSessions(source).filter(s => !isActiveCloudSession(s));
+  /* Con usuario activo NO se mezcla localStorage como historial paralelo.
+     localStorage queda solo como caché/migración para que Safari y la web app
+     no muestren historiales distintos. */
+  const source = currentUser ? (cloudSessions || []) : getSessionsLocal();
+  return dedupeSessions(source).filter(s => !shouldHideFromHistory(s));
 }
 
 
@@ -3877,6 +3889,7 @@ function getLastExerciseData(routineId, exerciseName) {
 async function loadCloudSessions() {
   if (!currentUser) {
     cloudSessions = [];
+    cloudSessionsLoaded = false;
     return [];
   }
 
@@ -3889,6 +3902,7 @@ async function loadCloudSessions() {
   if (error) {
     console.error('loadCloudSessions', error);
     showToast('❌ ' + error.message);
+    cloudSessionsLoaded = false;
     return cloudSessions || [];
   }
 
@@ -3900,8 +3914,18 @@ async function loadCloudSessions() {
     date: row.data_json?.date || row.date,
   })));
 
+  cloudSessionsLoaded = true;
   setSessionsLocal(cloudSessions);
   return cloudSessions;
+}
+
+async function refreshCloudHistory(force = false) {
+  if (!currentUser) return [];
+  if (cloudHistoryRefreshPromise && !force) return cloudHistoryRefreshPromise;
+  cloudHistoryRefreshPromise = loadCloudSessions().finally(() => {
+    cloudHistoryRefreshPromise = null;
+  });
+  return cloudHistoryRefreshPromise;
 }
 
 async function syncLocalSessionsToCloud() {
@@ -3954,6 +3978,8 @@ async function syncLocalSessionsToCloud() {
 
 let currentSessionCloudTimer = null;
 let currentSessionCloudSaving = false;
+let cloudSessionsLoaded = false;
+let cloudHistoryRefreshPromise = null;
 
 function queueCurrentSessionCloudSave(immediate = false) {
   if (!currentUser || !currentSession || !isActiveCloudSession(currentSession)) return;
@@ -3973,7 +3999,7 @@ async function saveActiveSessionToCloud() {
   try {
     const { data: existing, error: checkError } = await supabaseClient
       .from('sessions')
-      .select('id')
+      .select('id, data_json')
       .eq('user_id', currentUser.id)
       .eq('routine_name', cleanSession.routineName)
       .eq('date', cleanSession.date)
@@ -3982,7 +4008,12 @@ async function saveActiveSessionToCloud() {
     if (checkError) throw checkError;
 
     if (existing && existing.length > 0) {
-      const existingId = existing[0].id;
+      const existingRow = existing[0];
+      const existingId = existingRow.id;
+      const existingSession = normalizeSession(existingRow.data_json || {});
+      if (existingSession && !isActiveCloudSession(existingSession)) {
+        return true;
+      }
       const { error } = await supabaseClient
         .from('sessions')
         .update({
@@ -4598,6 +4629,7 @@ async function signUp() {
   await renderAuthStatus();
   await renderProfile();
   if (currentUser) await syncLocalSessionsToCloud();
+  await refreshCloudHistory(true);
   renderHome();
   renderHistory();
   showToast('✅ Cuenta creada');
@@ -4615,6 +4647,7 @@ async function signIn() {
   await renderAuthStatus();
   await renderProfile();
   if (currentUser) await syncLocalSessionsToCloud();
+  await refreshCloudHistory(true);
   renderHome();
   renderHistory();
   showToast('✅ Sesión iniciada');
@@ -4782,11 +4815,14 @@ function showScreen(name) {
 
   if (name === 'history') {
     renderHistory();
-    if (currentUser) loadCloudSessions().then(renderHistory);
+    if (currentUser) refreshCloudHistory(true).then(() => {
+      renderHistory();
+      renderHome();
+    });
   }
   if (name === 'home') {
     renderHome();
-    if (currentUser) loadCloudSessions().then(renderHome);
+    if (currentUser) refreshCloudHistory().then(renderHome);
   }
   if (name === 'profile') renderProfile();
   if (name === 'auth') renderAuthStatus();
@@ -5290,6 +5326,12 @@ async function finishSession() {
 function renderHistory() {
   const sessions = getSessions();
   const list = document.getElementById('historyList');
+  if (!list) return;
+
+  if (currentUser && !cloudSessionsLoaded) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">☁️</div><div class="empty-text">Sincronizando historial con Supabase…</div></div>`;
+    return;
+  }
 
   if (sessions.length === 0) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin sesiones registradas.<br>Selecciona una rutina para empezar.</div></div>`;
@@ -6055,7 +6097,7 @@ function exportSessionsCsv() {
 setInterval(() => {
   const historyOpen = document.getElementById('historyScreen')?.classList.contains('active');
   if (!currentUser || !historyOpen || currentSession) return;
-  loadCloudSessions().then(renderHistory);
+  refreshCloudHistory(true).then(renderHistory);
 }, 8000);
 
 window.addEventListener('pageshow', () => {
@@ -6070,14 +6112,32 @@ async function initApp() {
 
   if (currentUser) {
     await syncLocalSessionsToCloud();
+    await refreshCloudHistory(true);
   } else {
     cloudSessions = [];
+    cloudSessionsLoaded = false;
   }
 
   renderHome();
   renderHistory();
   await renderProfile();
   showScreen(currentUser ? 'home' : 'auth');
+}
+
+if (supabaseClient?.auth?.onAuthStateChange) {
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    currentUser = session?.user || null;
+    if (currentUser) {
+      await syncLocalSessionsToCloud();
+      await refreshCloudHistory(true);
+    } else {
+      cloudSessions = [];
+      cloudSessionsLoaded = false;
+    }
+    renderHome();
+    renderHistory();
+    await renderAuthStatus();
+  });
 }
 
 /* === FORJA MÓVIL: lista amplia + minimizar con flecha === */
