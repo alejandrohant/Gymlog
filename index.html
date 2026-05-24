@@ -7206,8 +7206,10 @@ restartTimerInterval();
 
 
 
-/* === FORJA FIX LIMPIO: cuenta obligatoria + historial Supabase === */
+
+/* === FORJA AUTH + HISTORIAL SUPABASE LIMPIO === */
 let authBootDone = false;
+let authBusy = false;
 
 function setAuthLocked(locked) {
   document.body.classList.toggle('auth-locked', !!locked);
@@ -7220,71 +7222,81 @@ function withTimeout(promise, ms, fallback = null) {
   ]);
 }
 
-function renderAuthLoggedOut(panel, statusText = 'Sin sesión') {
+function setAuthStatus(message, isError = false) {
+  const el = document.getElementById('authStatus');
+  if (!el) return;
+  el.textContent = message || '';
+  el.style.color = isError ? '#ff9b9b' : 'var(--muted)';
+}
+
+function activateOnlyScreen(name) {
+  document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+  const screen = document.getElementById(name + 'Screen');
+  if (screen) screen.classList.add('active');
+}
+
+function updateBottomNav(name) {
+  document.querySelectorAll('.nav-btn').forEach(button => button.classList.remove('active'));
+  const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
+  const index = navMap[name];
+  if (index === undefined) return;
+  const button = document.querySelectorAll('.nav-btn')[index];
+  if (button) button.classList.add('active');
+}
+
+function renderAuthLoggedOut(statusText = 'Inicia sesión para usar FORJA.') {
+  const panel = document.getElementById('authPanel');
   if (!panel) return;
+  currentUser = null;
   setAuthLocked(true);
   panel.innerHTML = `
     <div class="exercise-card" style="padding:20px;">
-      <input id="authEmail" type="email" placeholder="Correo"
-        autocomplete="email"
+      <input id="authEmail" type="email" placeholder="Correo" autocomplete="email"
         style="width:100%;margin-bottom:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
-      <input id="authPassword" type="password" placeholder="Contraseña"
-        autocomplete="current-password"
+      <input id="authPassword" type="password" placeholder="Contraseña" autocomplete="current-password"
         style="width:100%;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
       <div style="display:flex;gap:10px;">
-        <button onclick="signUp()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-          CREAR CUENTA
-        </button>
-        <button onclick="signIn()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-          ENTRAR
-        </button>
+        <button id="authCreateBtn" onclick="signUp()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">CREAR CUENTA</button>
+        <button id="authLoginBtn" onclick="signIn()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">ENTRAR</button>
       </div>
       <div id="authStatus" style="margin-top:14px;font-size:13px;color:var(--muted);">${escapeHtml(statusText)}</div>
     </div>
   `;
 }
 
-function renderAuthLoggedIn(panel, displayName, email) {
-  if (!panel) return;
+function renderAuthLoggedIn() {
+  const panel = document.getElementById('authPanel');
+  if (!panel || !currentUser) return;
   setAuthLocked(false);
-  const safeName = displayName || 'Alejandro';
-  const initial = safeName.trim().charAt(0).toUpperCase() || 'A';
+  const email = currentUser.email || '';
+  const displayName = email ? email.split('@')[0] : 'Alejandro';
+  const initial = displayName.trim().charAt(0).toUpperCase() || 'A';
   panel.innerHTML = `
     <div class="exercise-card" style="padding:20px;">
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:18px;">
-        <div style="width:58px;height:58px;border-radius:18px;background:linear-gradient(180deg, rgba(201,164,76,0.22), rgba(201,164,76,0.08));border:1px solid rgba(201,164,76,0.18);display:grid;place-items:center;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;">
-          ${escapeHtml(initial)}
-        </div>
+        <div style="width:58px;height:58px;border-radius:18px;background:linear-gradient(180deg, rgba(201,164,76,0.22), rgba(201,164,76,0.08));border:1px solid rgba(201,164,76,0.18);display:grid;place-items:center;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;">${escapeHtml(initial)}</div>
         <div style="min-width:0;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1.4px;color:var(--accent);line-height:0.95;">
-            ${escapeHtml(safeName)}
-          </div>
-          <div style="margin-top:6px;font-size:13px;color:var(--muted);word-break:break-word;">
-            ${escapeHtml(email || '')}
-          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1.4px;color:var(--accent);line-height:0.95;">${escapeHtml(displayName)}</div>
+          <div style="margin-top:6px;font-size:13px;color:var(--muted);word-break:break-word;">${escapeHtml(email)}</div>
         </div>
       </div>
-      <div style="padding:12px 14px;margin-bottom:14px;border-radius:14px;background:rgba(71,255,138,0.08);border:1px solid rgba(71,255,138,0.15);color:#86efac;font-size:13px;">
-        Sesión iniciada · Historial sincronizado con Supabase
-      </div>
-      <button onclick="signOut()" style="width:100%;padding:12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-        CERRAR SESIÓN
-      </button>
+      <div style="padding:12px 14px;margin-bottom:14px;border-radius:14px;background:rgba(71,255,138,0.08);border:1px solid rgba(71,255,138,0.15);color:#86efac;font-size:13px;">Sesión iniciada · Historial sincronizado con Supabase</div>
+      <button onclick="signOut()" style="width:100%;padding:12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">CERRAR SESIÓN</button>
     </div>
   `;
 }
 
 async function getAuthUserFast() {
   try {
-    const sessionResult = await withTimeout(supabaseClient.auth.getSession(), 2500, null);
-    const sessionUser = sessionResult?.data?.session?.user || null;
-    if (sessionUser) return sessionUser;
+    const result = await withTimeout(supabaseClient.auth.getSession(), 3000, null);
+    const user = result?.data?.session?.user || null;
+    if (user) return user;
   } catch (error) {
     console.warn('getSession', error);
   }
   try {
-    const userResult = await withTimeout(supabaseClient.auth.getUser(), 2500, null);
-    return userResult?.data?.user || null;
+    const result = await withTimeout(supabaseClient.auth.getUser(), 3000, null);
+    return result?.data?.user || null;
   } catch (error) {
     console.warn('getUser', error);
     return null;
@@ -7295,26 +7307,120 @@ async function renderAuthStatus() {
   const panel = document.getElementById('authPanel');
   if (!panel) return;
 
-  if (!panel.innerHTML.trim()) {
-    panel.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">Cargando cuenta…</div></div>`;
-  }
-
-  currentUser = await getAuthUserFast();
-
-  if (!currentUser) {
-    renderAuthLoggedOut(panel, 'Inicia sesión para usar FORJA.');
+  if (currentUser) {
+    renderAuthLoggedIn();
     return;
   }
 
-  let displayName = currentUser.email ? currentUser.email.split('@')[0] : 'Alejandro';
-  try {
-    const name = await withTimeout(getAccountDisplayName(), 1800, displayName);
-    if (name) displayName = name;
-  } catch (error) {
-    console.warn('getAccountDisplayName', error);
+  renderAuthLoggedOut('Inicia sesión para usar FORJA.');
+}
+
+async function afterLogin(user) {
+  currentUser = user || null;
+  if (!currentUser) {
+    renderAuthLoggedOut('No se pudo iniciar sesión.');
+    activateOnlyScreen('auth');
+    updateBottomNav('auth');
+    return;
   }
 
-  renderAuthLoggedIn(panel, displayName, currentUser.email || '');
+  setAuthLocked(false);
+  renderAuthLoggedIn();
+
+  try { await syncLocalSessionsToCloud(); } catch (error) { console.warn('syncLocalSessionsToCloud', error); }
+  try { await refreshCloudHistory(true); } catch (error) { console.warn('refreshCloudHistory', error); }
+  try { renderHome(); } catch (error) { console.warn('renderHome', error); }
+  try { renderHistory(); } catch (error) { console.warn('renderHistory', error); }
+  try { await renderProfile(); } catch (error) { console.warn('renderProfile', error); }
+
+  showScreen('home');
+}
+
+async function signIn() {
+  if (authBusy) return;
+  const email = document.getElementById('authEmail')?.value.trim() || '';
+  const password = document.getElementById('authPassword')?.value.trim() || '';
+  if (!email || !password) {
+    setAuthStatus('Pon correo y contraseña.', true);
+    showToast('⚠️ Pon correo y contraseña');
+    return;
+  }
+
+  authBusy = true;
+  setAuthStatus('Entrando…');
+  const loginBtn = document.getElementById('authLoginBtn');
+  const createBtn = document.getElementById('authCreateBtn');
+  if (loginBtn) loginBtn.disabled = true;
+  if (createBtn) createBtn.disabled = true;
+
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      setAuthStatus(error.message || 'No se pudo iniciar sesión.', true);
+      showToast('❌ ' + (error.message || 'No se pudo iniciar sesión'));
+      return;
+    }
+    await afterLogin(data?.user || null);
+    showToast('✅ Sesión iniciada');
+  } catch (error) {
+    console.error('signIn', error);
+    setAuthStatus('Error al conectar con Supabase. Revisa internet o la configuración.', true);
+    showToast('❌ Error al conectar con Supabase');
+  } finally {
+    authBusy = false;
+    const currentLoginBtn = document.getElementById('authLoginBtn');
+    const currentCreateBtn = document.getElementById('authCreateBtn');
+    if (currentLoginBtn) currentLoginBtn.disabled = false;
+    if (currentCreateBtn) currentCreateBtn.disabled = false;
+  }
+}
+
+async function signUp() {
+  if (authBusy) return;
+  const email = document.getElementById('authEmail')?.value.trim() || '';
+  const password = document.getElementById('authPassword')?.value.trim() || '';
+  if (!email || !password) {
+    setAuthStatus('Pon correo y contraseña.', true);
+    showToast('⚠️ Pon correo y contraseña');
+    return;
+  }
+
+  authBusy = true;
+  setAuthStatus('Creando cuenta…');
+
+  try {
+    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+    if (error) {
+      setAuthStatus(error.message || 'No se pudo crear la cuenta.', true);
+      showToast('❌ ' + (error.message || 'No se pudo crear la cuenta'));
+      return;
+    }
+    if (data?.user) {
+      await afterLogin(data.user);
+      showToast('✅ Cuenta creada');
+    } else {
+      renderAuthLoggedOut('Cuenta creada. Revisa tu correo si Supabase pide confirmación.');
+    }
+  } catch (error) {
+    console.error('signUp', error);
+    setAuthStatus('Error al conectar con Supabase. Revisa internet o la configuración.', true);
+    showToast('❌ Error al conectar con Supabase');
+  } finally {
+    authBusy = false;
+  }
+}
+
+async function signOut() {
+  try { await supabaseClient.auth.signOut(); } catch (error) { console.warn('signOut', error); }
+  currentUser = null;
+  cloudSessions = [];
+  cloudSessionsLoaded = false;
+  currentSession = null;
+  setAuthLocked(true);
+  renderAuthLoggedOut('Sesión cerrada. Inicia sesión para usar FORJA.');
+  activateOnlyScreen('auth');
+  updateBottomNav('auth');
+  showToast('👋 Sesión cerrada');
 }
 
 async function ensureCloudHistoryReady(force = false) {
@@ -7345,7 +7451,7 @@ function renderHistory() {
 
   const sessions = dedupeSessions(cloudSessions || []);
 
-  if (sessions.length === 0) {
+  if (!sessions.length) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin sesiones registradas en Supabase.<br>Termina una rutina para guardarla.</div></div>`;
     return;
   }
@@ -7382,21 +7488,6 @@ function renderHistory() {
   }).join('');
 }
 
-function activateOnlyScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const targetScreen = document.getElementById(name + 'Screen');
-  if (targetScreen) targetScreen.classList.add('active');
-}
-
-function updateBottomNav(name) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
-  if (navMap[name] !== undefined) {
-    const btn = document.querySelectorAll('.nav-btn')[navMap[name]];
-    if (btn) btn.classList.add('active');
-  }
-}
-
 function showScreen(name) {
   const requestedName = name;
   const goingToSession = name === 'session';
@@ -7416,23 +7507,20 @@ function showScreen(name) {
   activateOnlyScreen(name);
   updateBottomNav(name);
 
-  if (name === 'session' && currentSession) enterTrainingMode();
-  else exitTrainingMode();
-
   if (name === 'auth') {
-    setAuthLocked(!currentUser);
-    renderAuthStatus();
+    if (currentUser) renderAuthLoggedIn();
+    else renderAuthLoggedOut('Inicia sesión para usar FORJA.');
     return;
   }
+
+  if (name === 'session' && currentSession) enterTrainingMode();
+  else exitTrainingMode();
 
   setAuthLocked(false);
 
   if (name === 'history') {
     renderHistory();
-    ensureCloudHistoryReady(true).then(() => {
-      renderHistory();
-      renderHome();
-    });
+    ensureCloudHistoryReady(true).then(() => renderHistory());
     return;
   }
 
@@ -7449,51 +7537,39 @@ async function initApp() {
   activateOnlyScreen('auth');
   updateBottomNav('auth');
   setAuthLocked(true);
+  renderAuthLoggedOut('Cargando cuenta…');
 
-  await renderAuthStatus();
+  const user = await getAuthUserFast();
   authBootDone = true;
 
-  if (!currentUser) {
+  if (!user) {
+    currentUser = null;
     cloudSessions = [];
     cloudSessionsLoaded = false;
+    renderAuthLoggedOut('Inicia sesión para usar FORJA.');
     activateOnlyScreen('auth');
     updateBottomNav('auth');
     setAuthLocked(true);
     return;
   }
 
-  setAuthLocked(false);
-  await syncLocalSessionsToCloud();
-  await ensureCloudHistoryReady(true);
-  renderHome();
-  renderHistory();
-  await renderProfile();
-  showScreen('home');
+  await afterLogin(user);
 }
 
 if (supabaseClient?.auth?.onAuthStateChange) {
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    currentUser = session?.user || null;
-
-    if (!currentUser) {
+    const user = session?.user || null;
+    if (!user) {
+      currentUser = null;
       cloudSessions = [];
       cloudSessionsLoaded = false;
-      currentSession = null;
-      renderHistory();
-      await renderAuthStatus();
+      renderAuthLoggedOut('Inicia sesión para usar FORJA.');
       activateOnlyScreen('auth');
       updateBottomNav('auth');
       setAuthLocked(true);
       return;
     }
-
-    setAuthLocked(false);
-    await syncLocalSessionsToCloud();
-    await refreshCloudHistory(true);
-    renderHome();
-    renderHistory();
-    await renderAuthStatus();
-    if (document.getElementById('authScreen')?.classList.contains('active')) showScreen('home');
+    if (!currentUser || currentUser.id !== user.id) await afterLogin(user);
   });
 }
 
