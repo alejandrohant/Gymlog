@@ -3111,6 +3111,75 @@ body.training-active .finish-btn{
   body.timer-active > .timer-wrap .timer-control-btn{width:36px !important;min-width:36px !important;height:31px !important;min-height:31px !important;}
 }
 
+
+
+/* === FORJA FIX FINAL 2026-05-24: scroll fluido sin mover barra inferior ===
+   Corrección limitada a la zona de desplazamiento de pantallas principales.
+   No modifica .nav, temporizador, entrenamiento activo, Supabase ni funciones. */
+:root{
+  --forja-fixed-header-h: 118px;
+}
+body:not(.training-active):not(.session-preview-active) .header{
+  position: fixed !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(100vw, 480px) !important;
+  max-width: 480px !important;
+  min-height: var(--forja-fixed-header-h) !important;
+  height: var(--forja-fixed-header-h) !important;
+  box-sizing: border-box !important;
+  z-index: 8800 !important;
+  margin: 0 !important;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) 20px 14px !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+body:not(.training-active):not(.session-preview-active) .header .brand{
+  display: flex !important;
+  pointer-events: auto !important;
+}
+body:not(.training-active):not(.session-preview-active) #homeScreen.screen.active,
+body:not(.training-active):not(.session-preview-active) #historyScreen.screen.active{
+  position: fixed !important;
+  top: var(--forja-fixed-header-h) !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 0 !important;
+  transform: translateX(-50%) !important;
+  width: min(100vw, 480px) !important;
+  max-width: 480px !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  padding: 18px 20px calc(var(--forja-nav-h, 66px) + 34px + env(safe-area-inset-bottom, 0px)) !important;
+  background: transparent !important;
+  z-index: 1 !important;
+}
+body:not(.training-active):not(.session-preview-active) #homeScreen .routine-grid,
+body:not(.training-active):not(.session-preview-active) #historyScreen #historyList{
+  padding-bottom: 6px !important;
+}
+@media (max-width:390px){
+  :root{ --forja-fixed-header-h: 112px; }
+  body:not(.training-active):not(.session-preview-active) #homeScreen.screen.active,
+  body:not(.training-active):not(.session-preview-active) #historyScreen.screen.active{
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+}
+
 </style>
 </head>
 <body style="background-color:#12051f">
