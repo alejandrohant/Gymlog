@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: clean-layout-real-2026-05-24-03 -->
+<!-- FORJA_BUILD: clean-layout-real-2026-05-24-04 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -2748,14 +2748,14 @@ body{
 
 
 
-/* === FORJA LAYOUT BASE LIMPIO 2026-05-24-03 ===
-   Un solo control final para fondo, navegación inferior, temporizador y sesión activa. */
+/* === FORJA LAYOUT BASE LIMPIO 2026-05-24-04 ===
+   Control único del fondo, barra inferior, temporizador y pantalla de rutina. */
 :root{
   --forja-safe-bottom: env(safe-area-inset-bottom, 0px);
   --forja-safe-top: env(safe-area-inset-top, 0px);
   --forja-nav-h: 66px;
   --forja-timer-h: 50px;
-  --forja-bottom-gap: max(10px, var(--forja-safe-bottom));
+  --forja-bottom-gap: max(4px, calc(var(--forja-safe-bottom) - 28px));
   --forja-bg:
     radial-gradient(circle at 50% -14%, rgba(104,45,152,.24), transparent 36%),
     radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
@@ -2783,7 +2783,7 @@ body::before,body::after,body.timer-active::before,body.timer-active::after,body
   height:100dvh !important;
   overflow-y:auto !important;
   -webkit-overflow-scrolling:touch !important;
-  padding-bottom:calc(var(--forja-nav-h) + 34px + var(--forja-safe-bottom)) !important;
+  padding-bottom:calc(var(--forja-nav-h) + 22px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
   background:transparent !important;
 }
 .nav{
@@ -2835,12 +2835,52 @@ body::before,body::after,body.timer-active::before,body.timer-active::after,body
   border:1px solid rgba(255,255,255,.22) !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 10px 28px rgba(0,0,0,.20) !important;
 }
-body.training-active .nav{display:none !important;}
-body:not(.training-active) #sessionScreen.screen.active .finish-btn{
+body.training-active .nav,
+body.session-preview-active .nav{
+  display:none !important;
+}
+body.session-preview-active #sessionScreen.screen.active{
+  padding-bottom:calc(92px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
+}
+body.session-preview-active #sessionScreen .session-legacy-actions{
+  display:flex !important;
+  position:relative !important;
+  inset:auto !important;
+  transform:none !important;
+  width:auto !important;
+  z-index:20 !important;
+  justify-content:flex-start !important;
+  align-items:center !important;
+  margin:0 0 12px !important;
+  padding:0 !important;
+  background:transparent !important;
+  pointer-events:auto !important;
+}
+body.session-preview-active #sessionScreen .session-legacy-actions button:first-child{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:46px !important;
+  height:40px !important;
+  padding:0 !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.06) !important;
+  border:1px solid rgba(201,164,76,.24) !important;
+  color:#d9bc67 !important;
+  font-size:22px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  box-shadow:none !important;
+  transform:none !important;
+}
+body.session-preview-active #sessionScreen .session-legacy-actions button:last-child{
+  display:none !important;
+}
+body.session-preview-active #sessionScreen.screen.active .finish-btn{
   position:fixed !important;
   left:50% !important;
   right:auto !important;
-  bottom:calc(var(--forja-bottom-gap) + var(--forja-nav-h) + 12px) !important;
+  bottom:max(8px, calc(var(--forja-safe-bottom) - 24px)) !important;
   transform:translate3d(-50%,0,0) !important;
   width:min(calc(100vw - 36px),444px) !important;
   max-width:444px !important;
@@ -2851,7 +2891,7 @@ body.timer-active #historyScreen.screen.active,
 body.timer-active #profileScreen.screen.active,
 body.timer-active #authScreen.screen.active,
 body.timer-active #detailScreen.screen.active{
-  padding-bottom:calc(var(--forja-nav-h) + var(--forja-timer-h) + 42px + var(--forja-safe-bottom)) !important;
+  padding-bottom:calc(var(--forja-nav-h) + var(--forja-timer-h) + 22px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
 }
 body > .timer-wrap{
   display:none !important;
@@ -2885,7 +2925,7 @@ body.timer-active > .timer-wrap{
   height:var(--forja-timer-h) !important;
   min-height:var(--forja-timer-h) !important;
   max-height:var(--forja-timer-h) !important;
-  bottom:calc(var(--forja-bottom-gap) + var(--forja-nav-h) + 6px) !important;
+  bottom:calc(var(--forja-bottom-gap) + var(--forja-nav-h) + 4px) !important;
   padding:7px 10px !important;
   border-radius:22px !important;
   border:1px solid rgba(226,194,125,.18) !important;
@@ -2969,7 +3009,7 @@ body.training-active #sessionScreen.screen.active{
   padding-top:max(174px, calc(var(--forja-safe-top) + 124px)) !important;
   padding-left:18px !important;
   padding-right:18px !important;
-  padding-bottom:calc(28px + var(--forja-safe-bottom)) !important;
+  padding-bottom:calc(28px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
   overflow-y:auto !important;
   overflow-x:hidden !important;
   -webkit-overflow-scrolling:touch !important;
