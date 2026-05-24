@@ -9158,5 +9158,315 @@ initApp();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 })();
 </script>
+
+<style id="forja-fix-alcance-estricto-2026-05-23">
+/* =========================================================
+   FORJA — CORRECCIÓN ESTRICTA VISUAL
+   Solo corrige: franja negra, temporizador, descartar/flecha,
+   ancho de pantalla de entrenamiento y burbuja activa de barra inferior.
+   No toca historial ni Supabase.
+   ========================================================= */
+:root{
+  --forja-real-bg: #0b0314;
+  --forja-real-bg2: #130620;
+  --forja-kb-offset: 0px;
+}
+
+html,
+body{
+  width:100% !important;
+  max-width:480px !important;
+  min-height:100svh !important;
+  margin:0 auto !important;
+  overflow-x:hidden !important;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(111,52,160,.22), transparent 34%),
+    radial-gradient(circle at 14% 0%, rgba(220,187,104,.060), transparent 28%),
+    linear-gradient(180deg, #090112 0%, #13051f 45%, #07000d 100%) !important;
+  background-color:var(--forja-real-bg) !important;
+}
+
+body::before,
+body::after,
+body.training-active::before,
+body.training-active::after,
+body.training-active.timer-active::before,
+body.training-active.timer-active::after,
+#sessionScreen::before,
+#sessionScreen::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* Quita la franja negra que estaba detrás de la flecha/regresar en rutina previa. */
+#sessionScreen,
+#sessionScreen.screen,
+#sessionScreen.screen.active{
+  width:100% !important;
+  max-width:480px !important;
+  min-width:0 !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  overflow-x:hidden !important;
+  background:transparent !important;
+  background-color:transparent !important;
+  box-shadow:none !important;
+}
+
+#sessionScreen.screen.active{
+  padding-left:18px !important;
+  padding-right:18px !important;
+  padding-bottom:calc(150px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+#sessionScreen .session-header,
+#sessionScreen .session-overview,
+#sessionScreen .exercise-card,
+#sessionScreen .session-preview-card,
+#sessionScreen .set-row,
+#sessionScreen .sets-table,
+#sessionScreen .notes-shell,
+#sessionScreen .exercise-tools{
+  max-width:100% !important;
+  min-width:0 !important;
+  margin-left:0 !important;
+  margin-right:0 !important;
+  transform:none !important;
+}
+
+#sessionScreen .session-header,
+#sessionScreen .session-overview{
+  width:100% !important;
+}
+
+/* Entrenamiento activo: conservar el fondo, sin rectángulos negros añadidos. */
+body.training-active{
+  overflow:hidden !important;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(111,52,160,.22), transparent 34%),
+    radial-gradient(circle at 14% 0%, rgba(220,187,104,.060), transparent 28%),
+    linear-gradient(180deg, #090112 0%, #13051f 45%, #07000d 100%) !important;
+  background-color:var(--forja-real-bg) !important;
+}
+
+body.training-active #sessionScreen.screen.active{
+  height:100svh !important;
+  max-height:100svh !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior-x:none !important;
+  overscroll-behavior-y:contain !important;
+  padding-left:18px !important;
+  padding-right:18px !important;
+  padding-top:calc(env(safe-area-inset-top,0px) + 64px) !important;
+  padding-bottom:calc(132px + env(safe-area-inset-bottom,0px)) !important;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(111,52,160,.20), transparent 34%),
+    linear-gradient(180deg, #090112 0%, #13051f 48%, #07000d 100%) !important;
+  background-color:var(--forja-real-bg) !important;
+}
+
+body.training-active.keyboard-open #sessionScreen.screen.active{
+  padding-bottom:calc(120px + env(safe-area-inset-bottom,0px)) !important;
+}
+
+/* Controles superiores: sin fondo negro, descartar rojo real, flecha estable. */
+body.training-active #sessionScreen .session-legacy-actions{
+  display:flex !important;
+  position:fixed !important;
+  top:calc(env(safe-area-inset-top,0px) + 10px) !important;
+  left:50% !important;
+  right:auto !important;
+  width:min(100%,480px) !important;
+  max-width:480px !important;
+  height:48px !important;
+  padding:0 18px !important;
+  margin:0 !important;
+  transform:translate3d(-50%,0,0) !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  -webkit-backdrop-filter:none !important;
+  backdrop-filter:none !important;
+  pointer-events:none !important;
+  transition:none !important;
+  z-index:6500 !important;
+}
+body.training-active #sessionScreen .session-hide-btn,
+body.training-active #sessionScreen .session-discard-btn{
+  pointer-events:auto !important;
+  transition:none !important;
+  transform:none !important;
+  animation:none !important;
+  box-shadow:none !important;
+}
+body.training-active #sessionScreen .session-hide-btn{
+  display:inline-flex !important;
+  width:42px !important;
+  height:42px !important;
+  min-width:42px !important;
+  min-height:42px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:999px !important;
+  color:#f0d78a !important;
+  background:rgba(255,244,212,.060) !important;
+  border:1px solid rgba(226,194,125,.30) !important;
+  -webkit-backdrop-filter:blur(22px) saturate(1.25) !important;
+  backdrop-filter:blur(22px) saturate(1.25) !important;
+  font-size:28px !important;
+  line-height:1 !important;
+}
+body.training-active #sessionScreen .session-discard-btn{
+  display:inline-flex !important;
+  min-height:42px !important;
+  padding:0 18px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:999px !important;
+  background:rgba(255,50,72,.16) !important;
+  border:1px solid rgba(255,50,72,.62) !important;
+  color:#ff5d68 !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  letter-spacing:.14em !important;
+  -webkit-backdrop-filter:blur(22px) saturate(1.15) !important;
+  backdrop-filter:blur(22px) saturate(1.15) !important;
+}
+
+/* Temporizador: píldora flotante, no bloque rectangular; al teclado sube sobre el teclado. */
+body.training-active.timer-active > .timer-wrap{
+  display:flex !important;
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:calc(var(--forja-kb-offset, 0px) + env(safe-area-inset-bottom,0px) + 14px) !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(calc(100% - 36px), 430px) !important;
+  max-width:430px !important;
+  min-height:78px !important;
+  padding:10px 16px !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  border-radius:28px !important;
+  background:
+    linear-gradient(145deg, rgba(42,15,61,.82), rgba(10,2,18,.88)),
+    radial-gradient(circle at 16% 0%, rgba(255,238,190,.08), transparent 34%) !important;
+  border:1px solid rgba(226,194,125,.24) !important;
+  border-bottom:1px solid rgba(226,194,125,.18) !important;
+  box-shadow:0 18px 38px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,245,214,.10) !important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.28) !important;
+  backdrop-filter:blur(28px) saturate(1.28) !important;
+  z-index:7000 !important;
+  overflow:hidden !important;
+  pointer-events:auto !important;
+}
+body.training-active.keyboard-open.timer-active > .timer-wrap{
+  bottom:calc(var(--forja-kb-offset, 0px) + 12px) !important;
+  min-height:68px !important;
+  width:min(calc(100% - 32px), 430px) !important;
+  padding:8px 14px !important;
+}
+body.training-active > .timer-wrap .rest-timer{
+  flex:0 0 auto !important;
+  margin:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  font-size:clamp(44px, 13vw, 66px) !important;
+  line-height:.9 !important;
+}
+body.training-active > .timer-wrap .timer-controls{
+  display:flex !important;
+  flex:0 0 auto !important;
+  width:auto !important;
+  max-width:156px !important;
+  justify-content:flex-end !important;
+  gap:6px !important;
+}
+body.training-active > .timer-wrap .timer-control-btn{
+  min-width:48px !important;
+  min-height:34px !important;
+  border-radius:17px !important;
+}
+
+/* Página previa: el botón iniciar no corta el último ejercicio. */
+#sessionScreen:not(.is-started) .exercise-card:last-of-type,
+#sessionScreen:not(.is-started) .session-preview-card:last-of-type{
+  margin-bottom:104px !important;
+}
+#sessionScreen:not(.is-started) .finish-btn{
+  bottom:calc(env(safe-area-inset-bottom,0px) + 18px) !important;
+}
+
+/* Barra inferior: burbuja activa más “liquid glass”, no bloque dorado plano. */
+.nav{
+  overflow:hidden !important;
+  background:
+    linear-gradient(145deg, rgba(31,8,47,.70), rgba(11,2,20,.78)),
+    radial-gradient(circle at 18% 0%, rgba(255,238,190,.07), transparent 35%) !important;
+  border:1px solid rgba(226,194,125,.18) !important;
+  -webkit-backdrop-filter:blur(30px) saturate(1.35) !important;
+  backdrop-filter:blur(30px) saturate(1.35) !important;
+}
+.nav-btn.active{
+  color:#160912 !important;
+  background:
+    linear-gradient(145deg, rgba(255,238,171,.92), rgba(204,158,64,.72)),
+    radial-gradient(circle at 24% 0%, rgba(255,255,255,.42), transparent 38%) !important;
+  border:1px solid rgba(255,244,212,.50) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), inset 0 -10px 20px rgba(123,78,22,.18), 0 10px 28px rgba(214,174,83,.20) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.30) !important;
+  backdrop-filter:blur(18px) saturate(1.30) !important;
+}
+</style>
+
+<script id="forja-fix-viewport-keyboard-final">
+(function(){
+  function isEditable(el){ return !!(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)); }
+  function syncKeyboardOffset(){
+    var vv = window.visualViewport;
+    var offset = 0;
+    if (vv) offset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    var focused = isEditable(document.activeElement);
+    var open = focused && offset > 60;
+    document.documentElement.style.setProperty('--forja-kb-offset', open ? offset + 'px' : '0px');
+    document.body.classList.toggle('keyboard-open', open);
+    var ss = document.getElementById('sessionScreen');
+    if (ss) ss.scrollLeft = 0;
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
+  }
+  function markSessionStartedState(){
+    var ss = document.getElementById('sessionScreen');
+    if (!ss) return;
+    var isStarted = document.body.classList.contains('training-active');
+    ss.classList.toggle('is-started', isStarted);
+  }
+  function tick(){ syncKeyboardOffset(); markSessionStartedState(); }
+  function bind(){
+    if (window.visualViewport){
+      window.visualViewport.addEventListener('resize', tick, {passive:true});
+      window.visualViewport.addEventListener('scroll', tick, {passive:true});
+    }
+    window.addEventListener('resize', tick, {passive:true});
+    document.addEventListener('focusin', function(){ setTimeout(tick, 50); setTimeout(tick, 180); }, true);
+    document.addEventListener('focusout', function(){ setTimeout(tick, 80); setTimeout(tick, 260); }, true);
+    document.addEventListener('touchmove', function(){
+      var ss = document.getElementById('sessionScreen');
+      if (ss && ss.scrollLeft) ss.scrollLeft = 0;
+    }, {passive:true});
+    setInterval(markSessionStartedState, 500);
+    tick();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();
+</script>
+
 </body>
 </html>
