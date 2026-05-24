@@ -8299,5 +8299,228 @@ body.timer-active #detailScreen.screen.active{
 })();
 </script>
 
+
+<style id="forja-final-bottom-timer-fix-2026-05-24">
+/* FORJA — corrección final limpia: fondo continuo y temporizador realmente abajo */
+html,
+body{
+  width:100% !important;
+  min-width:0 !important;
+  min-height:100vh !important;
+  min-height:100dvh !important;
+  margin:0 !important;
+  padding-left:0 !important;
+  padding-right:0 !important;
+  background-color:#0b0314 !important;
+  background-image:
+    radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
+    radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
+    linear-gradient(180deg,#0b0314 0%,#13051f 52%,#08010e 100%) !important;
+  overflow-x:hidden !important;
+}
+body{
+  max-width:none !important;
+}
+body::before,
+body::after,
+body.timer-active::before,
+body.timer-active::after,
+body.training-active::before,
+body.training-active::after,
+#sessionScreen::before,
+#sessionScreen::after{
+  content:none !important;
+  display:none !important;
+}
+.screen,
+.screen.active,
+#sessionScreen,
+#sessionScreen.screen.active{
+  background:transparent !important;
+  background-color:transparent !important;
+  box-shadow:none !important;
+}
+.header,
+.screen,
+.nav,
+.toast{
+  max-width:480px !important;
+}
+.screen.active{
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+body.training-active{
+  min-height:100dvh !important;
+  overflow:hidden !important;
+  background-color:#0b0314 !important;
+  background-image:
+    radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
+    linear-gradient(180deg,#0b0314 0%,#13051f 52%,#08010e 100%) !important;
+}
+body.training-active #sessionScreen.screen.active{
+  position:fixed !important;
+  inset:0 auto auto 50% !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:100% !important;
+  max-width:480px !important;
+  height:100dvh !important;
+  max-height:100dvh !important;
+  padding-top:calc(env(safe-area-inset-top,0px) + 62px) !important;
+  padding-left:18px !important;
+  padding-right:18px !important;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom,0px)) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+}
+body.training-active.timer-active #sessionScreen.screen.active{
+  padding-bottom:calc(112px + env(safe-area-inset-bottom,0px)) !important;
+}
+body > .timer-wrap{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(calc(100vw - 36px),430px) !important;
+  max-width:430px !important;
+  height:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  pointer-events:none !important;
+  z-index:9800 !important;
+}
+body.timer-active > .timer-wrap{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  height:78px !important;
+  min-height:78px !important;
+  bottom:calc(88px + env(safe-area-inset-bottom,0px)) !important;
+  padding:10px 14px !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  border-radius:28px !important;
+  border:1px solid rgba(226,194,125,.22) !important;
+  background:
+    linear-gradient(145deg,rgba(45,16,66,.78),rgba(12,3,22,.84)),
+    radial-gradient(circle at 18% 0%,rgba(255,245,214,.10),transparent 38%) !important;
+  box-shadow:0 18px 42px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.11) !important;
+  -webkit-backdrop-filter:blur(32px) saturate(1.30) !important;
+  backdrop-filter:blur(32px) saturate(1.30) !important;
+  pointer-events:auto !important;
+  box-sizing:border-box !important;
+}
+body.training-active.timer-active > .timer-wrap,
+body.training-active.timer-active.keyboard-open > .timer-wrap{
+  bottom:0 !important;
+  width:min(100vw,480px) !important;
+  max-width:480px !important;
+  height:calc(86px + env(safe-area-inset-bottom,0px)) !important;
+  min-height:calc(86px + env(safe-area-inset-bottom,0px)) !important;
+  padding:10px 18px calc(10px + env(safe-area-inset-bottom,0px)) !important;
+  border-left:0 !important;
+  border-right:0 !important;
+  border-bottom:0 !important;
+  border-radius:28px 28px 0 0 !important;
+  background:
+    linear-gradient(145deg,rgba(45,16,66,.88),rgba(9,2,17,.94)),
+    radial-gradient(circle at 18% 0%,rgba(255,245,214,.10),transparent 38%) !important;
+}
+body.timer-active.keyboard-open:not(.training-active) > .timer-wrap{
+  bottom:calc(88px + env(safe-area-inset-bottom,0px)) !important;
+}
+body.timer-active > .timer-wrap .rest-timer,
+body.timer-active > .timer-wrap .rest-timer.visible{
+  display:block !important;
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  font-family:'Bebas Neue',sans-serif !important;
+  font-size:clamp(48px,13vw,66px) !important;
+  line-height:.86 !important;
+  letter-spacing:.01em !important;
+  color:#a970ff !important;
+  text-shadow:0 0 20px rgba(169,112,255,.46),0 0 34px rgba(169,112,255,.22) !important;
+}
+body.timer-active > .timer-wrap .timer-controls,
+body.timer-active > .timer-wrap .timer-controls.visible{
+  display:grid !important;
+  grid-template-columns:repeat(2,52px) !important;
+  grid-auto-rows:34px !important;
+  gap:8px !important;
+  flex:0 0 auto !important;
+  width:auto !important;
+  max-width:none !important;
+  margin:0 !important;
+  justify-content:end !important;
+  align-items:center !important;
+}
+body.timer-active > .timer-wrap .timer-control-btn{
+  width:52px !important;
+  height:34px !important;
+  min-width:52px !important;
+  min-height:34px !important;
+  padding:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:999px !important;
+  font-family:'DM Sans',sans-serif !important;
+  font-size:16px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  color:#f0d78a !important;
+  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.045)) !important;
+  border:1px solid rgba(226,194,125,.26) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12) !important;
+  transform:none !important;
+  transition:none !important;
+}
+body.timer-active #homeScreen.screen.active,
+body.timer-active #historyScreen.screen.active,
+body.timer-active #profileScreen.screen.active,
+body.timer-active #detailScreen.screen.active{
+  padding-bottom:calc(210px + env(safe-area-inset-bottom,0px)) !important;
+}
+body.training-active .nav{display:none !important;}
+@media (max-width:390px){
+  body.timer-active > .timer-wrap{width:min(calc(100vw - 28px),430px) !important;}
+  body.training-active.timer-active > .timer-wrap{width:100vw !important;}
+  body.timer-active > .timer-wrap .timer-controls{grid-template-columns:repeat(2,48px) !important; gap:7px !important;}
+  body.timer-active > .timer-wrap .timer-control-btn{width:48px !important; min-width:48px !important;}
+}
+</style>
+<script id="forja-final-timer-guard-2026-05-24">
+(function(){
+  function guardTimer(){
+    try{
+      var activeInput = document.activeElement;
+      var typing = activeInput && /INPUT|TEXTAREA|SELECT/.test(activeInput.tagName || '');
+      if (!typing) document.body.classList.remove('keyboard-open');
+      if (typeof renderTimer === 'function') renderTimer();
+      if (typeof forjaTimerState !== 'undefined' && forjaTimerState && forjaTimerState.active) document.body.classList.add('timer-active');
+    }catch(e){}
+  }
+  window.addEventListener('pageshow', guardTimer);
+  document.addEventListener('visibilitychange', guardTimer);
+  document.addEventListener('click', function(){ setTimeout(guardTimer,0); }, true);
+  setInterval(guardTimer, 1000);
+  setTimeout(guardTimer, 0);
+})();
+</script>
+
 </body>
 </html>
