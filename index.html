@@ -3235,6 +3235,156 @@ body.session-preview-active:not(.training-active) #sessionScreen.screen.active .
   }
 }
 
+
+
+/* === FORJA FINAL: scroll limpio sin levantar barra inferior ===
+   Corrección limitada a desplazamiento y posiciones fijas visibles.
+   No modifica Supabase, datos, rutinas, cardio, timer ni lógica de entrenamiento. */
+:root{
+  --forja-header-h-final: 118px;
+  --forja-nav-h-final: 64px;
+  --forja-nav-bottom-final: 6px;
+  --forja-nav-gap-final: 10px;
+}
+
+body:not(.training-active){
+  overflow:hidden !important;
+}
+
+body:not(.training-active) .header{
+  position:fixed !important;
+  top:0 !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(100vw,480px) !important;
+  max-width:480px !important;
+  height:var(--forja-header-h-final) !important;
+  min-height:var(--forja-header-h-final) !important;
+  margin:0 !important;
+  padding:calc(env(safe-area-inset-top,0px) + 18px) 20px 12px !important;
+  box-sizing:border-box !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  z-index:4000 !important;
+}
+
+body:not(.training-active) .nav{
+  position:fixed !important;
+  top:auto !important;
+  bottom:var(--forja-nav-bottom-final) !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:calc(100vw - 24px) !important;
+  max-width:448px !important;
+  height:var(--forja-nav-h-final) !important;
+  margin:0 !important;
+  z-index:5000 !important;
+}
+
+body.session-preview-active:not(.training-active) .nav{
+  display:none !important;
+}
+
+body:not(.training-active):not(.session-preview-active) #homeScreen.screen.active,
+body:not(.training-active):not(.session-preview-active) #historyScreen.screen.active,
+body:not(.training-active):not(.session-preview-active) #profileScreen.screen.active,
+body:not(.training-active):not(.session-preview-active) #authScreen.screen.active,
+body:not(.training-active):not(.session-preview-active) #detailScreen.screen.active{
+  display:block !important;
+  position:fixed !important;
+  top:var(--forja-header-h-final) !important;
+  bottom:calc(var(--forja-nav-h-final) + var(--forja-nav-bottom-final) + var(--forja-nav-gap-final)) !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(100vw,480px) !important;
+  max-width:480px !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  margin:0 !important;
+  padding:18px 20px 16px !important;
+  box-sizing:border-box !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior-y:contain !important;
+  background:transparent !important;
+}
+
+body:not(.training-active):not(.session-preview-active) #homeScreen .routine-grid,
+body:not(.training-active):not(.session-preview-active) #historyScreen #historyList{
+  padding-bottom:0 !important;
+}
+
+body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
+  display:block !important;
+  position:fixed !important;
+  top:var(--forja-header-h-final) !important;
+  bottom:0 !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(100vw,480px) !important;
+  max-width:480px !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  margin:0 !important;
+  padding:18px 20px calc(112px + env(safe-area-inset-bottom,0px)) !important;
+  box-sizing:border-box !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior-y:contain !important;
+  background:transparent !important;
+  z-index:1 !important;
+}
+
+body.session-preview-active:not(.training-active) #sessionScreen .session-legacy-actions{
+  display:flex !important;
+  margin:0 0 14px !important;
+}
+
+body.session-preview-active:not(.training-active) #sessionScreen #exerciseList{
+  padding-bottom:calc(112px + env(safe-area-inset-bottom,0px)) !important;
+}
+
+body.session-preview-active:not(.training-active) #sessionScreen.screen.active .finish-btn{
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:8px !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(calc(100vw - 36px),444px) !important;
+  max-width:444px !important;
+  margin:0 !important;
+  z-index:8990 !important;
+}
+
+@media (max-width:390px){
+  :root{
+    --forja-header-h-final:112px;
+    --forja-nav-h-final:64px;
+  }
+  body:not(.training-active) .nav{
+    width:calc(100vw - 18px) !important;
+  }
+  body:not(.training-active):not(.session-preview-active) #homeScreen.screen.active,
+  body:not(.training-active):not(.session-preview-active) #historyScreen.screen.active,
+  body:not(.training-active):not(.session-preview-active) #profileScreen.screen.active,
+  body:not(.training-active):not(.session-preview-active) #authScreen.screen.active,
+  body:not(.training-active):not(.session-preview-active) #detailScreen.screen.active,
+  body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
+    padding-left:18px !important;
+    padding-right:18px !important;
+  }
+}
 </style>
 </head>
 <body style="background-color:#12051f">
