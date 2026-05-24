@@ -3127,7 +3127,7 @@ body:not(.training-active):not(.session-preview-active) .nav{
 }
 
 /* FORJA fijo, sin fondo distinto ni franja. */
-body:not(.training-active):not(.session-preview-active) .header{
+body:not(.training-active) .header{
   position: fixed !important;
   top: 0 !important;
   left: 50% !important;
@@ -3148,7 +3148,7 @@ body:not(.training-active):not(.session-preview-active) .header{
   box-shadow: none !important;
   z-index: 8800 !important;
 }
-body:not(.training-active):not(.session-preview-active) .header .brand{
+body:not(.training-active) .header .brand{
   display: flex !important;
 }
 
@@ -3180,6 +3180,50 @@ body:not(.training-active):not(.session-preview-active) #historyScreen.screen.ac
 body:not(.training-active):not(.session-preview-active) #homeScreen .routine-grid,
 body:not(.training-active):not(.session-preview-active) #historyScreen #historyList{
   padding-bottom: 8px !important;
+}
+
+
+
+/* === FORJA FIX ÚNICO: pantalla de rutina antes de iniciar ===
+   Mantiene FORJA igual que la pantalla principal y hace que la lista de ejercicios
+   se deslice dentro de su área, sin tocar barra inferior ni entrenamiento en curso. */
+body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
+  position:fixed !important;
+  top:var(--forja-header-fixed-h) !important;
+  bottom:calc(74px + max(0px, calc(env(safe-area-inset-bottom, 0px) - 28px))) !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(100vw,480px) !important;
+  max-width:480px !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  margin:0 !important;
+  padding:18px 20px 18px !important;
+  box-sizing:border-box !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior-y:contain !important;
+  background:transparent !important;
+  z-index:1 !important;
+}
+body.session-preview-active:not(.training-active) #sessionScreen .session-legacy-actions{
+  margin:0 0 14px !important;
+}
+body.session-preview-active:not(.training-active) #sessionScreen #exerciseList{
+  padding-bottom:10px !important;
+}
+body.session-preview-active:not(.training-active) #sessionScreen.screen.active .finish-btn{
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:max(8px, calc(env(safe-area-inset-bottom, 0px) - 24px)) !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(calc(100vw - 36px),444px) !important;
+  max-width:444px !important;
+  z-index:8990 !important;
 }
 
 @media (max-width:390px){
