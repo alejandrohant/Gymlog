@@ -3376,6 +3376,139 @@ body.timer-active #detailScreen.screen.active {
   body > .timer-wrap .timer-controls, body > .timer-wrap .timer-controls.visible { width: 128px !important; }
 }
 </style>
+
+<style id="forja-timer-compact-clean-final">
+/* FORJA — corrección limpia SOLO del temporizador flotante. No toca Supabase, historial ni estructura de pantallas. */
+body > .timer-wrap{
+  display:none!important;
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(calc(100vw - 32px), 430px)!important;
+  height:58px!important;
+  min-height:58px!important;
+  max-height:58px!important;
+  padding:7px 10px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  grid-template-columns:minmax(86px,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  border-radius:22px!important;
+  border:1px solid rgba(238,210,146,.18)!important;
+  background:linear-gradient(135deg,rgba(62,24,82,.86),rgba(13,3,24,.90))!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.10)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.22)!important;
+  backdrop-filter:blur(28px) saturate(1.22)!important;
+  overflow:hidden!important;
+  pointer-events:auto!important;
+  z-index:9800!important;
+}
+body.timer-active > .timer-wrap{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  /* Más cerca de la barra inferior cuando la sesión está minimizada */
+  bottom:calc(74px + max(0px, env(safe-area-inset-bottom,0px)))!important;
+}
+body.training-active.timer-active > .timer-wrap{
+  /* En pantalla de entrenamiento queda abajo, sin subir de más */
+  bottom:max(6px, env(safe-area-inset-bottom,0px))!important;
+}
+body:not(.timer-active) > .timer-wrap{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:0!important;
+  padding:0!important;
+  border:0!important;
+  pointer-events:none!important;
+}
+body > .timer-wrap .rest-timer,
+body > .timer-wrap .rest-timer.visible{
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  font-family:'Bebas Neue',sans-serif!important;
+  font-size:40px!important;
+  line-height:.9!important;
+  letter-spacing:.01em!important;
+  color:#a970ff!important;
+  text-shadow:0 0 18px rgba(169,112,255,.44)!important;
+  white-space:nowrap!important;
+}
+body > .timer-wrap .timer-controls,
+body > .timer-wrap .timer-controls.visible{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:7px!important;
+  width:auto!important;
+  height:42px!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+body > .timer-wrap .timer-control-btn,
+.timer-control-btn{
+  flex:0 0 42px!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  min-height:42px!important;
+  max-width:42px!important;
+  max-height:42px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:15px!important;
+  background:rgba(255,255,255,.060)!important;
+  border:1px solid rgba(238,210,146,.23)!important;
+  color:#efd98f!important;
+  font-family:'DM Sans',sans-serif!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10)!important;
+  transform:none!important;
+  transition:none!important;
+}
+/* Espacio inferior justo: evita que el timer tape tarjetas sin crear un hueco enorme. */
+body.timer-active #homeScreen.screen.active,
+body.timer-active #historyScreen.screen.active,
+body.timer-active #profileScreen.screen.active,
+body.timer-active #authScreen.screen.active,
+body.timer-active #detailScreen.screen.active{
+  padding-bottom:calc(188px + env(safe-area-inset-bottom,0px))!important;
+}
+body.training-active.timer-active #sessionScreen.screen.active{
+  padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))!important;
+}
+@media (max-width:390px){
+  body > .timer-wrap{
+    width:min(calc(100vw - 24px), 430px)!important;
+    height:56px!important;
+    min-height:56px!important;
+    max-height:56px!important;
+    padding:7px 9px!important;
+    gap:8px!important;
+  }
+  body > .timer-wrap .rest-timer,
+  body > .timer-wrap .rest-timer.visible{font-size:38px!important;}
+  body > .timer-wrap .timer-controls,
+  body > .timer-wrap .timer-controls.visible{gap:6px!important;height:40px!important;}
+  body > .timer-wrap .timer-control-btn,
+  .timer-control-btn{flex-basis:40px!important;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;max-width:40px!important;max-height:40px!important;}
+}
+</style>
+
 </head>
 <body style="background-color:#12051f">
 <div class="header">
