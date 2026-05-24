@@ -8957,3 +8957,228 @@ initApp();
   document.addEventListener('DOMContentLoaded', updateKeyboardState);
 })();
 </script>
+
+
+<!-- === FORJA FIX DEFINITIVO 2026-05-23: timer sin franja + descartar rojo + preview completo === -->
+<style id="forja-fix-definitivo-timer-sin-franja">
+  :root{
+    --forja-bg-solid:#090011;
+    --forja-bg-a:#12051f;
+    --forja-bg-b:#07010d;
+    --forja-vv-top:0px;
+    --forja-vv-height:100dvh;
+    --forja-timer-h:86px;
+  }
+
+  html,
+  body{
+    min-height:100%;
+    background:
+      radial-gradient(circle at 50% -12%, rgba(96,42,143,.24), transparent 35%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
+      linear-gradient(180deg,var(--forja-bg-b) 0%,var(--forja-bg-a) 48%,var(--forja-bg-solid) 100%) !important;
+    background-color:var(--forja-bg-solid) !important;
+  }
+
+  body.training-active,
+  body.training-active #sessionScreen,
+  body.training-active #sessionScreen.screen,
+  body.training-active #sessionScreen.screen.active{
+    background:
+      radial-gradient(circle at 50% -12%, rgba(96,42,143,.24), transparent 35%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
+      linear-gradient(180deg,var(--forja-bg-b) 0%,var(--forja-bg-a) 48%,var(--forja-bg-solid) 100%) !important;
+    background-color:var(--forja-bg-solid) !important;
+  }
+
+  /* Anula TODAS las capas negras viejas usadas para “rellenar” bajo el temporizador. */
+  body.timer-active::before,
+  body.timer-active::after,
+  body.training-active::before,
+  body.training-active::after,
+  body.training-active.timer-active::before,
+  body.training-active.timer-active::after{
+    content:none !important;
+    display:none !important;
+    width:0 !important;
+    height:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+  }
+
+  /* El temporizador se ancla al viewport visible, no al layout que iOS deforma con teclado. */
+  body.timer-active > .timer-wrap,
+  body.training-active.timer-active > .timer-wrap{
+    position:fixed !important;
+    left:50% !important;
+    right:auto !important;
+    top:calc(var(--forja-vv-top,0px) + var(--forja-vv-height,100dvh) - var(--forja-timer-h,86px) - 10px) !important;
+    bottom:auto !important;
+    transform:translateX(-50%) !important;
+    width:min(calc(100vw - 28px), 420px) !important;
+    min-height:76px !important;
+    max-height:86px !important;
+    padding:12px 14px !important;
+    box-sizing:border-box !important;
+    display:grid !important;
+    grid-template-columns:1fr auto !important;
+    gap:12px !important;
+    align-items:center !important;
+    border-radius:24px !important;
+    background:
+      linear-gradient(180deg, rgba(18,5,31,.985), rgba(8,1,16,.985)) !important;
+    border:1px solid rgba(226,194,125,.24) !important;
+    box-shadow:0 18px 38px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,245,214,.08) !important;
+    z-index:99990 !important;
+    overflow:hidden !important;
+    isolation:isolate !important;
+    pointer-events:auto !important;
+  }
+
+  body > .timer-wrap .rest-timer,
+  body > .timer-wrap .rest-timer.visible{
+    display:block !important;
+    font-family:'Bebas Neue', sans-serif !important;
+    font-size:clamp(46px, 12vw, 64px) !important;
+    line-height:.9 !important;
+    color:#a46bff !important;
+    text-shadow:0 0 18px rgba(164,107,255,.25) !important;
+    padding:0 !important;
+    margin:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    min-width:0 !important;
+  }
+
+  body > .timer-wrap .timer-controls,
+  body > .timer-wrap .timer-controls.visible{
+    display:grid !important;
+    grid-template-columns:repeat(2, 54px) !important;
+    gap:8px !important;
+    align-items:center !important;
+    justify-content:end !important;
+  }
+
+  body > .timer-wrap .timer-control-btn{
+    width:54px !important;
+    height:36px !important;
+    border-radius:18px !important;
+    background:rgba(255,255,255,.035) !important;
+    border:1px solid rgba(226,194,125,.28) !important;
+    color:#f0d27a !important;
+    box-shadow:none !important;
+    transform:none !important;
+    transition:none !important;
+  }
+
+  /* En modo entrenamiento deja espacio real al final, sin crear “bloques” negros. */
+  body.training-active #sessionScreen.screen.active{
+    min-height:100dvh !important;
+    padding-bottom:calc(148px + env(safe-area-inset-bottom,0px)) !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  body.training-active.timer-active #sessionScreen.screen.active{
+    padding-bottom:calc(188px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  /* Vista previa de rutina: último ejercicio completo y botón iniciar sin tapar contenido. */
+  body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
+    padding-bottom:calc(214px + env(safe-area-inset-bottom,0px)) !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  body.session-preview-active:not(.training-active) #exerciseList{
+    padding-bottom:calc(156px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
+    bottom:calc(18px + env(safe-area-inset-bottom,0px)) !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    width:min(calc(100vw - 48px), 420px) !important;
+    z-index:99980 !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .session-header,
+  body.training-active #sessionScreen .session-header{
+    width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  /* DESCARTAR rojo real y estable. */
+  #sessionScreen .session-discard-btn,
+  body.training-active #sessionScreen .session-discard-btn,
+  body.session-preview-active #sessionScreen .session-discard-btn{
+    color:#ffd7dc !important;
+    background:rgba(126,24,47,.42) !important;
+    border:1px solid rgba(255,83,113,.72) !important;
+    box-shadow:0 0 0 1px rgba(255,83,113,.08), inset 0 1px 0 rgba(255,255,255,.08) !important;
+    transform:none !important;
+    transition:none !important;
+    animation:none !important;
+  }
+
+  #sessionScreen .session-hide-btn,
+  body.training-active #sessionScreen .session-hide-btn,
+  body.session-preview-active #sessionScreen .session-hide-btn{
+    transform:none !important;
+    transition:none !important;
+    animation:none !important;
+  }
+
+  @media (max-width:390px){
+    body.timer-active > .timer-wrap,
+    body.training-active.timer-active > .timer-wrap{
+      width:calc(100vw - 20px) !important;
+      grid-template-columns:1fr auto !important;
+    }
+    body > .timer-wrap .timer-controls,
+    body > .timer-wrap .timer-controls.visible{
+      grid-template-columns:repeat(2, 48px) !important;
+    }
+    body > .timer-wrap .timer-control-btn{
+      width:48px !important;
+    }
+  }
+</style>
+<script id="forja-fix-definitivo-viewport-timer">
+(function(){
+  function setViewportVars(){
+    var vv = window.visualViewport;
+    var top = 0;
+    var height = window.innerHeight || document.documentElement.clientHeight || 0;
+    if (vv) {
+      top = Math.max(0, Math.round(vv.offsetTop || 0));
+      height = Math.max(320, Math.round(vv.height || height));
+    }
+    document.documentElement.style.setProperty('--forja-vv-top', top + 'px');
+    document.documentElement.style.setProperty('--forja-vv-height', height + 'px');
+    var wrap = document.querySelector('.timer-wrap');
+    if (wrap) {
+      var h = Math.max(76, Math.min(96, Math.round(wrap.getBoundingClientRect().height || 86)));
+      document.documentElement.style.setProperty('--forja-timer-h', h + 'px');
+    }
+  }
+
+  function bind(){
+    setViewportVars();
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', setViewportVars, {passive:true});
+      window.visualViewport.addEventListener('scroll', setViewportVars, {passive:true});
+    }
+    window.addEventListener('resize', setViewportVars, {passive:true});
+    window.addEventListener('orientationchange', function(){ setTimeout(setViewportVars, 80); }, {passive:true});
+    document.addEventListener('focusin', function(){ setTimeout(setViewportVars, 40); setTimeout(setViewportVars, 220); }, true);
+    document.addEventListener('focusout', function(){ setTimeout(setViewportVars, 80); setTimeout(setViewportVars, 260); }, true);
+    document.addEventListener('input', setViewportVars, true);
+    document.addEventListener('touchstart', setViewportVars, {passive:true});
+    setInterval(setViewportVars, 700);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
