@@ -3893,17 +3893,25 @@ async function loadCloudSessions() {
     return [];
   }
 
-  const { data, error } = await supabaseClient
-    .from('sessions')
-    .select('id, routine_id, routine_name, date, data_json')
-    .eq('user_id', currentUser.id)
-    .order('date', { ascending: false });
+  const response = await withTimeout(
+    supabaseClient
+      .from('sessions')
+      .select('id, routine_id, routine_name, date, data_json')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending: false }),
+    12000,
+    { data: null, error: new Error('Supabase tardó demasiado en responder.') }
+  );
+
+  const data = response?.data || [];
+  const error = response?.error || null;
 
   if (error) {
     console.error('loadCloudSessions', error);
-    showToast('❌ ' + error.message);
-    cloudSessionsLoaded = false;
-    return cloudSessions || [];
+    showToast('❌ ' + (error.message || 'No se pudo cargar historial'));
+    cloudSessionsLoaded = true;
+    cloudSessions = dedupeSessions(cloudSessions || []);
+    return cloudSessions;
   }
 
   cloudSessions = dedupeSessions((data || []).map(row => ({
@@ -3933,10 +3941,16 @@ async function syncLocalSessionsToCloud() {
 
   const legacyLocalSessions = getLegacyLocalSessionsForCloudMigration();
 
-  const { data: existingRows, error: fetchError } = await supabaseClient
-    .from('sessions')
-    .select('id, routine_name, date')
-    .eq('user_id', currentUser.id);
+  const existingResponse = await withTimeout(
+    supabaseClient
+      .from('sessions')
+      .select('id, routine_name, date')
+      .eq('user_id', currentUser.id),
+    12000,
+    { data: null, error: new Error('Supabase tardó demasiado en responder al preparar sincronización.') }
+  );
+  const existingRows = existingResponse?.data || [];
+  const fetchError = existingResponse?.error || null;
 
   if (fetchError) {
     console.error('syncLocalSessionsToCloud', fetchError);
@@ -3963,7 +3977,12 @@ async function syncLocalSessionsToCloud() {
     });
 
   if (rows.length) {
-    const { error } = await supabaseClient.from('sessions').insert(rows);
+    const insertResponse = await withTimeout(
+      supabaseClient.from('sessions').insert(rows),
+      12000,
+      { error: new Error('Supabase tardó demasiado en guardar el historial local.') }
+    );
+    const error = insertResponse?.error || null;
     if (error) {
       console.error('syncLocalSessionsToCloud insert', error);
       showToast('❌ ' + error.message);
@@ -4334,57 +4353,37 @@ function saveProfileLocal(profile) {
   localStorage.setItem('forja_profile', JSON.stringify(profile));
 }
 
-async function renderProfile() {
-  let profile = getProfileLocal();
-
-  if (currentUser) {
-    const { data, error } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('id', currentUser.id)
-      .maybeSingle();
-
-    if (!error && data) {
-      profile = {
-        name: data.name || '',
-        goal: data.goal || '',
-        weight: data.weight || '',
-        height: data.height || '',
-        age: data.age || '',
-        split: data.split || '',
-        note: data.note || '',
-        photo: data.photo_url || ''
-      };
-    }
-  }
-
-  document.getElementById('profileContent').innerHTML = `
+function paintProfile(profile) {
+  const target = document.getElementById('profileContent');
+  if (!target) return;
+  profile = profile || getDefaultProfile();
+  target.innerHTML = `
     <div class="profile-shell">
       <div class="profile-head">
         <div style="display:flex;gap:14px;align-items:center;">
           <div class="profile-avatar">${profile.photo ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">` : '👤'}</div>
           <div>
             <div class="eyebrow">Perfil</div>
-            <div class="profile-name">${profile.name || 'Sin nombre'}</div>
-            <div class="profile-sub">Objetivo actual: ${profile.goal || '--'}</div>
+            <div class="profile-name">${escapeHtml(profile.name || 'Alejandro')}</div>
+            <div class="profile-sub">Objetivo actual: ${escapeHtml(profile.goal || 'Ganar músculo')}</div>
           </div>
         </div>
         <div class="profile-badge">
-          <div class="profile-badge-value">${profile.split || '--'}</div>
+          <div class="profile-badge-value">${escapeHtml(profile.split || 'PPL')}</div>
           <div class="profile-badge-label">División</div>
         </div>
       </div>
 
       <div class="profile-grid">
-        <div class="profile-stat"><div class="profile-stat-label">Peso</div><div class="profile-stat-value">${profile.weight || '--'}</div></div>
-        <div class="profile-stat"><div class="profile-stat-label">Estatura</div><div class="profile-stat-value">${profile.height || '--'}</div></div>
-        <div class="profile-stat"><div class="profile-stat-label">Edad</div><div class="profile-stat-value">${profile.age || '--'}</div></div>
+        <div class="profile-stat"><div class="profile-stat-label">Peso</div><div class="profile-stat-value">${escapeHtml(profile.weight || '--')}</div></div>
+        <div class="profile-stat"><div class="profile-stat-label">Estatura</div><div class="profile-stat-value">${escapeHtml(profile.height || '--')}</div></div>
+        <div class="profile-stat"><div class="profile-stat-label">Edad</div><div class="profile-stat-value">${escapeHtml(profile.age || '--')}</div></div>
         <div class="profile-stat"><div class="profile-stat-label">Modo</div><div class="profile-stat-value">Construcción</div></div>
       </div>
 
       <div class="profile-note">
         <div class="profile-note-title">Nota personal</div>
-        <div style="line-height:1.55;color:var(--text);font-size:14px;">${profile.note || 'Sin nota guardada todavía.'}</div>
+        <div style="line-height:1.55;color:var(--text);font-size:14px;">${escapeHtml(profile.note || 'Sin nota guardada todavía.')}</div>
       </div>
 
       <div class="profile-actions">
@@ -4395,6 +4394,43 @@ async function renderProfile() {
       <input id="profilePhotoInput" type="file" accept="image/*" style="display:none" onchange="handleProfilePhoto(event)">
     </div>
   `;
+}
+
+async function renderProfile() {
+  let profile = getProfileLocal();
+  paintProfile(profile);
+
+  if (!currentUser || !supabaseClient?.from) return;
+
+  try {
+    const result = await withTimeout(
+      supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .maybeSingle(),
+      8000,
+      null
+    );
+
+    if (!result || result.error || !result.data) return;
+
+    const data = result.data;
+    profile = {
+      name: data.name || profile.name || '',
+      goal: data.goal || profile.goal || '',
+      weight: data.weight || profile.weight || '',
+      height: data.height || profile.height || '',
+      age: data.age || profile.age || '',
+      split: data.split || profile.split || '',
+      note: data.note || profile.note || '',
+      photo: data.photo_url || profile.photo || ''
+    };
+    saveProfileLocal(profile);
+    paintProfile(profile);
+  } catch (error) {
+    console.warn('renderProfile Supabase', error);
+  }
 }
 
 async function editProfile() {
@@ -4825,7 +4861,7 @@ function showScreen(name) {
     renderHome();
     if (currentUser) refreshCloudHistory().then(renderHome);
   }
-  if (name === 'profile') renderProfile();
+  if (name === 'profile') { try { renderProfile(); } catch (error) { console.warn('renderProfile', error); } }
   if (name === 'auth') renderAuthStatus();
 }
 
@@ -7341,16 +7377,24 @@ async function afterLogin(user) {
     return;
   }
 
+  cloudSessionsLoaded = false;
   setAuthLocked(false);
   renderAuthLoggedIn();
 
-  try { await syncLocalSessionsToCloud(); } catch (error) { console.warn('syncLocalSessionsToCloud', error); }
-  try { await refreshCloudHistory(true); } catch (error) { console.warn('refreshCloudHistory', error); }
-  try { renderHome(); } catch (error) { console.warn('renderHome', error); }
-  try { renderHistory(); } catch (error) { console.warn('renderHistory', error); }
-  try { await renderProfile(); } catch (error) { console.warn('renderProfile', error); }
-
+  // La interfaz no debe quedarse vacía esperando Supabase.
+  try { renderHome(); } catch (error) { console.warn('renderHome inicial', error); }
+  try { renderHistory(); } catch (error) { console.warn('renderHistory inicial', error); }
+  try { renderProfile(); } catch (error) { console.warn('renderProfile inicial', error); }
   showScreen('home');
+
+  // Supabase sincroniza después, sin bloquear Rutinas, Historial ni Perfil.
+  Promise.resolve().then(async () => {
+    try { await syncLocalSessionsToCloud(); } catch (error) { console.warn('syncLocalSessionsToCloud', error); }
+    try { await refreshCloudHistory(true); } catch (error) { console.warn('refreshCloudHistory', error); }
+    try { renderHome(); } catch (error) { console.warn('renderHome post-sync', error); }
+    try { renderHistory(); } catch (error) { console.warn('renderHistory post-sync', error); }
+    try { renderProfile(); } catch (error) { console.warn('renderProfile post-sync', error); }
+  });
 }
 
 async function signIn() {
@@ -7583,7 +7627,7 @@ function showScreen(name) {
     return;
   }
 
-  if (name === 'profile') renderProfile();
+  if (name === 'profile') { try { renderProfile(); } catch (error) { console.warn('renderProfile', error); } }
 }
 
 async function initApp() {
