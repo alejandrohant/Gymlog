@@ -2748,43 +2748,88 @@ body{
 
 
 
-/* === FORJA LAYOUT BASE LIMPIO 2026-05-24-04 ===
-   Control único del fondo, barra inferior, temporizador y pantalla de rutina. */
+/* === FORJA LAYOUT BASE LIMPIO 2026-05-24-05 ===
+   Corrección estructural: scroll principal estable, fondo uniforme y barra inferior sin tapar contenido. */
 :root{
   --forja-safe-bottom: env(safe-area-inset-bottom, 0px);
   --forja-safe-top: env(safe-area-inset-top, 0px);
   --forja-nav-h: 66px;
   --forja-timer-h: 50px;
   --forja-bottom-gap: max(4px, calc(var(--forja-safe-bottom) - 28px));
+  --forja-header-real-h: 86px;
+  --forja-bg-flat:#0b0314;
   --forja-bg:
-    radial-gradient(circle at 50% -14%, rgba(104,45,152,.24), transparent 36%),
-    radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
-    linear-gradient(180deg,#0b0314 0%,#12051f 48%,#08010e 100%);
+    radial-gradient(circle at 50% -16%, rgba(104,45,152,.22), transparent 38%),
+    radial-gradient(circle at 8% 0%, rgba(216,184,102,.045), transparent 30%),
+    linear-gradient(180deg,#0b0314 0%,#0b0314 100%);
 }
-html,body{
+html,
+body{
   width:100%;
+  height:100dvh;
   min-height:100dvh;
   margin:0;
-  overflow-x:hidden;
-  background-color:#0b0314 !important;
+  overflow:hidden !important;
+  overscroll-behavior:none !important;
+  background-color:var(--forja-bg-flat) !important;
   background-image:var(--forja-bg) !important;
 }
-body::before,body::after,body.timer-active::before,body.timer-active::after,body.training-active::before,body.training-active::after,#sessionScreen::before,#sessionScreen::after{
+body{
+  max-width:480px;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  padding-top:var(--forja-safe-top) !important;
+  color:var(--forja-cream, #eadfcf) !important;
+}
+body::before,
+body::after,
+body.timer-active::before,
+body.timer-active::after,
+body.training-active::before,
+body.training-active::after,
+#sessionScreen::before,
+#sessionScreen::after{
   content:none !important;
   display:none !important;
 }
 .header{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  right:auto !important;
+  z-index:120 !important;
   background:transparent !important;
+  background-image:none !important;
   border:0 !important;
   box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+.header-title{color:var(--forja-gold,#d8b866) !important;}
+.header-sub{color:rgba(184,170,199,.70) !important;}
+.screen{
+  display:none !important;
+  background:transparent !important;
 }
 .screen.active{
   display:block !important;
-  height:100dvh !important;
+  height:calc(100dvh - var(--forja-safe-top) - var(--forja-header-real-h)) !important;
+  max-height:calc(100dvh - var(--forja-safe-top) - var(--forja-header-real-h)) !important;
   overflow-y:auto !important;
+  overflow-x:hidden !important;
   -webkit-overflow-scrolling:touch !important;
-  padding-bottom:calc(var(--forja-nav-h) + 22px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
-  background:transparent !important;
+  overscroll-behavior:contain !important;
+  padding:22px 20px calc(var(--forja-nav-h) + 44px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
+  scrollbar-gutter:stable !important;
+}
+#homeScreen.screen.active{
+  padding-bottom:calc(var(--forja-nav-h) + 64px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
+}
+.routine-grid,
+#historyList{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:18px !important;
 }
 .nav{
   display:grid !important;
@@ -2840,6 +2885,9 @@ body.session-preview-active .nav{
   display:none !important;
 }
 body.session-preview-active #sessionScreen.screen.active{
+  height:calc(100dvh - var(--forja-safe-top)) !important;
+  max-height:calc(100dvh - var(--forja-safe-top)) !important;
+  padding-top:18px !important;
   padding-bottom:calc(92px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
 }
 body.session-preview-active #sessionScreen .session-legacy-actions{
@@ -2891,7 +2939,7 @@ body.timer-active #historyScreen.screen.active,
 body.timer-active #profileScreen.screen.active,
 body.timer-active #authScreen.screen.active,
 body.timer-active #detailScreen.screen.active{
-  padding-bottom:calc(var(--forja-nav-h) + var(--forja-timer-h) + 22px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
+  padding-bottom:calc(var(--forja-nav-h) + var(--forja-timer-h) + 34px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
 }
 body > .timer-wrap{
   display:none !important;
@@ -3014,7 +3062,7 @@ body.training-active #sessionScreen.screen.active{
   overflow-x:hidden !important;
   -webkit-overflow-scrolling:touch !important;
   overscroll-behavior:contain !important;
-  background-color:#0b0314 !important;
+  background-color:var(--forja-bg-flat) !important;
   background-image:var(--forja-bg) !important;
 }
 body.training-active #sessionScreen .session-legacy-actions{
@@ -3102,6 +3150,7 @@ body.training-active .finish-btn{
 }
 @media (max-width:390px){
   :root{--forja-timer-h:48px;--forja-nav-h:64px;}
+  .screen.active{padding-left:18px !important;padding-right:18px !important;}
   .nav{width:calc(100vw - 24px) !important;}
   body.timer-active > .timer-wrap{width:min(calc(100vw - 24px),420px) !important;padding:7px 9px !important;gap:7px !important;}
   body.timer-active > .timer-wrap .rest-timer,
@@ -3110,7 +3159,6 @@ body.training-active .finish-btn{
   body.timer-active > .timer-wrap .timer-controls.visible{grid-template-columns:repeat(4,36px) !important;gap:5px !important;}
   body.timer-active > .timer-wrap .timer-control-btn{width:36px !important;min-width:36px !important;height:31px !important;min-height:31px !important;}
 }
-
 </style>
 </head>
 <body style="background-color:#12051f">
@@ -7859,6 +7907,32 @@ function renderHistory() {
 initApp();
 </script>
 
+
+
+<script>
+/* FORJA HOME SCROLL GUARD 2026-05-24: mide el encabezado real y evita que el body sea el que se desplace. */
+(function(){
+  function syncForjaLayout(){
+    try{
+      var h=document.querySelector('.header');
+      if(h){
+        document.documentElement.style.setProperty('--forja-header-real-h', Math.ceil(h.offsetHeight)+'px');
+      }
+      if(document.body && !document.body.classList.contains('training-active')){
+        document.documentElement.style.overflow='hidden';
+        document.body.style.overflow='hidden';
+      }
+    }catch(e){}
+  }
+  window.syncForjaLayout=syncForjaLayout;
+  window.addEventListener('resize', syncForjaLayout, {passive:true});
+  window.addEventListener('orientationchange', function(){setTimeout(syncForjaLayout,120);}, {passive:true});
+  window.addEventListener('pageshow', syncForjaLayout, {passive:true});
+  document.addEventListener('visibilitychange', syncForjaLayout, {passive:true});
+  setTimeout(syncForjaLayout,0);
+  setTimeout(syncForjaLayout,250);
+})();
+</script>
 
 <script>
 /* FORJA CLEAN TIMER GUARD 2026-05-24: mantiene visible el temporizador real sin duplicar showScreen/minimizeSession. */
