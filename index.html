@@ -7733,7 +7733,7 @@ async function forjaFetchAllSessionRows() {
     const response = await withTimeout(
       supabaseClient
         .from('sessions')
-        .select('id, routine_id, routine_name, date, data_json, created_at, updated_at')
+        .select('id, routine_id, routine_name, date, data_json, created_at')
         .eq('user_id', currentUser.id)
         .order('date', { ascending: false })
         .range(from, to),
@@ -7763,7 +7763,7 @@ async function loadCloudSessions() {
       routineId: row.data_json?.routineId || row.routine_id,
       routineName: row.data_json?.routineName || row.routine_name,
       date: row.data_json?.date || row.date,
-      updatedAt: row.data_json?.updatedAt || row.updated_at || row.created_at,
+      updatedAt: row.data_json?.updatedAt || row.created_at,
     })));
     cloudSessionsLoaded = true;
     setSessionsLocal(cloudSessions);
@@ -7826,9 +7826,9 @@ async function syncLocalSessionsToCloud() {
 }
 
 function getSessions() {
-  const cloud = Array.isArray(cloudSessions) ? cloudSessions : [];
-  const local = getAllRecoverableLocalSessions();
-  const source = currentUser ? [...cloud, ...local] : local;
+  // Con sesión iniciada, Supabase es la fuente oficial del historial.
+  // El respaldo local solo se usa para migración hacia Supabase, no para pintar historial paralelo.
+  const source = currentUser ? (Array.isArray(cloudSessions) ? cloudSessions : []) : getSessionsLocal();
   return dedupeSessions(source).filter(s => !shouldHideFromHistory(s));
 }
 
