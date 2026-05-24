@@ -7670,6 +7670,228 @@ if (supabaseClient?.auth?.onAuthStateChange) {
   });
 }
 
+
+
+/* FORJA HISTORIAL — recuperación limpia y fuente Supabase completa */
+function forjaLooksLikeSession(obj) {
+  return !!obj && typeof obj === 'object' && !Array.isArray(obj) &&
+    (obj.routineName || obj.routine_name || obj.name) &&
+    (obj.date || obj.finishedAt || obj.startedAt || obj.created_at) &&
+    Array.isArray(obj.exercises);
+}
+
+function forjaCollectSessionsDeep(value, out, depth = 0) {
+  if (!value || depth > 4) return;
+  if (Array.isArray(value)) {
+    for (const item of value) forjaCollectSessionsDeep(item, out, depth + 1);
+    return;
+  }
+  if (typeof value !== 'object') return;
+  if (forjaLooksLikeSession(value)) {
+    out.push(value);
+    return;
+  }
+  for (const key of Object.keys(value)) {
+    if (/routine|profile|timer|auth|user/i.test(key)) continue;
+    forjaCollectSessionsDeep(value[key], out, depth + 1);
+  }
+}
+
+function getAllRecoverableLocalSessions() {
+  const found = [];
+  try {
+    const directKeys = ['gymlog_sessions', 'forja_sessions', 'sessions', 'forja_history', 'gymlog_history'];
+    for (const key of directKeys) {
+      try { forjaCollectSessionsDeep(JSON.parse(localStorage.getItem(key) || 'null'), found); } catch {}
+    }
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i) || '';
+      if (!/session|history|forja|gymlog/i.test(key)) continue;
+      if (/current|timer|routine|profile|auth|supabase/i.test(key)) continue;
+      try { forjaCollectSessionsDeep(JSON.parse(localStorage.getItem(key) || 'null'), found); } catch {}
+    }
+  } catch (error) {
+    console.warn('getAllRecoverableLocalSessions', error);
+  }
+  return dedupeSessions(found);
+}
+
+function getSessionsLocal() {
+  return dedupeSessions(getAllRecoverableLocalSessions());
+}
+
+function getLegacyLocalSessionsForCloudMigration() {
+  return dedupeSessions(getAllRecoverableLocalSessions());
+}
+
+async function forjaFetchAllSessionRows() {
+  if (!currentUser) return [];
+  const all = [];
+  const pageSize = 1000;
+  for (let from = 0; from < 10000; from += pageSize) {
+    const to = from + pageSize - 1;
+    const response = await withTimeout(
+      supabaseClient
+        .from('sessions')
+        .select('id, routine_id, routine_name, date, data_json, created_at, updated_at')
+        .eq('user_id', currentUser.id)
+        .order('date', { ascending: false })
+        .range(from, to),
+      15000,
+      { data: null, error: new Error('Supabase tardó demasiado en responder.') }
+    );
+    if (response?.error) throw response.error;
+    const rows = response?.data || [];
+    all.push(...rows);
+    if (rows.length < pageSize) break;
+  }
+  return all;
+}
+
+async function loadCloudSessions() {
+  if (!currentUser) {
+    cloudSessions = [];
+    cloudSessionsLoaded = false;
+    return [];
+  }
+
+  try {
+    const rows = await forjaFetchAllSessionRows();
+    cloudSessions = dedupeSessions(rows.map(row => ({
+      ...(row.data_json || {}),
+      _cloudId: row.id,
+      routineId: row.data_json?.routineId || row.routine_id,
+      routineName: row.data_json?.routineName || row.routine_name,
+      date: row.data_json?.date || row.date,
+      updatedAt: row.data_json?.updatedAt || row.updated_at || row.created_at,
+    })));
+    cloudSessionsLoaded = true;
+    setSessionsLocal(cloudSessions);
+    return cloudSessions;
+  } catch (error) {
+    console.error('loadCloudSessions', error);
+    cloudSessionsLoaded = true;
+    cloudSessions = dedupeSessions([...(cloudSessions || []), ...getAllRecoverableLocalSessions()]);
+    showToast('❌ ' + (error.message || 'No se pudo cargar historial'));
+    return cloudSessions;
+  }
+}
+
+async function refreshCloudHistory(force = false) {
+  if (!currentUser) return [];
+  if (cloudHistoryRefreshPromise && !force) return cloudHistoryRefreshPromise;
+  cloudHistoryRefreshPromise = (async () => {
+    const before = dedupeSessions([...(cloudSessions || []), ...getAllRecoverableLocalSessions()]);
+    if (before.length && !cloudSessionsLoaded) cloudSessions = before;
+    await syncLocalSessionsToCloud();
+    return await loadCloudSessions();
+  })().finally(() => { cloudHistoryRefreshPromise = null; });
+  return cloudHistoryRefreshPromise;
+}
+
+async function syncLocalSessionsToCloud() {
+  if (!currentUser) return true;
+  const localSessions = getAllRecoverableLocalSessions();
+  if (!localSessions.length) return true;
+
+  let rows = [];
+  try { rows = await forjaFetchAllSessionRows(); }
+  catch (error) { console.warn('syncLocalSessionsToCloud fetch', error); rows = []; }
+
+  const existingKeys = new Set((rows || []).map(row => {
+    const payload = row.data_json || {};
+    return sessionKey({
+      routineName: payload.routineName || row.routine_name,
+      routineId: payload.routineId || row.routine_id,
+      date: payload.date || row.date,
+      exercises: payload.exercises || []
+    });
+  }).filter(Boolean));
+
+  const pending = dedupeSessions(localSessions).filter(s => sessionKey(s) && !existingKeys.has(sessionKey(s)) && !isActiveCloudSession(s));
+  if (!pending.length) return true;
+
+  for (const session of pending) {
+    const clean = stripCloudMeta({ ...session, status: 'finished', finishedAt: session.finishedAt || session.date });
+    const { error } = await supabaseClient.from('sessions').insert({
+      user_id: currentUser.id,
+      routine_id: clean.routineId || clean.routineName || 'custom',
+      routine_name: clean.routineName || 'Sesión',
+      date: clean.date || clean.finishedAt || new Date().toISOString(),
+      data_json: clean
+    });
+    if (error) console.warn('syncLocalSessionsToCloud insert', error);
+  }
+  return true;
+}
+
+function getSessions() {
+  const cloud = Array.isArray(cloudSessions) ? cloudSessions : [];
+  const local = getAllRecoverableLocalSessions();
+  const source = currentUser ? [...cloud, ...local] : local;
+  return dedupeSessions(source).filter(s => !shouldHideFromHistory(s));
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+
+  if (!currentUser) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">Inicia sesión en Cuenta para ver el historial sincronizado.</div></div>`;
+    return;
+  }
+
+  const sessions = getSessions();
+
+  if (!cloudSessionsLoaded && sessions.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">☁️</div><div class="empty-text">Sincronizando historial con Supabase…</div></div>`;
+    ensureCloudHistoryReady(true).then(() => renderHistory());
+    return;
+  }
+
+  if (!sessions.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No hay sesiones cargadas todavía.<br>Abre esta misma versión donde estaba el historial anterior para recuperarlo y subirlo a Supabase.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = sessions.map((s, i) => {
+    const active = isActiveCloudSession(s);
+    const exercises = Array.isArray(s.exercises) ? s.exercises : [];
+    const doneSets = exercises.reduce((acc, ex) => acc + ((ex.sets || []).filter(st => st.done).length), 0);
+    const volume = exercises.reduce((acc, ex) => acc + ((ex.sets || []).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0)), 0);
+    const emoji = typeof routineEmojiBySession === 'function' ? routineEmojiBySession(s) : '🏋️';
+    return `
+      <div class="history-card clean-history-card ${active ? 'active-session-card' : ''}"
+        onclick="if(!window.__forjaLongPressDone){${active ? `editSavedSession(${i})` : `showDetail(${i})`}} window.__forjaLongPressDone=false;"
+        oncontextmenu="event.preventDefault(); openSessionActions(${i});"
+        onpointerdown="forjaStartLongPress(event, ${i})"
+        onpointerup="forjaEndLongPress()"
+        onpointerleave="forjaEndLongPress()"
+        onpointercancel="forjaEndLongPress()">
+        <div class="history-clean-top">
+          <div class="history-symbol">${escapeHtml(emoji)}</div>
+          <div class="history-clean-main">
+            <div class="history-name">${escapeHtml(s.routineName || 'Sesión')}${active ? ' <span style="font-size:11px;letter-spacing:.8px;color:#f3c969;margin-left:6px;">EN CURSO</span>' : ''}</div>
+            <div class="routine-meta">${exercises.length} ejercicios registrados${active ? ' · actualizándose en Supabase' : ''}</div>
+          </div>
+          <div class="history-date-clean">${formatDate(s.date)}</div>
+        </div>
+        <div class="forja-history-details">
+          <span><strong>${doneSets}</strong> series</span>
+          <span><strong>${Math.round(volume).toLocaleString()}</strong> vol.</span>
+          <span><strong>${exercises.length}</strong> ejercicios</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (currentUser && cloudSessionsLoaded) {
+    const localCount = getAllRecoverableLocalSessions().length;
+    const cloudCount = (cloudSessions || []).length;
+    if (localCount > cloudCount) refreshCloudHistory(true).then(() => renderHistory());
+  }
+}
+
 initApp();
 </script>
 
