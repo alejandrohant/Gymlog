@@ -8866,319 +8866,297 @@ initApp();
 })();
 </script>
 
-</body>
-</html>
 
-<!-- === FORJA AJUSTE FINAL PUNTUAL 2026-05-23: teclado/timer + último ejercicio === -->
-<style id="forja-fix-teclado-timer-ultimo-ejercicio">
-  /* Fondo único detrás de todo el modo entrenamiento: evita franjas negras al abrir teclado. */
-  html,
-  body,
-  body.training-active,
-  body.training-active #sessionScreen.screen.active{
+
+<!-- === FORJA FIX FINAL REAL: teclado/timer/ancho preview sin tocar datos === -->
+<style id="forja-fix-final-real-timer-preview">
+  html{
+    width:100% !important;
+    min-height:100% !important;
+    overflow-x:hidden !important;
     background:
       radial-gradient(circle at 50% -10%, rgba(96,42,143,.22), transparent 34%),
       radial-gradient(circle at 12% 3%, rgba(216,184,102,.05), transparent 26%),
-      linear-gradient(180deg,#07010d 0%,#12051e 48%,#050009 100%) !important;
+      linear-gradient(180deg,#0d0418 0%,#12051f 38%,#09010f 100%) !important;
     background-color:#0b0314 !important;
   }
 
-  /* Quita la capa que estaba creando la franja oscura bajo el temporizador. */
-  body.training-active.timer-active::after,
-  body.training-active::after{
-    content:none !important;
-    display:none !important;
-    background:transparent !important;
-  }
-
-  /* Entrenamiento abierto: fondo estable y espacio real al final para que nada quede cortado. */
-  body.training-active #sessionScreen.screen.active{
-    min-height:100dvh !important;
-    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 132px) !important;
-    box-shadow:none !important;
-  }
-
-  body.training-active.timer-active #sessionScreen.screen.active{
-    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 150px) !important;
-  }
-
-  /* Vista previa de rutina: el último ejercicio no queda debajo del botón iniciar. */
-  body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
-    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 184px) !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
-    bottom:calc(env(safe-area-inset-bottom,0px) + 14px) !important;
-  }
-
-  /* Temporizador: caja limpia, sin bloque inferior negro. */
-  body.timer-active > .timer-wrap,
-  body.training-active.timer-active > .timer-wrap{
-    background:linear-gradient(180deg, rgba(16,5,29,.96), rgba(10,2,18,.96)) !important;
-    border:1px solid rgba(226,194,125,.22) !important;
-    box-shadow:0 14px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,245,214,.08) !important;
-    isolation:isolate !important;
-  }
-
-  /* Sin teclado: temporizador abajo, como barra limpia. */
-  body.training-active.timer-active:not(.keyboard-open) > .timer-wrap{
-    bottom:max(10px, calc(env(safe-area-inset-bottom,0px) - 22px)) !important;
-  }
-
-  /* Con teclado: temporizador se coloca sobre el teclado, sin dejar franja negra dentro de la app. */
-  body.training-active.timer-active.keyboard-open > .timer-wrap{
-    bottom:calc(var(--forja-keyboard-offset, 0px) + 10px) !important;
-  }
-</style>
-<script id="forja-fix-teclado-timer-ultimo-ejercicio">
-(function(){
-  function updateKeyboardState(){
-    var vv = window.visualViewport;
-    var active = document.activeElement;
-    var editing = !!(active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName));
-    var keyboardOffset = 0;
-
-    if (vv) {
-      keyboardOffset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-    }
-
-    var keyboardOpen = editing && keyboardOffset > 80;
-    document.body.classList.toggle('keyboard-open', keyboardOpen);
-    document.documentElement.style.setProperty('--forja-keyboard-offset', keyboardOpen ? keyboardOffset + 'px' : '0px');
-  }
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', updateKeyboardState, {passive:true});
-    window.visualViewport.addEventListener('scroll', updateKeyboardState, {passive:true});
-  }
-  window.addEventListener('resize', updateKeyboardState, {passive:true});
-  document.addEventListener('focusin', function(){ setTimeout(updateKeyboardState, 60); });
-  document.addEventListener('focusout', function(){ setTimeout(updateKeyboardState, 180); });
-  document.addEventListener('DOMContentLoaded', updateKeyboardState);
-})();
-</script>
-
-
-<!-- === FORJA FIX DEFINITIVO 2026-05-23: timer sin franja + descartar rojo + preview completo === -->
-<style id="forja-fix-definitivo-timer-sin-franja">
-  :root{
-    --forja-bg-solid:#090011;
-    --forja-bg-a:#12051f;
-    --forja-bg-b:#07010d;
-    --forja-vv-top:0px;
-    --forja-vv-height:100dvh;
-    --forja-timer-h:86px;
-  }
-
-  html,
   body{
-    min-height:100%;
-    background:
-      radial-gradient(circle at 50% -12%, rgba(96,42,143,.24), transparent 35%),
-      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
-      linear-gradient(180deg,var(--forja-bg-b) 0%,var(--forja-bg-a) 48%,var(--forja-bg-solid) 100%) !important;
-    background-color:var(--forja-bg-solid) !important;
-  }
-
-  body.training-active,
-  body.training-active #sessionScreen,
-  body.training-active #sessionScreen.screen,
-  body.training-active #sessionScreen.screen.active{
-    background:
-      radial-gradient(circle at 50% -12%, rgba(96,42,143,.24), transparent 35%),
-      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
-      linear-gradient(180deg,var(--forja-bg-b) 0%,var(--forja-bg-a) 48%,var(--forja-bg-solid) 100%) !important;
-    background-color:var(--forja-bg-solid) !important;
-  }
-
-  /* Anula TODAS las capas negras viejas usadas para “rellenar” bajo el temporizador. */
-  body.timer-active::before,
-  body.timer-active::after,
-  body.training-active::before,
-  body.training-active::after,
-  body.training-active.timer-active::before,
-  body.training-active.timer-active::after{
-    content:none !important;
-    display:none !important;
-    width:0 !important;
-    height:0 !important;
-    background:transparent !important;
-    box-shadow:none !important;
-  }
-
-  /* El temporizador se ancla al viewport visible, no al layout que iOS deforma con teclado. */
-  body.timer-active > .timer-wrap,
-  body.training-active.timer-active > .timer-wrap{
-    position:fixed !important;
-    left:50% !important;
-    right:auto !important;
-    top:calc(var(--forja-vv-top,0px) + var(--forja-vv-height,100dvh) - var(--forja-timer-h,86px) - 10px) !important;
-    bottom:auto !important;
-    transform:translateX(-50%) !important;
-    width:min(calc(100vw - 28px), 420px) !important;
-    min-height:76px !important;
-    max-height:86px !important;
-    padding:12px 14px !important;
-    box-sizing:border-box !important;
-    display:grid !important;
-    grid-template-columns:1fr auto !important;
-    gap:12px !important;
-    align-items:center !important;
-    border-radius:24px !important;
-    background:
-      linear-gradient(180deg, rgba(18,5,31,.985), rgba(8,1,16,.985)) !important;
-    border:1px solid rgba(226,194,125,.24) !important;
-    box-shadow:0 18px 38px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,245,214,.08) !important;
-    z-index:99990 !important;
-    overflow:hidden !important;
-    isolation:isolate !important;
-    pointer-events:auto !important;
-  }
-
-  body > .timer-wrap .rest-timer,
-  body > .timer-wrap .rest-timer.visible{
-    display:block !important;
-    font-family:'Bebas Neue', sans-serif !important;
-    font-size:clamp(46px, 12vw, 64px) !important;
-    line-height:.9 !important;
-    color:#a46bff !important;
-    text-shadow:0 0 18px rgba(164,107,255,.25) !important;
-    padding:0 !important;
-    margin:0 !important;
-    background:transparent !important;
-    border:0 !important;
-    box-shadow:none !important;
+    width:100% !important;
+    max-width:480px !important;
     min-width:0 !important;
+    margin:0 auto !important;
+    overflow-x:hidden !important;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(96,42,143,.22), transparent 34%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.05), transparent 26%),
+      linear-gradient(180deg,#0d0418 0%,#12051f 38%,#09010f 100%) !important;
+    background-color:#0b0314 !important;
   }
 
-  body > .timer-wrap .timer-controls,
-  body > .timer-wrap .timer-controls.visible{
-    display:grid !important;
-    grid-template-columns:repeat(2, 54px) !important;
-    gap:8px !important;
-    align-items:center !important;
-    justify-content:end !important;
+  *, *::before, *::after{ box-sizing:border-box !important; }
+
+  .screen,
+  .screen.active,
+  #sessionScreen,
+  #sessionScreen.screen.active{
+    max-width:100% !important;
+    overflow-x:hidden !important;
   }
 
-  body > .timer-wrap .timer-control-btn{
-    width:54px !important;
-    height:36px !important;
-    border-radius:18px !important;
-    background:rgba(255,255,255,.035) !important;
-    border:1px solid rgba(226,194,125,.28) !important;
-    color:#f0d27a !important;
-    box-shadow:none !important;
-    transform:none !important;
-    transition:none !important;
-  }
-
-  /* En modo entrenamiento deja espacio real al final, sin crear “bloques” negros. */
-  body.training-active #sessionScreen.screen.active{
-    min-height:100dvh !important;
-    padding-bottom:calc(148px + env(safe-area-inset-bottom,0px)) !important;
-    overflow-y:auto !important;
-    -webkit-overflow-scrolling:touch !important;
-  }
-
-  body.training-active.timer-active #sessionScreen.screen.active{
-    padding-bottom:calc(188px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  /* Vista previa de rutina: último ejercicio completo y botón iniciar sin tapar contenido. */
+  /* Pantalla previa de rutina: no se va a la izquierda y el último ejercicio no queda cortado. */
   body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
-    padding-bottom:calc(214px + env(safe-area-inset-bottom,0px)) !important;
+    width:100% !important;
+    max-width:480px !important;
+    min-width:0 !important;
+    margin:0 auto !important;
+    padding-left:18px !important;
+    padding-right:18px !important;
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 148px) !important;
+    overflow-x:hidden !important;
     overflow-y:auto !important;
     -webkit-overflow-scrolling:touch !important;
-  }
-
-  body.session-preview-active:not(.training-active) #exerciseList{
-    padding-bottom:calc(156px + env(safe-area-inset-bottom,0px)) !important;
-  }
-
-  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
-    bottom:calc(18px + env(safe-area-inset-bottom,0px)) !important;
-    left:50% !important;
-    transform:translateX(-50%) !important;
-    width:min(calc(100vw - 48px), 420px) !important;
-    z-index:99980 !important;
+    background:transparent !important;
   }
 
   body.session-preview-active:not(.training-active) #sessionScreen .session-header,
+  body.session-preview-active:not(.training-active) #sessionScreen .session-overview,
+  body.session-preview-active:not(.training-active) #sessionScreen .exercise-card,
+  body.session-preview-active:not(.training-active) #sessionScreen .session-preview-card{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+    transform:none !important;
+  }
+
+  body.session-preview-active:not(.training-active) #sessionScreen .finish-btn{
+    left:50% !important;
+    right:auto !important;
+    transform:translate3d(-50%,0,0) !important;
+    width:min(calc(100% - 36px), 444px) !important;
+    max-width:444px !important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 14px) !important;
+  }
+
+  /* Entrenamiento activo: contenedor centrado, sin desplazamiento horizontal ni tarjetas gigantes. */
+  body.training-active{
+    overflow:hidden !important;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(96,42,143,.22), transparent 34%),
+      linear-gradient(180deg,#0d0418 0%,#12051f 45%,#09010f 100%) !important;
+    background-color:#0b0314 !important;
+  }
+
+  body.training-active #sessionScreen.screen.active{
+    position:fixed !important;
+    inset:0 auto auto 50% !important;
+    transform:translate3d(-50%,0,0) !important;
+    width:100% !important;
+    max-width:480px !important;
+    height:100dvh !important;
+    min-height:100dvh !important;
+    margin:0 !important;
+    padding-left:18px !important;
+    padding-right:18px !important;
+    padding-top:calc(env(safe-area-inset-top,0px) + 46px) !important;
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 120px) !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior-x:none !important;
+    overscroll-behavior-y:contain !important;
+    background:
+      radial-gradient(circle at 50% -8%, rgba(96,42,143,.20), transparent 34%),
+      linear-gradient(180deg,#0d0418 0%,#140622 48%,#09010f 100%) !important;
+    background-color:#0b0314 !important;
+  }
+
+  body.training-active.timer-active #sessionScreen.screen.active{
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 142px) !important;
+  }
+
+  body.training-active.keyboard-open #sessionScreen.screen.active{
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 64px) !important;
+  }
+
+  body.training-active #sessionScreen .session-header,
+  body.training-active #sessionScreen .session-overview,
+  body.training-active #sessionScreen .exercise-card,
+  body.training-active #sessionScreen .session-preview-card,
+  body.training-active #sessionScreen .set-row,
+  body.training-active #sessionScreen .notes-shell,
+  body.training-active #sessionScreen .exercise-tools{
+    max-width:100% !important;
+    min-width:0 !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+    transform:none !important;
+  }
+
   body.training-active #sessionScreen .session-header{
     width:100% !important;
-    box-sizing:border-box !important;
+    padding:24px 24px 22px !important;
   }
 
-  /* DESCARTAR rojo real y estable. */
-  #sessionScreen .session-discard-btn,
-  body.training-active #sessionScreen .session-discard-btn,
-  body.session-preview-active #sessionScreen .session-discard-btn{
-    color:#ffd7dc !important;
-    background:rgba(126,24,47,.42) !important;
-    border:1px solid rgba(255,83,113,.72) !important;
-    box-shadow:0 0 0 1px rgba(255,83,113,.08), inset 0 1px 0 rgba(255,255,255,.08) !important;
-    transform:none !important;
-    transition:none !important;
-    animation:none !important;
+  body.training-active #sessionScreen .session-title{
+    max-width:100% !important;
+    overflow-wrap:anywhere !important;
+    font-size:clamp(40px, 12vw, 62px) !important;
+    line-height:.92 !important;
   }
 
-  #sessionScreen .session-hide-btn,
+  body.training-active #sessionScreen .session-legacy-actions{
+    position:fixed !important;
+    top:calc(env(safe-area-inset-top,0px) + 8px) !important;
+    left:50% !important;
+    transform:translate3d(-50%,0,0) !important;
+    width:100% !important;
+    max-width:480px !important;
+    padding:0 18px !important;
+    height:42px !important;
+    display:flex !important;
+    justify-content:space-between !important;
+    align-items:center !important;
+    background:transparent !important;
+    border:0 !important;
+    box-shadow:none !important;
+    pointer-events:none !important;
+    z-index:6200 !important;
+  }
+
   body.training-active #sessionScreen .session-hide-btn,
-  body.session-preview-active #sessionScreen .session-hide-btn{
+  body.training-active #sessionScreen .session-discard-btn{
     transform:none !important;
     transition:none !important;
     animation:none !important;
+    will-change:auto !important;
+    pointer-events:auto !important;
   }
 
-  @media (max-width:390px){
-    body.timer-active > .timer-wrap,
-    body.training-active.timer-active > .timer-wrap{
-      width:calc(100vw - 20px) !important;
-      grid-template-columns:1fr auto !important;
-    }
-    body > .timer-wrap .timer-controls,
-    body > .timer-wrap .timer-controls.visible{
-      grid-template-columns:repeat(2, 48px) !important;
-    }
-    body > .timer-wrap .timer-control-btn{
-      width:48px !important;
-    }
+  body.training-active #sessionScreen .session-hide-btn{
+    display:inline-flex !important;
+    width:42px !important;
+    height:42px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:999px !important;
+    background:rgba(255,244,212,.07) !important;
+    border:1px solid rgba(226,194,125,.30) !important;
+    color:#f0d78a !important;
+    font-size:28px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+    box-shadow:none !important;
+  }
+
+  body.training-active #sessionScreen .session-discard-btn{
+    display:inline-flex !important;
+    min-height:42px !important;
+    padding:0 18px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:999px !important;
+    background:rgba(255,42,63,.18) !important;
+    border:1px solid rgba(255,42,63,.62) !important;
+    color:#ff4f62 !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+    letter-spacing:.14em !important;
+    box-shadow:none !important;
+  }
+
+  /* Temporizador: abajo normal; al abrir teclado se mueve arriba para eliminar definitivamente la franja negra. */
+  body.training-active.timer-active > .timer-wrap{
+    display:flex !important;
+    position:fixed !important;
+    left:50% !important;
+    right:auto !important;
+    top:auto !important;
+    bottom:0 !important;
+    transform:translate3d(-50%,0,0) !important;
+    width:100% !important;
+    max-width:480px !important;
+    min-height:86px !important;
+    padding:10px 18px calc(env(safe-area-inset-bottom,0px) + 10px) !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:12px !important;
+    border-radius:22px 22px 0 0 !important;
+    background:linear-gradient(180deg, rgba(16,5,29,.98), rgba(8,1,14,.98)) !important;
+    border:1px solid rgba(226,194,125,.22) !important;
+    border-bottom:0 !important;
+    box-shadow:0 -12px 28px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.08) !important;
+    z-index:6100 !important;
+    overflow:hidden !important;
+    pointer-events:auto !important;
+  }
+
+  body.training-active.keyboard-open.timer-active > .timer-wrap{
+    top:calc(env(safe-area-inset-top,0px) + 54px) !important;
+    bottom:auto !important;
+    width:min(calc(100% - 36px), 444px) !important;
+    max-width:444px !important;
+    min-height:64px !important;
+    padding:8px 14px !important;
+    border-radius:20px !important;
+    border:1px solid rgba(226,194,125,.22) !important;
+    box-shadow:0 16px 32px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,245,214,.08) !important;
+  }
+
+  body.training-active > .timer-wrap .rest-timer{
+    flex:0 0 auto !important;
+  }
+
+  body.training-active > .timer-wrap .timer-controls{
+    flex:0 0 auto !important;
+    max-width:170px !important;
+  }
+
+  /* Mata cualquier capa negra antigua que haya quedado de parches anteriores. */
+  body.training-active::before,
+  body.training-active::after,
+  body.training-active.timer-active::before,
+  body.training-active.timer-active::after,
+  #sessionScreen::before,
+  #sessionScreen::after{
+    content:none !important;
+    display:none !important;
   }
 </style>
-<script id="forja-fix-definitivo-viewport-timer">
+<script id="forja-fix-final-real-keyboard">
 (function(){
-  function setViewportVars(){
+  function isEditable(el){ return !!(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)); }
+  function syncKeyboard(){
     var vv = window.visualViewport;
-    var top = 0;
-    var height = window.innerHeight || document.documentElement.clientHeight || 0;
-    if (vv) {
-      top = Math.max(0, Math.round(vv.offsetTop || 0));
-      height = Math.max(320, Math.round(vv.height || height));
-    }
-    document.documentElement.style.setProperty('--forja-vv-top', top + 'px');
-    document.documentElement.style.setProperty('--forja-vv-height', height + 'px');
-    var wrap = document.querySelector('.timer-wrap');
-    if (wrap) {
-      var h = Math.max(76, Math.min(96, Math.round(wrap.getBoundingClientRect().height || 86)));
-      document.documentElement.style.setProperty('--forja-timer-h', h + 'px');
-    }
+    var offset = 0;
+    if (vv) offset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    var focused = isEditable(document.activeElement);
+    var open = focused && (offset > 70 || window.innerHeight > (vv ? vv.height + 70 : 0));
+    document.body.classList.toggle('keyboard-open', open);
+    var ss = document.getElementById('sessionScreen');
+    if (ss) ss.scrollLeft = 0;
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
   }
-
   function bind(){
-    setViewportVars();
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', setViewportVars, {passive:true});
-      window.visualViewport.addEventListener('scroll', setViewportVars, {passive:true});
+    if (window.visualViewport){
+      window.visualViewport.addEventListener('resize', syncKeyboard, {passive:true});
+      window.visualViewport.addEventListener('scroll', syncKeyboard, {passive:true});
     }
-    window.addEventListener('resize', setViewportVars, {passive:true});
-    window.addEventListener('orientationchange', function(){ setTimeout(setViewportVars, 80); }, {passive:true});
-    document.addEventListener('focusin', function(){ setTimeout(setViewportVars, 40); setTimeout(setViewportVars, 220); }, true);
-    document.addEventListener('focusout', function(){ setTimeout(setViewportVars, 80); setTimeout(setViewportVars, 260); }, true);
-    document.addEventListener('input', setViewportVars, true);
-    document.addEventListener('touchstart', setViewportVars, {passive:true});
-    setInterval(setViewportVars, 700);
+    window.addEventListener('resize', syncKeyboard, {passive:true});
+    document.addEventListener('focusin', function(){ setTimeout(syncKeyboard, 80); }, true);
+    document.addEventListener('focusout', function(){ setTimeout(syncKeyboard, 220); }, true);
+    document.addEventListener('touchmove', function(){
+      var ss = document.getElementById('sessionScreen');
+      if (ss && ss.scrollLeft) ss.scrollLeft = 0;
+    }, {passive:true});
+    syncKeyboard();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
-  else bind();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 })();
 </script>
+</body>
+</html>
