@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: clean-timer-2026-05-24-01 -->
+<!-- FORJA_BUILD: final-layout-lock-2026-05-24-02 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -2747,176 +2747,202 @@ body{
 
 
 
-/* =========================================================
-   CORRECCIÓN PUNTUAL: quitar franja negra bajo temporizador
-   - No toca historial, Supabase, tarjetas, barra inferior ni navegación.
-   - Solo estabiliza el fondo real del modo entrenamiento, incluso con teclado.
-   ========================================================= */
-html,
-body {
-  background: #0d0418 !important;
-}
-body.training-active {
-  background: linear-gradient(180deg,#0d0418 0%,#12051f 36%,#09000f 100%) !important;
-}
-body.training-active #sessionScreen.screen.active {
-  background: linear-gradient(180deg,#0d0418 0%,#12051f 36%,#09000f 100%) !important;
-  min-height: 100svh !important;
-}
-body.training-active.timer-active #sessionScreen.screen.active {
-  padding-bottom: calc(env(safe-area-inset-bottom,0px) + 118px) !important;
-}
-body.training-active.timer-active > .timer-wrap {
-  background: rgba(12,3,22,.96) !important;
-  margin-bottom: 0 !important;
-}
-body.training-active.timer-active::after {
-  content: "";
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(env(safe-area-inset-bottom,0px) + 104px);
-  background: linear-gradient(180deg, rgba(9,0,15,0) 0%, #09000f 44%, #09000f 100%);
-  pointer-events: none;
-  z-index: 2999;
-}
-body.training-active.timer-active > .timer-wrap {
-  z-index: 9950 !important;
-}
 
-
-
-/* === FORJA CLEAN TIMER 2026-05-24 — integrado en el stylesheet principal ===
-   Corrección estructural: un solo layout de temporizador, sin estilos duplicados posteriores.
-   No toca Supabase, datos, historial ni autenticación. */
+/* === FORJA FINAL LAYOUT LOCK 2026-05-24-02 ===
+   Limpio: controla solo navegación inferior y temporizador real. */
 :root{
-  --forja-bg-top:#0b0314;
-  --forja-bg-mid:#13051f;
-  --forja-bg-bottom:#08010e;
-  --forja-gold:#d8b760;
-  --forja-line:rgba(226,194,125,.18);
+  --forja-bottom-gap: max(12px, env(safe-area-inset-bottom,0px));
+  --forja-nav-h: 64px;
+  --forja-timer-h: 52px;
 }
-html,
-body{
+html,body{
   width:100%;
   min-height:100dvh;
   margin:0;
   overflow-x:hidden;
-  background-color:var(--forja-bg-top) !important;
+  background-color:#0b0314 !important;
   background-image:
     radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
     radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
-    linear-gradient(180deg,var(--forja-bg-top) 0%,var(--forja-bg-mid) 52%,var(--forja-bg-bottom) 100%) !important;
+    linear-gradient(180deg,#0b0314 0%,#13051f 54%,#08010e 100%) !important;
 }
-body::before,
-body::after,
-body.timer-active::before,
-body.timer-active::after,
-body.training-active::before,
-body.training-active::after,
-#sessionScreen::before,
-#sessionScreen::after{
+body::before,body::after,body.timer-active::before,body.timer-active::after,body.training-active::before,body.training-active::after,#sessionScreen::before,#sessionScreen::after{
   content:none !important;
   display:none !important;
 }
-.header,
-.screen,
-.nav,
-.toast{
-  max-width:480px;
-}
-.screen,
-.screen.active,
-#sessionScreen,
-#sessionScreen.screen.active{
-  background:transparent !important;
-  background-color:transparent !important;
-  box-shadow:none !important;
-}
-.screen.active{
-  margin-left:auto !important;
-  margin-right:auto !important;
-}
-.nav{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:7px;
-  position:fixed;
-  left:50%;
-  right:auto;
-  top:auto;
-  bottom:max(8px, calc(env(safe-area-inset-bottom,0px) - 22px));
-  transform:translateX(-50%);
-  width:calc(100% - 32px);
-  max-width:448px;
-  margin:0;
-  padding:7px;
-  z-index:9000;
-  border-radius:28px;
-  background:rgba(17,5,30,.62);
-  border:1px solid rgba(238,210,146,.12);
-  box-shadow:0 18px 42px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.10);
-  -webkit-backdrop-filter:blur(34px) saturate(1.28);
-  backdrop-filter:blur(34px) saturate(1.28);
-}
-.nav-btn{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-width:0;
-  height:50px;
-  padding:0 6px;
-  border-radius:20px;
-  font-family:'DM Sans',sans-serif;
-  font-size:14px;
-  font-weight:800;
-  letter-spacing:-.02em;
-  text-transform:none;
-  color:rgba(205,193,216,.62);
-  background:transparent;
-  border:0;
-  transform:none;
-}
-.nav-btn.active{
-  color:rgba(245,238,255,.92);
-  background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.065));
-  border:1px solid rgba(255,255,255,.22);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 10px 28px rgba(0,0,0,.18);
-  -webkit-backdrop-filter:blur(28px) saturate(1.35);
-  backdrop-filter:blur(28px) saturate(1.35);
-}
-.screen.active{
-  height:100dvh;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));
-}
-body.training-active{
-  min-height:100dvh;
-  overflow:hidden;
-  background-color:var(--forja-bg-top) !important;
-  background-image:
-    radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
-    linear-gradient(180deg,var(--forja-bg-top) 0%,var(--forja-bg-mid) 52%,var(--forja-bg-bottom) 100%) !important;
-}
-body.training-active .nav,
-body.training-active .brand{
-  display:none !important;
-}
-body.training-active .header{
-  display:block !important;
-  position:fixed !important;
-  inset:0 0 auto 0 !important;
-  height:0 !important;
-  min-height:0 !important;
-  padding:0 !important;
-  overflow:visible !important;
-  pointer-events:none !important;
+.header{
   background:transparent !important;
   border:0 !important;
   box-shadow:none !important;
-  z-index:3600 !important;
+}
+.nav{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:7px !important;
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:var(--forja-bottom-gap) !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:calc(100vw - 32px) !important;
+  max-width:448px !important;
+  height:var(--forja-nav-h) !important;
+  margin:0 !important;
+  padding:7px !important;
+  box-sizing:border-box !important;
+  border-radius:28px !important;
+  background:rgba(17,5,30,.72) !important;
+  border:1px solid rgba(238,210,146,.14) !important;
+  box-shadow:0 18px 42px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.10) !important;
+  -webkit-backdrop-filter:blur(34px) saturate(1.28) !important;
+  backdrop-filter:blur(34px) saturate(1.28) !important;
+  z-index:9000 !important;
+}
+.nav-btn{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-width:0 !important;
+  height:50px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border-radius:20px !important;
+  background:transparent !important;
+  border:0 !important;
+  color:rgba(205,193,216,.66) !important;
+  font-family:'DM Sans',sans-serif !important;
+  font-size:16px !important;
+  font-weight:800 !important;
+  letter-spacing:0 !important;
+  text-transform:none !important;
+  transform:none !important;
+}
+.nav-btn.active{
+  color:rgba(245,238,255,.94) !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.065)) !important;
+  border:1px solid rgba(255,255,255,.22) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 10px 28px rgba(0,0,0,.20) !important;
+}
+body.training-active .nav{display:none !important;}
+.screen.active{
+  height:100dvh !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  padding-bottom:calc(var(--forja-nav-h) + 40px + env(safe-area-inset-bottom,0px)) !important;
+}
+body.timer-active #homeScreen.screen.active,
+body.timer-active #historyScreen.screen.active,
+body.timer-active #profileScreen.screen.active,
+body.timer-active #authScreen.screen.active,
+body.timer-active #detailScreen.screen.active{
+  padding-bottom:calc(var(--forja-nav-h) + var(--forja-timer-h) + 58px + env(safe-area-inset-bottom,0px)) !important;
+}
+body > .timer-wrap{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(calc(100vw - 32px),420px) !important;
+  height:0 !important;
+  min-height:0 !important;
+  max-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  pointer-events:none !important;
+  z-index:8800 !important;
+  box-sizing:border-box !important;
+}
+body.timer-active > .timer-wrap{
+  display:grid !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  grid-template-columns:minmax(72px,1fr) auto !important;
+  align-items:center !important;
+  gap:8px !important;
+  width:min(calc(100vw - 32px),420px) !important;
+  max-width:420px !important;
+  height:var(--forja-timer-h) !important;
+  min-height:var(--forja-timer-h) !important;
+  max-height:var(--forja-timer-h) !important;
+  bottom:calc(var(--forja-bottom-gap) + var(--forja-nav-h) + 8px) !important;
+  margin:0 !important;
+  padding:7px 10px !important;
+  border-radius:22px !important;
+  border:1px solid rgba(226,194,125,.18) !important;
+  background:linear-gradient(135deg,rgba(59,24,83,.86),rgba(12,3,22,.94)) !important;
+  box-shadow:0 12px 26px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.08) !important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.22) !important;
+  backdrop-filter:blur(28px) saturate(1.22) !important;
+  overflow:hidden !important;
+  pointer-events:auto !important;
+}
+body.training-active.timer-active > .timer-wrap,
+body.training-active.timer-active.keyboard-open > .timer-wrap{
+  bottom:max(2px, calc(env(safe-area-inset-bottom,0px) - 12px)) !important;
+  width:min(calc(100vw - 20px),430px) !important;
+  max-width:430px !important;
+  z-index:9950 !important;
+}
+body.timer-active > .timer-wrap .rest-timer,
+body.timer-active > .timer-wrap .rest-timer.visible{
+  display:block !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  font-family:'Bebas Neue',sans-serif !important;
+  font-size:36px !important;
+  line-height:.88 !important;
+  letter-spacing:.01em !important;
+  color:#a970ff !important;
+  text-shadow:0 0 18px rgba(169,112,255,.44) !important;
+  white-space:nowrap !important;
+}
+body.timer-active > .timer-wrap .timer-controls,
+body.timer-active > .timer-wrap .timer-controls.visible{
+  display:grid !important;
+  grid-template-columns:repeat(4,38px) !important;
+  gap:5px !important;
+  align-items:center !important;
+  justify-content:end !important;
+  width:auto !important;
+  max-width:none !important;
+  height:32px !important;
+  margin:0 !important;
+  padding:0 !important;
+  flex-wrap:nowrap !important;
+}
+body.timer-active > .timer-wrap .timer-control-btn{
+  width:38px !important;
+  height:32px !important;
+  min-width:38px !important;
+  min-height:32px !important;
+  max-width:38px !important;
+  max-height:32px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border-radius:16px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-family:'DM Sans',sans-serif !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  color:#efd98f !important;
+  background:rgba(255,255,255,.060) !important;
+  border:1px solid rgba(238,210,146,.23) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10) !important;
+  transform:none !important;
+  transition:none !important;
 }
 body.training-active #sessionScreen.screen.active{
   position:fixed !important;
@@ -2929,163 +2955,24 @@ body.training-active #sessionScreen.screen.active{
   padding-top:calc(env(safe-area-inset-top,0px) + 62px) !important;
   padding-left:18px !important;
   padding-right:18px !important;
-  padding-bottom:calc(92px + env(safe-area-inset-bottom,0px)) !important;
+  padding-bottom:calc(var(--forja-timer-h) + 22px + env(safe-area-inset-bottom,0px)) !important;
   overflow-y:auto !important;
   overflow-x:hidden !important;
   -webkit-overflow-scrolling:touch !important;
   overscroll-behavior:contain !important;
-}
-body.training-active #sessionScreen .session-legacy-actions{
-  display:flex !important;
-  position:sticky !important;
-  top:calc(env(safe-area-inset-top,0px) + 8px) !important;
-  z-index:3500 !important;
-  justify-content:space-between !important;
-  align-items:center !important;
-  gap:8px !important;
-  margin:0 !important;
-  padding:8px 12px 0 !important;
   background:transparent !important;
-  pointer-events:auto !important;
-}
-body > .timer-wrap{
-  display:none;
-  visibility:hidden;
-  opacity:0;
-  position:fixed;
-  left:50%;
-  right:auto;
-  top:auto;
-  bottom:auto;
-  transform:translate3d(-50%,0,0);
-  width:min(calc(100vw - 32px),420px);
-  max-width:420px;
-  height:0;
-  min-height:0;
-  max-height:0;
-  margin:0;
-  padding:0;
-  overflow:hidden;
-  pointer-events:none;
-  z-index:9800;
-  box-sizing:border-box;
-}
-body.timer-active > .timer-wrap{
-  display:grid;
-  visibility:visible;
-  opacity:1;
-  grid-template-columns:minmax(74px,1fr) auto;
-  align-items:center;
-  gap:8px;
-  height:56px;
-  min-height:56px;
-  max-height:56px;
-  bottom:calc(max(8px, calc(env(safe-area-inset-bottom,0px) - 22px)) + 60px);
-  padding:7px 11px;
-  border-radius:22px;
-  border:1px solid rgba(226,194,125,.18);
-  background:linear-gradient(135deg,rgba(59,24,83,.88),rgba(12,3,22,.94));
-  box-shadow:0 12px 26px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.08);
-  -webkit-backdrop-filter:blur(28px) saturate(1.22);
-  backdrop-filter:blur(28px) saturate(1.22);
-  pointer-events:auto;
-}
-body.training-active.timer-active > .timer-wrap,
-body.training-active.timer-active.keyboard-open > .timer-wrap{
-  bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 26px));
-  width:min(calc(100vw - 24px),430px);
-  max-width:430px;
-  border-radius:22px;
-}
-body:not(.timer-active) > .timer-wrap{
-  display:none !important;
-  visibility:hidden !important;
-  opacity:0 !important;
-  height:0 !important;
-  min-height:0 !important;
-  max-height:0 !important;
-  padding:0 !important;
-  border:0 !important;
-  pointer-events:none !important;
-}
-body.timer-active > .timer-wrap .rest-timer,
-body.timer-active > .timer-wrap .rest-timer.visible{
-  display:block;
-  min-width:0;
-  margin:0;
-  padding:0;
-  background:transparent;
-  border:0;
-  font-family:'Bebas Neue',sans-serif;
-  font-size:37px;
-  line-height:.88;
-  letter-spacing:.01em;
-  color:#a970ff;
-  text-shadow:0 0 18px rgba(169,112,255,.44);
-  white-space:nowrap;
-}
-body.timer-active > .timer-wrap .timer-controls,
-body.timer-active > .timer-wrap .timer-controls.visible{
-  display:grid;
-  grid-template-columns:repeat(4,40px);
-  gap:5px;
-  align-items:center;
-  justify-content:end;
-  width:auto;
-  max-width:none;
-  height:34px;
-  margin:0;
-  padding:0;
-}
-body.timer-active > .timer-wrap .timer-control-btn{
-  width:40px;
-  height:34px;
-  min-width:40px;
-  min-height:34px;
-  max-width:40px;
-  max-height:34px;
-  margin:0;
-  padding:0;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:'DM Sans',sans-serif;
-  font-size:14px;
-  font-weight:900;
-  line-height:1;
-  color:#efd98f;
-  background:rgba(255,255,255,.060);
-  border:1px solid rgba(238,210,146,.23);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
-  transform:none;
-  transition:none;
-}
-body.timer-active #homeScreen.screen.active,
-body.timer-active #historyScreen.screen.active,
-body.timer-active #profileScreen.screen.active,
-body.timer-active #authScreen.screen.active,
-body.timer-active #detailScreen.screen.active{
-  padding-bottom:calc(178px + env(safe-area-inset-bottom,0px));
-}
-body.training-active.timer-active #sessionScreen.screen.active{
-  padding-bottom:calc(84px + env(safe-area-inset-bottom,0px)) !important;
 }
 @media (max-width:390px){
-  body.timer-active > .timer-wrap{
-    width:min(calc(100vw - 24px),420px);
-    height:54px;
-    min-height:54px;
-    max-height:54px;
-    padding:7px 9px;
-    gap:7px;
-  }
+  :root{--forja-timer-h:50px;--forja-nav-h:62px;}
+  .nav{width:calc(100vw - 24px) !important;}
+  body.timer-active > .timer-wrap{width:min(calc(100vw - 24px),420px) !important;padding:7px 9px !important;gap:7px !important;}
   body.timer-active > .timer-wrap .rest-timer,
-  body.timer-active > .timer-wrap .rest-timer.visible{font-size:35px;}
+  body.timer-active > .timer-wrap .rest-timer.visible{font-size:34px !important;}
   body.timer-active > .timer-wrap .timer-controls,
-  body.timer-active > .timer-wrap .timer-controls.visible{grid-template-columns:repeat(4,38px);gap:5px;}
-  body.timer-active > .timer-wrap .timer-control-btn{width:38px;min-width:38px;height:32px;min-height:32px;}
+  body.timer-active > .timer-wrap .timer-controls.visible{grid-template-columns:repeat(4,36px) !important;gap:5px !important;}
+  body.timer-active > .timer-wrap .timer-control-btn{width:36px !important;min-width:36px !important;height:31px !important;min-height:31px !important;}
 }
+
 </style>
 </head>
 <body style="background-color:#12051f">
