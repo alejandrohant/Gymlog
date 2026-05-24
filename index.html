@@ -7206,9 +7206,23 @@ restartTimerInterval();
 
 
 
-/* === FORJA FIX LIMPIO: cuenta + historial sincronizado con Supabase === */
+/* === FORJA FIX LIMPIO: cuenta obligatoria + historial Supabase === */
+let authBootDone = false;
+
+function setAuthLocked(locked) {
+  document.body.classList.toggle('auth-locked', !!locked);
+}
+
+function withTimeout(promise, ms, fallback = null) {
+  return Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(() => resolve(fallback), ms))
+  ]);
+}
+
 function renderAuthLoggedOut(panel, statusText = 'Sin sesión') {
   if (!panel) return;
+  setAuthLocked(true);
   panel.innerHTML = `
     <div class="exercise-card" style="padding:20px;">
       <input id="authEmail" type="email" placeholder="Correo"
@@ -7232,6 +7246,7 @@ function renderAuthLoggedOut(panel, statusText = 'Sin sesión') {
 
 function renderAuthLoggedIn(panel, displayName, email) {
   if (!panel) return;
+  setAuthLocked(false);
   const safeName = displayName || 'Alejandro';
   const initial = safeName.trim().charAt(0).toUpperCase() || 'A';
   panel.innerHTML = `
@@ -7259,6 +7274,23 @@ function renderAuthLoggedIn(panel, displayName, email) {
   `;
 }
 
+async function getAuthUserFast() {
+  try {
+    const sessionResult = await withTimeout(supabaseClient.auth.getSession(), 2500, null);
+    const sessionUser = sessionResult?.data?.session?.user || null;
+    if (sessionUser) return sessionUser;
+  } catch (error) {
+    console.warn('getSession', error);
+  }
+  try {
+    const userResult = await withTimeout(supabaseClient.auth.getUser(), 2500, null);
+    return userResult?.data?.user || null;
+  } catch (error) {
+    console.warn('getUser', error);
+    return null;
+  }
+}
+
 async function renderAuthStatus() {
   const panel = document.getElementById('authPanel');
   if (!panel) return;
@@ -7267,28 +7299,16 @@ async function renderAuthStatus() {
     panel.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">Cargando cuenta…</div></div>`;
   }
 
-  try {
-    const sessionResult = await supabaseClient.auth.getSession();
-    const sessionUser = sessionResult?.data?.session?.user || null;
-
-    if (sessionUser) {
-      currentUser = sessionUser;
-    } else {
-      const userResult = await supabaseClient.auth.getUser();
-      currentUser = userResult?.data?.user || null;
-    }
-  } catch (error) {
-    console.warn('renderAuthStatus auth check', error);
-  }
+  currentUser = await getAuthUserFast();
 
   if (!currentUser) {
-    renderAuthLoggedOut(panel);
+    renderAuthLoggedOut(panel, 'Inicia sesión para usar FORJA.');
     return;
   }
 
   let displayName = currentUser.email ? currentUser.email.split('@')[0] : 'Alejandro';
   try {
-    const name = await getAccountDisplayName();
+    const name = await withTimeout(getAccountDisplayName(), 1800, displayName);
     if (name) displayName = name;
   } catch (error) {
     console.warn('getAccountDisplayName', error);
@@ -7362,12 +7382,28 @@ function renderHistory() {
   }).join('');
 }
 
+function activateOnlyScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const targetScreen = document.getElementById(name + 'Screen');
+  if (targetScreen) targetScreen.classList.add('active');
+}
+
+function updateBottomNav(name) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
+  if (navMap[name] !== undefined) {
+    const btn = document.querySelectorAll('.nav-btn')[navMap[name]];
+    if (btn) btn.classList.add('active');
+  }
+}
+
 function showScreen(name) {
+  const requestedName = name;
   const goingToSession = name === 'session';
 
   if (!currentUser && name !== 'auth') {
     name = 'auth';
-    showToast('🔒 Inicia sesión primero');
+    if (requestedName !== 'auth' && authBootDone) showToast('🔒 Inicia sesión primero');
   }
 
   if (!goingToSession) document.body.classList.remove('session-preview-active');
@@ -7377,25 +7413,19 @@ function showScreen(name) {
     stopTimer();
   }
 
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-  const targetScreen = document.getElementById(name + 'Screen');
-  if (targetScreen) targetScreen.classList.add('active');
+  activateOnlyScreen(name);
+  updateBottomNav(name);
 
   if (name === 'session' && currentSession) enterTrainingMode();
   else exitTrainingMode();
 
-  const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
-  if (navMap[name] !== undefined) {
-    const btn = document.querySelectorAll('.nav-btn')[navMap[name]];
-    if (btn) btn.classList.add('active');
-  }
-
   if (name === 'auth') {
+    setAuthLocked(!currentUser);
     renderAuthStatus();
     return;
   }
+
+  setAuthLocked(false);
 
   if (name === 'history') {
     renderHistory();
@@ -7416,22 +7446,56 @@ function showScreen(name) {
 }
 
 async function initApp() {
-  await renderAuthStatus();
+  activateOnlyScreen('auth');
+  updateBottomNav('auth');
+  setAuthLocked(true);
 
-  if (currentUser) {
-    await syncLocalSessionsToCloud();
-    await ensureCloudHistoryReady(true);
-  } else {
+  await renderAuthStatus();
+  authBootDone = true;
+
+  if (!currentUser) {
     cloudSessions = [];
     cloudSessionsLoaded = false;
+    activateOnlyScreen('auth');
+    updateBottomNav('auth');
+    setAuthLocked(true);
+    return;
   }
 
+  setAuthLocked(false);
+  await syncLocalSessionsToCloud();
+  await ensureCloudHistoryReady(true);
   renderHome();
   renderHistory();
   await renderProfile();
-  showScreen(currentUser ? 'home' : 'auth');
+  showScreen('home');
 }
 
+if (supabaseClient?.auth?.onAuthStateChange) {
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    currentUser = session?.user || null;
+
+    if (!currentUser) {
+      cloudSessions = [];
+      cloudSessionsLoaded = false;
+      currentSession = null;
+      renderHistory();
+      await renderAuthStatus();
+      activateOnlyScreen('auth');
+      updateBottomNav('auth');
+      setAuthLocked(true);
+      return;
+    }
+
+    setAuthLocked(false);
+    await syncLocalSessionsToCloud();
+    await refreshCloudHistory(true);
+    renderHome();
+    renderHistory();
+    await renderAuthStatus();
+    if (document.getElementById('authScreen')?.classList.contains('active')) showScreen('home');
+  });
+}
 
 initApp();
 </script>
@@ -7559,6 +7623,15 @@ body.timer-active > .timer-wrap .timer-control-btn{width:48px!important;height:3
 /* Barra inferior: liquid glass transparente, no burbuja dorada sólida. */
 .nav{background:linear-gradient(145deg,rgba(31,8,47,.62),rgba(11,2,20,.70)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.06),transparent 35%)!important;border:1px solid rgba(226,194,125,.16)!important;-webkit-backdrop-filter:blur(30px) saturate(1.35)!important;backdrop-filter:blur(30px) saturate(1.35)!important;}
 .nav-btn.active{color:#f8f3ea!important;background:linear-gradient(145deg,rgba(255,255,255,.18),rgba(255,255,255,.055)),radial-gradient(circle at 28% 0%,rgba(255,245,214,.18),transparent 44%)!important;border:1px solid rgba(255,244,212,.24)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.20),0 10px 28px rgba(0,0,0,.18)!important;-webkit-backdrop-filter:blur(22px) saturate(1.35)!important;backdrop-filter:blur(22px) saturate(1.35)!important;}
+
+body.auth-locked .nav{display:none!important;}
+body.auth-locked #homeScreen,
+body.auth-locked #historyScreen,
+body.auth-locked #profileScreen,
+body.auth-locked #sessionScreen,
+body.auth-locked #detailScreen{display:none!important;}
+body.auth-locked #authScreen.screen.active{display:block!important;}
+body.auth-locked .timer-wrap{display:none!important;}
 </style>
 </body>
 </html>
