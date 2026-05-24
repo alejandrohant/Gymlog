@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: clean-layout-real-2026-05-24-04 -->
+<!-- FORJA_BUILD: header-scroll-fix-2026-05-24-01 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -3111,6 +3111,65 @@ body.training-active .finish-btn{
   body.timer-active > .timer-wrap .timer-control-btn{width:36px !important;min-width:36px !important;height:31px !important;min-height:31px !important;}
 }
 
+
+
+/* === FORJA FIX FINAL: encabezado fijo + scroll interno estable ===
+   Corrige solo el desplazamiento en Home/Historial/Perfil/Cuenta/Detalle.
+   No cambia la posición de la barra inferior ni el diseño de tarjetas. */
+body:not(.training-active):not(.session-preview-active) {
+  overflow: hidden !important;
+}
+
+body:not(.training-active):not(.session-preview-active) .header {
+  display: flex !important;
+  position: fixed !important;
+  top: env(safe-area-inset-top, 0px) !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translate3d(-50%,0,0) !important;
+  width: 100% !important;
+  max-width: 480px !important;
+  z-index: 8900 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body:not(.training-active):not(.session-preview-active) .screen.active {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  top: calc(env(safe-area-inset-top, 0px) + 92px) !important;
+  bottom: 0 !important;
+  transform: translate3d(-50%,0,0) !important;
+  width: 100% !important;
+  max-width: 480px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  padding-top: 18px !important;
+  padding-bottom: calc(var(--forja-nav-h) + 34px + max(0px, var(--forja-safe-bottom) - 28px)) !important;
+  background: transparent !important;
+}
+
+body.timer-active:not(.training-active):not(.session-preview-active) #homeScreen.screen.active,
+body.timer-active:not(.training-active):not(.session-preview-active) #historyScreen.screen.active,
+body.timer-active:not(.training-active):not(.session-preview-active) #profileScreen.screen.active,
+body.timer-active:not(.training-active):not(.session-preview-active) #authScreen.screen.active,
+body.timer-active:not(.training-active):not(.session-preview-active) #detailScreen.screen.active {
+  padding-bottom: calc(var(--forja-nav-h) + var(--forja-timer-h) + 42px + max(0px, var(--forja-safe-bottom) - 28px)) !important;
+}
+
+body:not(.training-active):not(.session-preview-active) #homeScreen .routine-grid,
+body:not(.training-active):not(.session-preview-active) #historyScreen #historyList {
+  padding-bottom: 0 !important;
+}
 </style>
 </head>
 <body style="background-color:#12051f">
