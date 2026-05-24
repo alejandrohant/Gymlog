@@ -8030,192 +8030,272 @@ body.auth-locked .timer-wrap{display:none!important;}
 </style>
 
 
-<style id="forja-fix-2026-05-24-timer-bottom-final">
-/* FIX FINAL: entrenamiento sin franja negra + temporizador persistente y bien anclado */
-html,
+
+<style id="forja-clean-timer-layout-2026-05-24">
+/* FORJA — corrección limpia: fondo continuo + temporizador coherente y persistente */
+html{
+  width:100% !important;
+  min-height:100% !important;
+  margin:0 !important;
+  background:#0b0314 !important;
+  overflow-x:hidden !important;
+}
 body{
-  background:#0b0212!important;
-  min-height:100%!important;
-  overflow-x:hidden!important;
-}
-body::before{
-  content:""!important;
-  position:fixed!important;
-  inset:0!important;
-  z-index:-1!important;
-  pointer-events:none!important;
-  background:
+  width:100% !important;
+  max-width:none !important;
+  min-height:100svh !important;
+  margin:0 !important;
+  overflow-x:hidden !important;
+  background:#0b0314 !important;
+  background-image:
     radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
-    linear-gradient(180deg,#160721 0%,#10031b 52%,#08010e 100%)!important;
+    radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
+    linear-gradient(180deg,#0b0314 0%,#13051f 48%,#08010e 100%) !important;
 }
-body.training-active{
-  overflow:hidden!important;
-  background:#0b0212!important;
-}
-body.training-active::before{
-  content:""!important;
-  position:fixed!important;
-  inset:0!important;
-  z-index:-1!important;
-  pointer-events:none!important;
-  display:block!important;
-  background:
-    radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
-    linear-gradient(180deg,#160721 0%,#10031b 52%,#08010e 100%)!important;
-}
+body::before,
+body::after,
+body.training-active::before,
 body.training-active::after,
+body.timer-active::before,
 body.timer-active::after,
 #sessionScreen::before,
 #sessionScreen::after{
-  content:none!important;
-  display:none!important;
-  background:transparent!important;
+  content:none !important;
+  display:none !important;
+}
+.header,
+.screen,
+.nav,
+.toast,
+body > .timer-wrap{
+  max-width:480px !important;
+}
+.screen,
+.screen.active,
+#sessionScreen,
+#sessionScreen.screen.active{
+  background:transparent !important;
+  background-color:transparent !important;
+}
+.screen.active{
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+body.training-active{
+  overflow:hidden !important;
+  background:#0b0314 !important;
+  background-image:
+    radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
+    linear-gradient(180deg,#0b0314 0%,#13051f 52%,#08010e 100%) !important;
+}
+body.training-active .header{
+  display:block !important;
+  position:fixed !important;
+  inset:0 0 auto 0 !important;
+  height:0 !important;
+  min-height:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+  pointer-events:none !important;
+  z-index:3600 !important;
+}
+body.training-active .brand,
+body.training-active .nav{
+  display:none !important;
 }
 body.training-active #sessionScreen.screen.active{
-  position:fixed!important;
-  inset:0 auto auto 50%!important;
-  transform:translate3d(-50%,0,0)!important;
-  width:100%!important;
-  max-width:480px!important;
-  height:100svh!important;
-  max-height:100svh!important;
-  overflow-y:auto!important;
-  overflow-x:hidden!important;
-  background:transparent!important;
-  background-color:transparent!important;
-  padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))!important;
+  position:fixed !important;
+  inset:0 auto auto 50% !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:100% !important;
+  max-width:480px !important;
+  height:100svh !important;
+  max-height:100svh !important;
+  padding:calc(env(safe-area-inset-top,0px) + 62px) 18px calc(116px + env(safe-area-inset-bottom,0px)) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+  background:transparent !important;
+  background-color:transparent !important;
 }
 body.training-active.timer-active #sessionScreen.screen.active{
-  padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))!important;
+  padding-bottom:calc(126px + env(safe-area-inset-bottom,0px)) !important;
+}
+/* Temporizador global: una sola tarjeta liquid glass, misma estética de la app. */
+body > .timer-wrap{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:min(calc(100vw - 36px),430px) !important;
+  min-height:0 !important;
+  height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  overflow:hidden !important;
+  pointer-events:none !important;
+  z-index:9800 !important;
 }
 body.timer-active > .timer-wrap{
-  display:flex!important;
-  visibility:visible!important;
-  opacity:1!important;
-  position:fixed!important;
-  left:50%!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;
-  transform:translate3d(-50%,0,0)!important;
-  width:min(calc(100vw - 36px),430px)!important;
-  max-width:430px!important;
-  min-height:78px!important;
-  height:auto!important;
-  padding:10px 16px!important;
-  flex-direction:row!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  gap:12px!important;
-  border-radius:28px!important;
-  background:linear-gradient(145deg,rgba(42,15,61,.86),rgba(8,1,15,.96)),radial-gradient(circle at 16% 0%,rgba(255,238,190,.08),transparent 34%)!important;
-  border:1px solid rgba(226,194,125,.24)!important;
-  box-shadow:0 18px 38px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,245,214,.10)!important;
-  -webkit-backdrop-filter:blur(28px) saturate(1.28)!important;
-  backdrop-filter:blur(28px) saturate(1.28)!important;
-  z-index:9800!important;
-  overflow:hidden!important;
-  pointer-events:auto!important;
-  box-sizing:border-box!important;
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  height:78px !important;
+  min-height:78px !important;
+  padding:10px 14px !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  bottom:calc(90px + env(safe-area-inset-bottom,0px)) !important;
+  border-radius:30px !important;
+  border:1px solid rgba(226,194,125,.22) !important;
+  background:
+    linear-gradient(145deg,rgba(45,16,66,.72),rgba(13,3,24,.76)),
+    radial-gradient(circle at 18% 0%,rgba(255,245,214,.10),transparent 38%) !important;
+  box-shadow:0 18px 42px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.11) !important;
+  -webkit-backdrop-filter:blur(32px) saturate(1.30) !important;
+  backdrop-filter:blur(32px) saturate(1.30) !important;
+  pointer-events:auto !important;
+  box-sizing:border-box !important;
 }
 body.training-active.timer-active > .timer-wrap{
-  bottom:0!important;
-  width:min(100vw,480px)!important;
-  max-width:480px!important;
-  min-height:88px!important;
-  padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))!important;
-  border-radius:28px 28px 0 0!important;
-  background:linear-gradient(145deg,rgba(42,15,61,.92),rgba(5,0,10,.99)),radial-gradient(circle at 16% 0%,rgba(255,238,190,.08),transparent 34%)!important;
-  border-left:1px solid rgba(226,194,125,.22)!important;
-  border-right:1px solid rgba(226,194,125,.22)!important;
-  border-top:1px solid rgba(226,194,125,.28)!important;
-  border-bottom:0!important;
+  bottom:calc(8px + env(safe-area-inset-bottom,0px)) !important;
 }
 body.timer-active.keyboard-open > .timer-wrap{
-  bottom:calc(var(--forja-kb-offset,0px) + 8px)!important;
-}
-body:not(.timer-active) > .timer-wrap{
-  display:none!important;
-  visibility:hidden!important;
-  opacity:0!important;
-  pointer-events:none!important;
+  bottom:calc(var(--forja-kb-offset,0px) + 10px) !important;
 }
 body.timer-active > .timer-wrap .rest-timer,
 body.timer-active > .timer-wrap .rest-timer.visible{
-  display:block!important;
-  flex:0 0 auto!important;
-  margin:0!important;
-  padding:0!important;
-  background:transparent!important;
-  font-size:clamp(46px,13vw,66px)!important;
-  line-height:.9!important;
+  display:block !important;
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  font-family:'Bebas Neue',sans-serif !important;
+  font-size:clamp(48px,13vw,66px) !important;
+  line-height:.86 !important;
+  letter-spacing:.01em !important;
+  color:#a970ff !important;
+  text-shadow:0 0 20px rgba(169,112,255,.46),0 0 34px rgba(169,112,255,.22) !important;
 }
 body.timer-active > .timer-wrap .timer-controls,
 body.timer-active > .timer-wrap .timer-controls.visible{
-  display:grid!important;
-  grid-template-columns:repeat(2,48px)!important;
-  grid-auto-rows:34px!important;
-  gap:7px!important;
-  width:auto!important;
-  max-width:none!important;
-  justify-content:end!important;
-  align-items:center!important;
-  flex:0 0 auto!important;
+  display:grid !important;
+  grid-template-columns:repeat(2,52px) !important;
+  grid-auto-rows:34px !important;
+  gap:8px !important;
+  flex:0 0 auto !important;
+  width:auto !important;
+  max-width:none !important;
+  margin:0 !important;
+  justify-content:end !important;
+  align-items:center !important;
 }
 body.timer-active > .timer-wrap .timer-control-btn{
-  width:48px!important;
-  height:34px!important;
-  min-width:48px!important;
-  min-height:34px!important;
-  padding:0!important;
-  border-radius:17px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  font-size:16px!important;
-  line-height:1!important;
+  width:52px !important;
+  height:34px !important;
+  min-width:52px !important;
+  min-height:34px !important;
+  padding:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:999px !important;
+  font-family:'DM Sans',sans-serif !important;
+  font-size:16px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  color:#f0d78a !important;
+  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.045)) !important;
+  border:1px solid rgba(226,194,125,.26) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12) !important;
+  transform:none !important;
+  transition:none !important;
 }
 body.timer-active #homeScreen.screen.active,
 body.timer-active #historyScreen.screen.active,
 body.timer-active #profileScreen.screen.active,
-body.timer-active #authScreen.screen.active,
 body.timer-active #detailScreen.screen.active{
-  padding-bottom:calc(250px + env(safe-area-inset-bottom,0px))!important;
+  padding-bottom:calc(210px + env(safe-area-inset-bottom,0px)) !important;
+}
+@media (max-width:390px){
+  body.timer-active > .timer-wrap{width:min(calc(100vw - 28px),430px) !important; padding:9px 12px !important;}
+  body.timer-active > .timer-wrap .timer-controls{grid-template-columns:repeat(2,48px) !important; gap:7px !important;}
+  body.timer-active > .timer-wrap .timer-control-btn{width:48px !important; min-width:48px !important;}
 }
 </style>
-<script id="forja-fix-2026-05-24-timer-persist-final">
+<script id="forja-clean-timer-persist-2026-05-24">
 (function(){
-  const oldShowScreen = window.showScreen;
-  if (typeof oldShowScreen === 'function') {
-    window.showScreen = function(name){
-      const wasTimerActive = document.body.classList.contains('timer-active');
-      const savedTimer = (typeof forjaTimerState !== 'undefined') ? JSON.parse(JSON.stringify(forjaTimerState || {})) : null;
-      oldShowScreen.call(this, name);
-      if (savedTimer && savedTimer.active) {
-        window.forjaTimerState = savedTimer;
-        try { saveStoredTimer(); } catch(e) {}
-        try { renderTimer(); } catch(e) {}
-        try { restartTimerInterval(); } catch(e) {}
-        document.body.classList.add('timer-active');
-      } else if (wasTimerActive) {
-        try { renderTimer(); } catch(e) {}
-      }
-    };
-  }
-  const oldMinimizeSession = window.minimizeSession;
-  if (typeof oldMinimizeSession === 'function') {
-    window.minimizeSession = function(){
-      const savedTimer = (typeof forjaTimerState !== 'undefined') ? JSON.parse(JSON.stringify(forjaTimerState || {})) : null;
-      oldMinimizeSession.call(this);
-      if (savedTimer && savedTimer.active) {
-        window.forjaTimerState = savedTimer;
-        try { saveStoredTimer(); } catch(e) {}
-        try { renderTimer(); } catch(e) {}
-        try { restartTimerInterval(); } catch(e) {}
+  function keepTimerAlive(){
+    try{
+      if (typeof renderTimer === 'function') renderTimer();
+      if (typeof restartTimerInterval === 'function') restartTimerInterval();
+      if (typeof forjaTimerState !== 'undefined' && forjaTimerState && forjaTimerState.active) {
         document.body.classList.add('timer-active');
       }
-    };
+    }catch(e){}
   }
+  const previousShowScreen = window.showScreen;
+  if (typeof previousShowScreen === 'function' && !previousShowScreen.__forjaCleanTimer){
+    const wrapped = function(name){
+      let snapshot = null;
+      try{
+        if (typeof forjaTimerState !== 'undefined' && forjaTimerState && forjaTimerState.active) {
+          snapshot = JSON.parse(JSON.stringify(forjaTimerState));
+        }
+      }catch(e){}
+      const result = previousShowScreen.apply(this, arguments);
+      try{
+        if (snapshot && typeof forjaTimerState !== 'undefined') {
+          forjaTimerState = snapshot;
+          if (typeof saveStoredTimer === 'function') saveStoredTimer();
+        }
+      }catch(e){}
+      keepTimerAlive();
+      setTimeout(keepTimerAlive, 0);
+      return result;
+    };
+    wrapped.__forjaCleanTimer = true;
+    window.showScreen = wrapped;
+  }
+  const previousMinimizeSession = window.minimizeSession;
+  if (typeof previousMinimizeSession === 'function' && !previousMinimizeSession.__forjaCleanTimer){
+    const wrappedMin = function(){
+      let snapshot = null;
+      try{
+        if (typeof forjaTimerState !== 'undefined' && forjaTimerState && forjaTimerState.active) {
+          snapshot = JSON.parse(JSON.stringify(forjaTimerState));
+        }
+      }catch(e){}
+      const result = previousMinimizeSession.apply(this, arguments);
+      try{
+        if (snapshot && typeof forjaTimerState !== 'undefined') {
+          forjaTimerState = snapshot;
+          if (typeof saveStoredTimer === 'function') saveStoredTimer();
+        }
+      }catch(e){}
+      keepTimerAlive();
+      setTimeout(keepTimerAlive, 0);
+      return result;
+    };
+    wrappedMin.__forjaCleanTimer = true;
+    window.minimizeSession = wrappedMin;
+  }
+  document.addEventListener('visibilitychange', keepTimerAlive);
+  window.addEventListener('pageshow', keepTimerAlive);
+  setTimeout(keepTimerAlive, 0);
 })();
 </script>
 
