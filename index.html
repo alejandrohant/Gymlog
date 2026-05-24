@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: clean-layout-real-2026-05-24-04 -->
+<!-- FORJA_BUILD: base-restaurado-funciones-sin-tocar-layout-2026-05-24 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -4885,10 +4885,16 @@ function updateSessionCounters() {
 
 
 function replaceExercise(ei) {
-  const allExercises = ROUTINES.flatMap(r => r.exercises);
-  const uniqueExercises = allExercises.filter(
-    (ex, index, arr) => arr.findIndex(e => e.name === ex.name) === index
-  );
+  const cardioExercises = [
+    { name: 'Bicicleta', sets: 1, type: 'cardio' },
+    { name: 'Caminadora', sets: 1, type: 'cardio' },
+    { name: 'Elíptica', sets: 1, type: 'cardio' },
+    { name: 'Escaladora', sets: 1, type: 'cardio' }
+  ];
+  const allExercises = [...cardioExercises, ...ROUTINES.flatMap(r => r.exercises || [])];
+  const uniqueExercises = allExercises
+    .filter((ex, index, arr) => arr.findIndex(e => normalizeText(e.name) === normalizeText(ex.name)) === index)
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
 
   const oldOverlay = document.getElementById('exerciseChangeOverlay');
   if (oldOverlay) oldOverlay.remove();
@@ -5015,7 +5021,7 @@ function replaceExercise(ei) {
     const customName = document.getElementById('customExerciseInput').value.trim();
 
     const selected = customName
-      ? { name: customName, note: null }
+      ? { name: customName, note: null, type: isCardioExerciseName(customName) ? 'cardio' : null }
       : uniqueExercises[selectedIndex];
 
     if (!selected || !selected.name) {
@@ -5034,6 +5040,7 @@ function replaceExercise(ei) {
       originalName,
       replaced: selected.name !== originalName,
       note: selected.note || null,
+      type: selected.type || (isCardioExerciseName(selected.name) ? 'cardio' : null),
       notes: previousNotes,
       sets: Array.from({ length: currentSetsCount }, (_, i) => {
         const lastSet = lastEx?.sets?.[i];
@@ -5287,8 +5294,8 @@ function showDetail(index) {
             <div class="detail-set">
               <div class="detail-set-num">${i + 1}</div>
               <div class="detail-set-data">
-                <span class="detail-set-weight">${st.weight} lbs</span>
-                <span class="detail-set-reps"> × ${st.reps} reps</span>
+                <span class="detail-set-weight">${displaySetWeight(st, ex.name)}</span>
+                <span class="detail-set-reps">${isCardioExerciseName(ex.name) ? ' · ' : ' × '}${displaySetReps(st, ex.name)}</span>
               </div>
             </div>
           `).join('')}
@@ -6609,14 +6616,38 @@ function isBodyweightExercise(ex) {
   return !!(ex && (ex.bodyweight === true || isBodyweightExerciseName(ex.name)));
 }
 
+function isCardioExerciseName(name) {
+  const clean = normalizeText(name || '');
+  return clean === 'caminadora'
+    || clean === 'caminadora inclinada'
+    || clean === 'eliptica'
+    || clean === 'bicicleta'
+    || clean === 'escaladora';
+}
+
+function isCardioExercise(ex) {
+  return !!(ex && (ex.type === 'cardio' || isCardioExerciseName(ex.name)));
+}
+
 function displaySetWeight(set, exName) {
+  if (isCardioExerciseName(exName)) return `${set.weight || 0} min`;
   if (isBodyweightExerciseName(exName)) return 'Peso corporal';
   return `${set.weight || 0} lbs`;
+}
+
+function displaySetReps(set, exName) {
+  if (isCardioExerciseName(exName)) return `${set.reps || 0} km`;
+  return `${set.reps || 0} reps`;
 }
 
 function getSummaryForExercise(sets, exName) {
   const done = (sets || []).filter(s => s.done || s.weight || s.reps);
   if (!done.length) return 'Sin datos';
+  if (isCardioExerciseName(exName)) {
+    const totalMin = done.reduce((a, s) => a + (parseFloat(s.weight) || 0), 0);
+    const totalKm = done.reduce((a, s) => a + (parseFloat(s.reps) || 0), 0);
+    return `${done.length} registro${done.length === 1 ? '' : 's'} · ${totalMin || 0} min · ${totalKm || 0} km`;
+  }
   const avgR = Math.round(done.reduce((a, s) => a + (parseFloat(s.reps) || 0), 0) / done.length);
   if (isBodyweightExerciseName(exName)) return `${done.length} series · peso corporal · ~${avgR} reps`;
   const w = done[0].weight;
@@ -6653,6 +6684,7 @@ function renderExercises() {
     </div>
     ${currentSession.exercises.map((ex, ei) => {
       const bodyweight = isBodyweightExercise(ex);
+      const cardio = isCardioExercise(ex);
       const lastEx = getLastExerciseData(currentSession.routineId, ex.name);
       const prevHtml = lastEx ? `
         <div class="prev-info">
@@ -6663,9 +6695,19 @@ function renderExercises() {
       const replacementHtml = ex.replaced && ex.originalName ? `<div class="prev-info">↔ Sustituye a: <span>${escapeHtml(ex.originalName)}</span></div>` : '';
 
       const setsHtml = ex.sets.map((set, si) => {
+        if (cardio) {
+          return `
+            <div class="set-row" id="setrow-${ei}-${si}" ontouchstart="forjaSetSwipeStart(event)" ontouchend="forjaSetSwipeEnd(event,${ei},${si})">
+              <div class="set-num">${si + 1}</div>
+              <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="weight-${ei}-${si}" placeholder="min" value="${set.weight || ''}" onchange="updateSet(${ei},${si},'weight',this.value)" inputmode="decimal">
+              <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="km" value="${set.reps || ''}" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="decimal">
+              <button class="set-check ${set.done ? 'done' : ''}" onclick="toggleSet(${ei},${si})">${set.done ? '✓' : ''}</button>
+            </div>
+          `;
+        }
         if (bodyweight) {
           return `
-            <div class="set-row bodyweight-set" id="setrow-${ei}-${si}">
+            <div class="set-row bodyweight-set" id="setrow-${ei}-${si}" ontouchstart="forjaSetSwipeStart(event)" ontouchend="forjaSetSwipeEnd(event,${ei},${si})">
               <div class="set-num">${si + 1}</div>
               <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="${lastEx?.sets?.[si]?.reps || 'reps'}" value="${set.reps || ''}" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="numeric">
               <button class="set-check ${set.done ? 'done' : ''}" onclick="toggleSet(${ei},${si})">${set.done ? '✓' : ''}</button>
@@ -6673,7 +6715,7 @@ function renderExercises() {
           `;
         }
         return `
-          <div class="set-row" id="setrow-${ei}-${si}">
+          <div class="set-row" id="setrow-${ei}-${si}" ontouchstart="forjaSetSwipeStart(event)" ontouchend="forjaSetSwipeEnd(event,${ei},${si})">
             <div class="set-num">${si + 1}</div>
             <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="weight-${ei}-${si}" placeholder="${lastEx?.sets?.[si]?.weight || 'lbs'}" value="${set.weight || ''}" onchange="updateSet(${ei},${si},'weight',this.value)" inputmode="decimal">
             <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="${lastEx?.sets?.[si]?.reps || 'reps'}" value="${set.reps || ''}" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="numeric">
@@ -6689,7 +6731,7 @@ function renderExercises() {
               <div class="exercise-index">${ei + 1}</div>
               <div class="exercise-title-block">
                 <div class="exercise-name">${ex.name}</div>
-                <div class="exercise-submeta">${ex.sets.length} series activas${bodyweight ? ' · peso corporal' : ''}</div>
+                <div class="exercise-submeta">${ex.sets.length} ${cardio ? 'registro activo' : 'series activas'}${bodyweight ? ' · peso corporal' : ''}${cardio ? ' · tiempo / distancia' : ''}</div>
               </div>
             </div>
             ${lastEx ? '<div class="prev-badge">ANTERIOR ↑</div>' : ''}
@@ -6709,7 +6751,7 @@ function renderExercises() {
           <div class="sets-table">
             <div class="sets-header ${bodyweight ? 'bodyweight-header' : ''}">
               <div></div>
-              ${bodyweight ? '<div class="bodyweight-reps-label">REPS</div>' : '<div style="text-align:center">PESO</div><div style="text-align:center">REPS</div>'}
+              ${cardio ? '<div style="text-align:center">TIEMPO</div><div style="text-align:center">KM</div>' : (bodyweight ? '<div class="bodyweight-reps-label">REPS</div>' : '<div style="text-align:center">PESO</div><div style="text-align:center">REPS</div>')}
               <div></div>
             </div>
             ${setsHtml}
@@ -6722,6 +6764,7 @@ function renderExercises() {
         </div>
       `;
     }).join('')}
+    <button class="add-set-btn" onclick="addExerciseToSession()">+ Agregar ejercicio</button>
   `;
 }
 
@@ -6731,6 +6774,185 @@ function addSet(ei) {
   ex.sets.push({ weight: isBodyweightExercise(ex) ? '0' : (lastSet?.weight || ''), reps: lastSet?.reps || '', done: false });
   saveCurrentDraft();
   renderExercises();
+}
+
+let forjaSetSwipeX = 0;
+let forjaSetSwipeY = 0;
+
+function forjaSetSwipeStart(event) {
+  const touch = event.changedTouches && event.changedTouches[0];
+  if (!touch) return;
+  forjaSetSwipeX = touch.clientX;
+  forjaSetSwipeY = touch.clientY;
+}
+
+function forjaSetSwipeEnd(event, ei, si) {
+  const touch = event.changedTouches && event.changedTouches[0];
+  if (!touch) return;
+  const dx = touch.clientX - forjaSetSwipeX;
+  const dy = touch.clientY - forjaSetSwipeY;
+  if (dx < -70 && Math.abs(dy) < 45) deleteSet(ei, si);
+}
+
+function deleteSet(ei, si) {
+  if (!currentSession?.exercises?.[ei]?.sets?.[si]) return;
+  const ex = currentSession.exercises[ei];
+  const set = ex.sets[si];
+  const hasData = !!(set.weight || set.reps || set.done);
+  const msg = hasData ? '¿Eliminar esta serie y sus datos?' : '¿Eliminar esta serie?';
+  if (!confirm(msg)) return;
+  ex.sets.splice(si, 1);
+  if (!ex.sets.length) ex.sets.push({ weight: isBodyweightExercise(ex) ? '0' : '', reps: '', done: false });
+  saveCurrentDraft();
+  renderExercises();
+  updateSessionCounters();
+  showToast('🗑️ Serie eliminada');
+}
+
+function addExerciseToSession() {
+  if (!currentSession) return;
+
+  const cardioExercises = [
+    { name: 'Bicicleta', sets: 1, type: 'cardio' },
+    { name: 'Caminadora', sets: 1, type: 'cardio' },
+    { name: 'Elíptica', sets: 1, type: 'cardio' },
+    { name: 'Escaladora', sets: 1, type: 'cardio' }
+  ];
+
+  const allExercises = [...cardioExercises, ...ROUTINES.flatMap(r => r.exercises || [])];
+  const uniqueExercises = allExercises
+    .filter((ex, index, arr) => arr.findIndex(e => normalizeText(e.name) === normalizeText(ex.name)) === index)
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+
+  const oldOverlay = document.getElementById('exerciseAddOverlay');
+  if (oldOverlay) oldOverlay.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'exerciseAddOverlay';
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      width: 100%;
+      max-width: 430px;
+      background: #241238;
+      border: 1px solid rgba(205,180,120,0.22);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+      color: #f7f2ea;
+      font-family: 'DM Sans', sans-serif;
+    ">
+      <div style="
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 26px;
+        letter-spacing: 1.5px;
+        color: #c9a44c;
+        margin-bottom: 12px;
+      ">Agregar ejercicio</div>
+
+      <label style="font-size:12px;color:#a89cb8;text-transform:uppercase;letter-spacing:1px;">Selecciona uno</label>
+      <select id="exerciseAddSelect" style="
+        width:100%;
+        margin-top:8px;
+        margin-bottom:14px;
+        padding:13px 12px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,0.12);
+        background:#12051f;
+        color:#f7f2ea;
+        font-size:14px;
+        font-family:'DM Sans', sans-serif;
+      ">
+        ${uniqueExercises.map((ex, i) => `<option value="${i}">${escapeHtml(ex.name)}</option>`).join('')}
+      </select>
+
+      <label style="font-size:12px;color:#a89cb8;text-transform:uppercase;letter-spacing:1px;">O escribe uno nuevo</label>
+      <input id="customExerciseAddInput" type="text" placeholder="Ejemplo: Caminadora inclinada" style="
+        width:100%;
+        margin-top:8px;
+        margin-bottom:16px;
+        padding:13px 12px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,0.12);
+        background:#12051f;
+        color:#f7f2ea;
+        font-size:14px;
+        font-family:'DM Sans', sans-serif;
+      ">
+
+      <div style="display:flex;gap:10px;">
+        <button id="cancelExerciseAdd" style="
+          flex:1;
+          padding:13px;
+          border-radius:12px;
+          border:1px solid rgba(205,180,120,0.18);
+          background:rgba(255,255,255,0.04);
+          color:#c9a44c;
+          font-family:'Bebas Neue', sans-serif;
+          font-size:18px;
+          letter-spacing:1px;
+          cursor:pointer;
+        ">Cancelar</button>
+        <button id="applyExerciseAdd" style="
+          flex:1;
+          padding:13px;
+          border-radius:12px;
+          border:none;
+          background:#c9a44c;
+          color:#12051f;
+          font-family:'Bebas Neue', sans-serif;
+          font-size:18px;
+          letter-spacing:1px;
+          cursor:pointer;
+        ">Agregar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.getElementById('cancelExerciseAdd').onclick = () => overlay.remove();
+  overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+
+  document.getElementById('applyExerciseAdd').onclick = () => {
+    const selectedIndex = parseInt(document.getElementById('exerciseAddSelect').value, 10);
+    const customName = document.getElementById('customExerciseAddInput').value.trim();
+    const selected = customName ? { name: customName, sets: 1, note: null, type: isCardioExerciseName(customName) ? 'cardio' : null } : uniqueExercises[selectedIndex];
+    if (!selected?.name) {
+      showToast('⚠️ Selecciona o escribe un ejercicio');
+      return;
+    }
+
+    const lastEx = getLastExerciseData(currentSession.routineId, selected.name);
+    const setCount = Math.max(1, Number(selected.sets) || 1);
+    currentSession.exercises.push({
+      name: selected.name,
+      originalName: selected.name,
+      note: selected.note || null,
+      replaced: false,
+      added: true,
+      type: selected.type || (isCardioExerciseName(selected.name) ? 'cardio' : null),
+      sets: Array.from({ length: setCount }, (_, i) => {
+        const lastSet = lastEx?.sets?.[i];
+        return { weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false };
+      })
+    });
+
+    overlay.remove();
+    saveCurrentDraft();
+    renderExercises();
+    updateSessionCounters();
+    showToast('✅ Ejercicio agregado');
+  };
 }
 
 let forjaTimerInterval = null;
@@ -6852,13 +7074,18 @@ function toggleSet(ei, si) {
   if (!currentSession?.exercises?.[ei]?.sets?.[si]) return;
   const ex = currentSession.exercises[ei];
   const bodyweight = isBodyweightExercise(ex);
+  const cardio = isCardioExercise(ex);
   const set = ex.sets[si];
   const wEl = document.getElementById(`weight-${ei}-${si}`);
   const rEl = document.getElementById(`reps-${ei}-${si}`);
   if (!rEl) return;
 
   if (!set.done) {
-    if (bodyweight) {
+    if (cardio) {
+      set.weight = wEl ? (wEl.value || '') : '';
+      set.reps = rEl.value || '';
+      if (wEl) wEl.value = set.weight;
+    } else if (bodyweight) {
       set.weight = '0';
       set.reps = rEl.value || rEl.placeholder;
     } else {
@@ -6882,7 +7109,7 @@ function toggleSet(ei, si) {
   updateSessionCounters();
   saveCurrentDraft();
 
-  if (set.done) {
+  if (set.done && !cardio) {
     const t = {
       'Elevacion Laterales (Mancuerna)': 75,
       'Tirón a la Cara': 75,
