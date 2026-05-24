@@ -7892,173 +7892,336 @@ initApp();
 </script>
 
 
-<style id="forja-solo-correcciones-puntuales-2026-05-23">
-/* Correcciones puntuales: no rediseña inicio, barra ni tarjetas. */
-html, body{
-  background:#12051f !important;
-}
-body:not(.training-active){
-  background:
-    radial-gradient(circle at top left, rgba(201,164,76,0.08), transparent 28%),
-    radial-gradient(circle at top right, rgba(143,90,47,0.10), transparent 24%),
-    linear-gradient(180deg,#0d0418 0%,#12051f 20%,#18092b 100%) !important;
-}
 
-/* Historial: permitir desplazamiento real y espacio final para la barra. */
-body:not(.training-active) #historyScreen.screen.active{
-  display:block !important;
-  height:calc(100dvh - 104px) !important;
-  max-height:calc(100dvh - 104px) !important;
-  overflow-y:auto !important;
-  -webkit-overflow-scrolling:touch !important;
-  overscroll-behavior-y:contain !important;
-  padding-bottom:calc(150px + env(safe-area-inset-bottom,0px)) !important;
-}
-body:not(.training-active) #historyList{
-  padding-bottom:calc(120px + env(safe-area-inset-bottom,0px)) !important;
-}
-
-/* Entrenamiento: quitar franja negra inferior sin mover la lógica del temporizador. */
-body.training-active{
-  background:
-    radial-gradient(circle at top, rgba(201,164,76,.05), transparent 26%),
-    linear-gradient(180deg,#0d0418 0%,#12051f 30%,#170826 100%) !important;
-}
-body.training-active #sessionScreen.screen.active{
-  background:
-    radial-gradient(circle at top, rgba(201,164,76,.05), transparent 26%),
-    linear-gradient(180deg,#0d0418 0%,#12051f 30%,#170826 100%) !important;
-  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 112px) !important;
-}
-body.training-active.timer-active #sessionScreen.screen.active{
-  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 132px) !important;
-}
-body.training-active.timer-active > .timer-wrap{
-  bottom:calc(env(safe-area-inset-bottom,0px) + 10px) !important;
-}
-
-/* El temporizador activo debe seguir visible al cambiar entre inicio / historial / cuenta. */
-body.timer-active:not(.training-active) > .timer-wrap{
-  bottom:calc(max(8px, calc(env(safe-area-inset-bottom,0px) - 22px)) + 74px) !important;
-}
-</style>
-<script id="forja-solo-correcciones-puntuales-2026-05-23">
-(function(){
-  'use strict';
-
-  function isSessionLikeSafe(s){
-    return !!(s && typeof s === 'object' && (s.routineName || s.routine_name) && Array.isArray(s.exercises));
+<!-- === FORJA CORRECCIÓN PUNTUAL 2026-05-23: historial + sync seguro + timer estable === -->
+<style id="forja-fix-historial-sync-timer-2026-05-23">
+  /* Historial desplazable: no toca pantalla de inicio ni tarjetas. */
+  #historyScreen.screen.active{
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior-y:contain !important;
+    padding-bottom:calc(170px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  #historyList{
+    overflow:visible !important;
+    min-height:auto !important;
+    padding-bottom:calc(120px + env(safe-area-inset-bottom,0px)) !important;
   }
 
-  function normalizeRecoveredSession(s){
+  /* Evita la franja negra/blanca bajo el temporizador en entrenamiento. */
+  html,
+  body,
+  body.training-active,
+  body.training-active #sessionScreen,
+  body.training-active #sessionScreen.screen.active{
+    background-color:#07010d !important;
+  }
+  body.training-active #sessionScreen.screen.active{
+    background:
+      radial-gradient(circle at 50% -10%, rgba(96,42,143,.26), transparent 34%),
+      radial-gradient(circle at 12% 3%, rgba(216,184,102,.055), transparent 26%),
+      linear-gradient(180deg,#07010d 0%,#12051e 48%,#050009 100%) !important;
+  }
+  body.training-active.timer-active::after{
+    content:"";
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    height:calc(12px + env(safe-area-inset-bottom,0px));
+    background:#07010d;
+    z-index:2940;
+    pointer-events:none;
+  }
+  body.training-active.timer-active > .timer-wrap{
+    z-index:9950 !important;
+  }
+
+  /* El temporizador debe seguir visible al cambiar entre Inicio / Historial / Cuenta. */
+  body.timer-active:not(.training-active) > .timer-wrap{
+    display:grid !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    bottom:calc(max(8px, env(safe-area-inset-bottom,0px)) + 74px) !important;
+    pointer-events:auto !important;
+  }
+</style>
+<script id="forja-fix-historial-sync-timer-2026-05-23">
+(function(){
+  function cloneForja(value){
+    try { return JSON.parse(JSON.stringify(value)); } catch(e) { return value; }
+  }
+
+  function normalizeForjaSession(session){
     try {
-      const raw = stripCloudMeta ? stripCloudMeta(s) : s;
-      return normalizeSession ? normalizeSession(raw) : raw;
+      if (typeof normalizeSession === 'function') return normalizeSession(session);
+    } catch(e) {}
+    if (!session || typeof session !== 'object') return null;
+    const source = session.data_json && typeof session.data_json === 'object' ? session.data_json : session;
+    const copy = cloneForja(source);
+    copy.routineName = copy.routineName || copy.routine_name || session.routine_name || copy.name || '';
+    copy.routineId = copy.routineId || copy.routine_id || session.routine_id || '';
+    copy.date = copy.date || session.date || copy.finishedAt || copy.createdAt || copy.startedAt || '';
+    if (!copy.routineName || !copy.date || !Array.isArray(copy.exercises)) return null;
+    copy.exercises = copy.exercises.map(ex => ({ ...ex, sets: Array.isArray(ex.sets) ? ex.sets : [] }));
+    if (session._cloudId) copy._cloudId = session._cloudId;
+    if (session.id && !copy._cloudId) copy._cloudId = session.id;
+    return copy;
+  }
+
+  function localDayKeyForja(iso){
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return String(iso || '').slice(0,10);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function canonicalSessionKeyForja(session){
+    const s = normalizeForjaSession(session);
+    if (!s) return '';
+    const rid = s.routineId || s.routineName;
+    return `${String(rid).trim() || String(s.routineName).trim()}__${localDayKeyForja(s.date)}`;
+  }
+
+  function statusForja(session){
+    const s = normalizeForjaSession(session);
+    return String(s?.status || s?.sessionStatus || '').toLowerCase();
+  }
+
+  function isActiveForja(session){
+    const s = normalizeForjaSession(session);
+    if (!s) return false;
+    const status = statusForja(s);
+    return s.inProgress === true || s.isActive === true || status === 'active' || status === 'in_progress' || status === 'en_curso';
+  }
+
+  function doneSetsForja(session){
+    const s = normalizeForjaSession(session);
+    if (!s) return 0;
+    return s.exercises.reduce((acc, ex) => acc + (Array.isArray(ex.sets) ? ex.sets.filter(st => st && st.done).length : 0), 0);
+  }
+
+  function validHistoryForja(session){
+    const s = normalizeForjaSession(session);
+    if (!s) return false;
+    return isActiveForja(s) || doneSetsForja(s) > 0;
+  }
+
+  function scoreForja(session){
+    const s = normalizeForjaSession(session);
+    if (!s) return -1;
+    const finishedBonus = isActiveForja(s) ? 0 : 1000000000;
+    const doneBonus = doneSetsForja(s) * 1000000;
+    const exerciseBonus = (s.exercises?.length || 0) * 1000;
+    const updated = Date.parse(s.updatedAt || s.finishedAt || s.date || 0) || 0;
+    return finishedBonus + doneBonus + exerciseBonus + updated / 1000000000000;
+  }
+
+  function dedupeForjaSafe(sessions){
+    const map = new Map();
+    for (const item of sessions || []) {
+      const s = normalizeForjaSession(item);
+      if (!s || !validHistoryForja(s)) continue;
+      const key = canonicalSessionKeyForja(s);
+      if (!key) continue;
+      const current = map.get(key);
+      if (!current || scoreForja(s) >= scoreForja(current)) map.set(key, s);
+    }
+    return Array.from(map.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
+  }
+
+  window.forjaCanonicalSessionKey = canonicalSessionKeyForja;
+  window.dedupeSessions = dedupeForjaSafe;
+  window.sessionKey = canonicalSessionKeyForja;
+  window.isActiveCloudSession = isActiveForja;
+  window.doneSetsCount = doneSetsForja;
+
+  window.getSessionsLocal = function(){
+    const all = [];
+    for (const key of ['gymlog_sessions','forja_sessions']) {
+      try {
+        const raw = JSON.parse(localStorage.getItem(key) || '[]');
+        if (Array.isArray(raw)) all.push(...raw);
+      } catch(e) {}
+    }
+    return dedupeForjaSafe(all);
+  };
+
+  window.setSessionsLocal = function(sessions){
+    try {
+      const existing = typeof getSessionsLocal === 'function' ? getSessionsLocal() : [];
+      const merged = dedupeForjaSafe([...(existing || []), ...(sessions || [])]);
+      localStorage.setItem('gymlog_sessions', JSON.stringify(merged.map(s => {
+        try { return typeof stripCloudMeta === 'function' ? stripCloudMeta(s) : s; }
+        catch(e) { return s; }
+      })));
     } catch(e) {
-      return s;
+      console.warn('setSessionsLocal safe', e);
+    }
+  };
+
+  function getDraftForja(){
+    try {
+      if (typeof getActiveDraftSession === 'function') return getActiveDraftSession();
+      const raw = JSON.parse(localStorage.getItem('gymlog_current_session') || 'null');
+      return normalizeForjaSession(raw?.session || raw);
+    } catch(e) { return null; }
+  }
+
+  window.getSessions = function(){
+    const all = [];
+    try { all.push(...(Array.isArray(window.cloudSessions) ? window.cloudSessions : cloudSessions || [])); } catch(e) {}
+    try { all.push(...getSessionsLocal()); } catch(e) {}
+    try { if (typeof currentSession !== 'undefined' && currentSession) all.push(currentSession); } catch(e) {}
+    const draft = getDraftForja();
+    if (draft) all.push(draft);
+    return dedupeForjaSafe(all);
+  };
+
+  window.getFinishedSessions = function(){
+    return getSessions().filter(s => !isActiveForja(s));
+  };
+
+  async function deleteStaleActiveCloudRowsForja(rows){
+    try {
+      if (typeof currentUser === 'undefined' || !currentUser || typeof supabaseClient === 'undefined') return;
+      const normalized = (rows || []).map(row => ({ row, session: normalizeForjaSession({ ...(row.data_json || {}), _cloudId: row.id, routine_id: row.routine_id, routine_name: row.routine_name, date: row.date }) })).filter(x => x.session);
+      const byKey = new Map();
+      for (const item of normalized) {
+        const key = canonicalSessionKeyForja(item.session);
+        if (!byKey.has(key)) byKey.set(key, []);
+        byKey.get(key).push(item);
+      }
+      const idsToDelete = [];
+      for (const group of byKey.values()) {
+        const finished = group.filter(x => !isActiveForja(x.session));
+        if (!finished.length) continue;
+        const bestFinishedDone = Math.max(...finished.map(x => doneSetsForja(x.session)));
+        for (const active of group.filter(x => isActiveForja(x.session))) {
+          if (bestFinishedDone >= doneSetsForja(active.session)) idsToDelete.push(active.row.id);
+        }
+      }
+      if (idsToDelete.length) {
+        await supabaseClient.from('sessions').delete().eq('user_id', currentUser.id).in('id', idsToDelete);
+      }
+    } catch(e) {
+      console.warn('deleteStaleActiveCloudRowsForja', e);
     }
   }
 
-  function readArrayKeySafe(key){
+  window.loadCloudSessions = async function(){
     try {
-      const value = localStorage.getItem(key);
-      if (!value) return [];
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) return parsed.filter(isSessionLikeSafe).map(normalizeRecoveredSession);
-      if (parsed && Array.isArray(parsed.sessions)) return parsed.sessions.filter(isSessionLikeSafe).map(normalizeRecoveredSession);
-    } catch(e) {}
-    return [];
-  }
-
-  function recoverLocalHistorySafe(){
-    const out = [];
-    const keys = ['gymlog_sessions','forja_sessions'];
-    try {
-      for (let i=0; i<localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (!k) continue;
-        const lk = k.toLowerCase();
-        if (lk.includes('current_session')) continue;
-        if ((lk.includes('sessions') || lk.includes('backup')) && !keys.includes(k)) keys.push(k);
+      if (typeof currentUser === 'undefined' || !currentUser) {
+        cloudSessions = [];
+        return [];
       }
-    } catch(e) {}
-    keys.forEach(k => out.push(...readArrayKeySafe(k)));
-    return dedupeSessions ? dedupeSessions(out) : out;
-  }
-
-  const previousGetSessions = (typeof getSessions === 'function') ? getSessions : null;
-  getSessions = window.getSessions = function(){
-    const local = recoverLocalHistorySafe();
-    const cloud = (typeof cloudSessions !== 'undefined' && Array.isArray(cloudSessions)) ? cloudSessions : [];
-    const live = (typeof currentSession !== 'undefined' && currentSession && isActiveCloudSession && isActiveCloudSession(currentSession)) ? [currentSession] : [];
-    const base = previousGetSessions ? previousGetSessions() : [];
-    return dedupeSessions ? dedupeSessions([...base, ...cloud, ...local, ...live]) : [...base, ...cloud, ...local, ...live];
+      const { data, error } = await supabaseClient
+        .from('sessions')
+        .select('id, routine_id, routine_name, date, data_json')
+        .eq('user_id', currentUser.id)
+        .order('date', { ascending:false });
+      if (error) throw error;
+      const rows = data || [];
+      await deleteStaleActiveCloudRowsForja(rows);
+      const mapped = rows.map(row => ({
+        ...(row.data_json || {}),
+        _cloudId: row.id,
+        routineId: row.data_json?.routineId || row.routine_id,
+        routineName: row.data_json?.routineName || row.routine_name,
+        date: row.data_json?.date || row.date,
+      }));
+      cloudSessions = dedupeForjaSafe(mapped);
+      setSessionsLocal(cloudSessions);
+      return cloudSessions;
+    } catch(error) {
+      console.error('loadCloudSessions safe', error);
+      return (typeof cloudSessions !== 'undefined' && cloudSessions) ? cloudSessions : [];
+    }
   };
 
-  const previousLoadCloudSessions = (typeof loadCloudSessions === 'function') ? loadCloudSessions : null;
-  if (previousLoadCloudSessions) {
-    loadCloudSessions = window.loadCloudSessions = async function(){
-      const beforeLocal = recoverLocalHistorySafe();
-      const loaded = await previousLoadCloudSessions.apply(this, arguments);
-      const afterLocal = recoverLocalHistorySafe();
-      const merged = dedupeSessions ? dedupeSessions([...(loaded || []), ...(cloudSessions || []), ...beforeLocal, ...afterLocal]) : [...(loaded || []), ...beforeLocal, ...afterLocal];
-      if (typeof cloudSessions !== 'undefined') cloudSessions = merged;
-      try { localStorage.setItem('gymlog_sessions', JSON.stringify(merged.map(s => stripCloudMeta ? stripCloudMeta(s) : s))); } catch(e) {}
-      return merged;
+  window.syncLocalSessionsToCloud = async function(){
+    try {
+      if (typeof currentUser === 'undefined' || !currentUser || typeof supabaseClient === 'undefined') return true;
+      const local = getSessionsLocal().filter(s => !isActiveForja(s));
+      const { data, error } = await supabaseClient
+        .from('sessions')
+        .select('id, routine_id, routine_name, date, data_json')
+        .eq('user_id', currentUser.id);
+      if (error) throw error;
+      const cloud = (data || []).map(row => ({ ...(row.data_json || {}), _cloudId: row.id, routineId: row.data_json?.routineId || row.routine_id, routineName: row.data_json?.routineName || row.routine_name, date: row.data_json?.date || row.date }));
+      const cloudByKey = new Map();
+      for (const s of cloud) cloudByKey.set(canonicalSessionKeyForja(s), s);
+      const rows = [];
+      for (const s of local) {
+        const key = canonicalSessionKeyForja(s);
+        const existing = cloudByKey.get(key);
+        if (!existing || scoreForja(s) > scoreForja(existing)) {
+          const clean = (typeof stripCloudMeta === 'function') ? stripCloudMeta(s) : s;
+          rows.push({ user_id: currentUser.id, routine_id: clean.routineId, routine_name: clean.routineName, date: clean.date, data_json: clean });
+        }
+      }
+      if (rows.length) {
+        const { error: insertError } = await supabaseClient.from('sessions').insert(rows);
+        if (insertError) throw insertError;
+      }
+      await loadCloudSessions();
+      return true;
+    } catch(error) {
+      console.error('syncLocalSessionsToCloud safe', error);
+      try { await loadCloudSessions(); } catch(e) {}
+      return false;
+    }
+  };
+
+  const oldSaveSessionForja = (typeof saveSession === 'function') ? saveSession : null;
+  if (oldSaveSessionForja) {
+    window.saveSession = async function(session){
+      const result = await oldSaveSessionForja.apply(this, arguments);
+      try {
+        if (result) {
+          clearCurrentDraft();
+          currentSession = null;
+          await loadCloudSessions();
+          renderHistory();
+          renderHome();
+        }
+      } catch(e) { console.warn('saveSession cleanup', e); }
+      return result;
     };
   }
 
-  /* Reemplaza showScreen solo para NO detener el temporizador al navegar. */
-  showScreen = window.showScreen = function(name){
-    if (typeof currentUser !== 'undefined' && !currentUser && name !== 'auth') {
-      name = 'auth';
-      if (typeof showToast === 'function') showToast('🔒 Inicia sesión primero');
-    }
+  const oldRenderHistoryForja = (typeof renderHistory === 'function') ? renderHistory : null;
+  if (oldRenderHistoryForja) {
+    window.renderHistory = function(){
+      return oldRenderHistoryForja.apply(this, arguments);
+    };
+  }
 
-    const goingToSession = name === 'session';
-    if (typeof currentSession !== 'undefined' && currentSession && !goingToSession) {
-      if (typeof editingSessionKey !== 'undefined' && !editingSessionKey && typeof saveCurrentDraft === 'function') saveCurrentDraft();
-      /* No se llama stopTimer(): el descanso debe seguir vivo en historial/cuenta. */
-    }
-
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-    const targetScreen = document.getElementById(name + 'Screen');
-    if (targetScreen) targetScreen.classList.add('active');
-
-    if (name === 'session' && typeof currentSession !== 'undefined' && currentSession && typeof enterTrainingMode === 'function') enterTrainingMode();
-    else if (typeof exitTrainingMode === 'function') exitTrainingMode();
-
-    const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
-    if (navMap[name] !== undefined) {
-      const navBtn = document.querySelectorAll('.nav-btn')[navMap[name]];
-      if (navBtn) navBtn.classList.add('active');
-    }
-
-    if (name === 'history') {
-      if (typeof renderHistory === 'function') renderHistory();
-      if (typeof currentUser !== 'undefined' && currentUser && typeof loadCloudSessions === 'function') loadCloudSessions().then(() => { if (typeof renderHistory === 'function') renderHistory(); });
-    }
-    if (name === 'home') {
-      if (typeof renderHome === 'function') renderHome();
-      if (typeof currentUser !== 'undefined' && currentUser && typeof loadCloudSessions === 'function') loadCloudSessions().then(() => { if (typeof renderHome === 'function') renderHome(); });
-    }
-    if (name === 'profile' && typeof renderProfile === 'function') renderProfile();
-    if (name === 'auth' && typeof renderAuthStatus === 'function') renderAuthStatus();
-
-    setTimeout(function(){
-      try { if (typeof renderTimer === 'function') renderTimer(); } catch(e) {}
+  const oldShowScreenForja = (typeof showScreen === 'function') ? showScreen : null;
+  if (oldShowScreenForja) {
+    window.showScreen = function(name){
+      const result = oldShowScreenForja.apply(this, arguments);
       if (name === 'history') {
-        const hs = document.getElementById('historyScreen');
-        if (hs) hs.scrollTop = hs.scrollTop;
+        setTimeout(function(){
+          try { renderHistory(); } catch(e) {}
+          try { if (typeof currentUser !== 'undefined' && currentUser) syncLocalSessionsToCloud().then(renderHistory); } catch(e) {}
+        }, 0);
       }
-    }, 0);
-  };
+      try { if (typeof renderTimer === 'function') renderTimer(); } catch(e) {}
+      return result;
+    };
+  }
 
   window.addEventListener('pageshow', function(){
-    try { if (typeof renderTimer === 'function') renderTimer(); } catch(e) {}
-  });
+    try {
+      if (typeof currentUser !== 'undefined' && currentUser) syncLocalSessionsToCloud().then(function(){
+        try { renderHome(); renderHistory(); } catch(e) {}
+      });
+      if (typeof renderTimer === 'function') renderTimer();
+    } catch(e) {}
+  }, { passive:true });
 })();
 </script>
 
