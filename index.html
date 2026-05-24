@@ -4793,6 +4793,7 @@ function showScreen(name) {
   }
 
   const goingToSession = name === 'session';
+  if (!goingToSession) document.body.classList.remove('session-preview-active');
 
   if (currentSession && !goingToSession) {
     if (!editingSessionKey) saveCurrentDraft();
@@ -4976,6 +4977,13 @@ function viewRoutine(routineId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('sessionScreen').classList.add('active');
   exitTrainingMode();
+  document.body.classList.add('session-preview-active');
+  const sessionBackBtn = document.querySelector('#sessionScreen .session-hide-btn');
+  if (sessionBackBtn) {
+    sessionBackBtn.textContent = '←';
+    sessionBackBtn.setAttribute('aria-label', 'Regresar');
+    sessionBackBtn.setAttribute('title', 'Regresar');
+  }
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').innerHTML = '<span class="session-kicker">Lista para entrenar</span><div>Toca iniciar para comenzar</div>';
   document.getElementById('exerciseList').innerHTML = `
@@ -5026,6 +5034,7 @@ function startSession(routineId) {
   }
 
   editingSessionKey = null;
+  document.body.classList.remove('session-preview-active');
   const routine = getRoutineById(routineId);
   if (!routine) { showToast('⚠️ Rutina no encontrada'); return; }
 
@@ -7146,11 +7155,17 @@ function toggleSet(ei, si) {
 }
 
 function enterTrainingMode() {
+  document.body.classList.remove('session-preview-active');
   document.body.classList.add('training-active');
   const actions = document.querySelector('#sessionScreen .session-legacy-actions');
   if (actions) {
     const buttons = actions.querySelectorAll('button');
-    if (buttons[0]) buttons[0].onclick = minimizeSession;
+    if (buttons[0]) {
+      buttons[0].onclick = minimizeSession;
+      buttons[0].textContent = '⌄';
+      buttons[0].setAttribute('aria-label', 'Ocultar entrenamiento');
+      buttons[0].setAttribute('title', 'Ocultar entrenamiento');
+    }
     if (buttons[1]) buttons[1].onclick = discardSession;
   }
   renderTimer();
@@ -7234,6 +7249,7 @@ body.timer-active::before,body.timer-active::after{content:none!important;displa
 #sessionScreen .session-header,#sessionScreen .session-overview,#sessionScreen .exercise-card,#sessionScreen .session-preview-card,#sessionScreen .set-row,#sessionScreen .sets-table,#sessionScreen .notes-shell,#sessionScreen .exercise-tools{
   max-width:100%!important; min-width:0!important; margin-left:0!important; margin-right:0!important; transform:none!important;
 }
+body.session-preview-active:not(.training-active) .nav{display:none!important;}
 /* Vista previa de rutina: sin franja negra detrás de la flecha. */
 body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
   height:calc(100svh - 84px)!important; max-height:calc(100svh - 84px)!important;
