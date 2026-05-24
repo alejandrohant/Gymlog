@@ -7206,6 +7206,233 @@ restartTimerInterval();
 
 
 
+/* === FORJA FIX LIMPIO: cuenta + historial sincronizado con Supabase === */
+function renderAuthLoggedOut(panel, statusText = 'Sin sesión') {
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="exercise-card" style="padding:20px;">
+      <input id="authEmail" type="email" placeholder="Correo"
+        autocomplete="email"
+        style="width:100%;margin-bottom:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
+      <input id="authPassword" type="password" placeholder="Contraseña"
+        autocomplete="current-password"
+        style="width:100%;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
+      <div style="display:flex;gap:10px;">
+        <button onclick="signUp()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+          CREAR CUENTA
+        </button>
+        <button onclick="signIn()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+          ENTRAR
+        </button>
+      </div>
+      <div id="authStatus" style="margin-top:14px;font-size:13px;color:var(--muted);">${escapeHtml(statusText)}</div>
+    </div>
+  `;
+}
+
+function renderAuthLoggedIn(panel, displayName, email) {
+  if (!panel) return;
+  const safeName = displayName || 'Alejandro';
+  const initial = safeName.trim().charAt(0).toUpperCase() || 'A';
+  panel.innerHTML = `
+    <div class="exercise-card" style="padding:20px;">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:18px;">
+        <div style="width:58px;height:58px;border-radius:18px;background:linear-gradient(180deg, rgba(201,164,76,0.22), rgba(201,164,76,0.08));border:1px solid rgba(201,164,76,0.18);display:grid;place-items:center;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;">
+          ${escapeHtml(initial)}
+        </div>
+        <div style="min-width:0;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1.4px;color:var(--accent);line-height:0.95;">
+            ${escapeHtml(safeName)}
+          </div>
+          <div style="margin-top:6px;font-size:13px;color:var(--muted);word-break:break-word;">
+            ${escapeHtml(email || '')}
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 14px;margin-bottom:14px;border-radius:14px;background:rgba(71,255,138,0.08);border:1px solid rgba(71,255,138,0.15);color:#86efac;font-size:13px;">
+        Sesión iniciada · Historial sincronizado con Supabase
+      </div>
+      <button onclick="signOut()" style="width:100%;padding:12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
+        CERRAR SESIÓN
+      </button>
+    </div>
+  `;
+}
+
+async function renderAuthStatus() {
+  const panel = document.getElementById('authPanel');
+  if (!panel) return;
+
+  if (!panel.innerHTML.trim()) {
+    panel.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">Cargando cuenta…</div></div>`;
+  }
+
+  try {
+    const sessionResult = await supabaseClient.auth.getSession();
+    const sessionUser = sessionResult?.data?.session?.user || null;
+
+    if (sessionUser) {
+      currentUser = sessionUser;
+    } else {
+      const userResult = await supabaseClient.auth.getUser();
+      currentUser = userResult?.data?.user || null;
+    }
+  } catch (error) {
+    console.warn('renderAuthStatus auth check', error);
+  }
+
+  if (!currentUser) {
+    renderAuthLoggedOut(panel);
+    return;
+  }
+
+  let displayName = currentUser.email ? currentUser.email.split('@')[0] : 'Alejandro';
+  try {
+    const name = await getAccountDisplayName();
+    if (name) displayName = name;
+  } catch (error) {
+    console.warn('getAccountDisplayName', error);
+  }
+
+  renderAuthLoggedIn(panel, displayName, currentUser.email || '');
+}
+
+async function ensureCloudHistoryReady(force = false) {
+  if (!currentUser) return [];
+  if (!force && cloudSessionsLoaded && Array.isArray(cloudSessions)) return cloudSessions;
+  try {
+    return await refreshCloudHistory(true);
+  } catch (error) {
+    console.error('ensureCloudHistoryReady', error);
+    return cloudSessions || [];
+  }
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+
+  if (!currentUser) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">Inicia sesión en Cuenta para ver el historial sincronizado.</div></div>`;
+    return;
+  }
+
+  if (!cloudSessionsLoaded) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">☁️</div><div class="empty-text">Sincronizando historial con Supabase…</div></div>`;
+    ensureCloudHistoryReady(true).then(() => renderHistory());
+    return;
+  }
+
+  const sessions = dedupeSessions(cloudSessions || []);
+
+  if (sessions.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin sesiones registradas en Supabase.<br>Termina una rutina para guardarla.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = sessions.map((s, i) => {
+    const active = isActiveCloudSession(s);
+    const exercises = Array.isArray(s.exercises) ? s.exercises : [];
+    const doneSets = exercises.reduce((acc, ex) => acc + ((ex.sets || []).filter(st => st.done).length), 0);
+    const volume = exercises.reduce((acc, ex) => acc + ((ex.sets || []).reduce((a, st) => a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0), 0)), 0);
+    const emoji = typeof routineEmojiBySession === 'function' ? routineEmojiBySession(s) : '🏋️';
+    return `
+      <div class="history-card clean-history-card ${active ? 'active-session-card' : ''}"
+        onclick="if(!window.__forjaLongPressDone){${active ? `editSavedSession(${i})` : `showDetail(${i})`}} window.__forjaLongPressDone=false;"
+        oncontextmenu="event.preventDefault(); openSessionActions(${i});"
+        onpointerdown="forjaStartLongPress(event, ${i})"
+        onpointerup="forjaEndLongPress()"
+        onpointerleave="forjaEndLongPress()"
+        onpointercancel="forjaEndLongPress()">
+        <div class="history-clean-top">
+          <div class="history-symbol">${escapeHtml(emoji)}</div>
+          <div class="history-clean-main">
+            <div class="history-name">${escapeHtml(s.routineName || 'Sesión')}${active ? ' <span style="font-size:11px;letter-spacing:.8px;color:#f3c969;margin-left:6px;">EN CURSO</span>' : ''}</div>
+            <div class="routine-meta">${exercises.length} ejercicios registrados${active ? ' · actualizándose en Supabase' : ''}</div>
+          </div>
+          <div class="history-date-clean">${formatDate(s.date)}</div>
+        </div>
+        <div class="forja-history-details">
+          <span><strong>${doneSets}</strong> series</span>
+          <span><strong>${Math.round(volume).toLocaleString()}</strong> vol.</span>
+          <span><strong>${exercises.length}</strong> ejercicios</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function showScreen(name) {
+  const goingToSession = name === 'session';
+
+  if (!currentUser && name !== 'auth') {
+    name = 'auth';
+    showToast('🔒 Inicia sesión primero');
+  }
+
+  if (!goingToSession) document.body.classList.remove('session-preview-active');
+
+  if (currentSession && !goingToSession) {
+    if (!editingSessionKey) saveCurrentDraft();
+    stopTimer();
+  }
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  const targetScreen = document.getElementById(name + 'Screen');
+  if (targetScreen) targetScreen.classList.add('active');
+
+  if (name === 'session' && currentSession) enterTrainingMode();
+  else exitTrainingMode();
+
+  const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
+  if (navMap[name] !== undefined) {
+    const btn = document.querySelectorAll('.nav-btn')[navMap[name]];
+    if (btn) btn.classList.add('active');
+  }
+
+  if (name === 'auth') {
+    renderAuthStatus();
+    return;
+  }
+
+  if (name === 'history') {
+    renderHistory();
+    ensureCloudHistoryReady(true).then(() => {
+      renderHistory();
+      renderHome();
+    });
+    return;
+  }
+
+  if (name === 'home') {
+    renderHome();
+    ensureCloudHistoryReady(false).then(renderHome);
+    return;
+  }
+
+  if (name === 'profile') renderProfile();
+}
+
+async function initApp() {
+  await renderAuthStatus();
+
+  if (currentUser) {
+    await syncLocalSessionsToCloud();
+    await ensureCloudHistoryReady(true);
+  } else {
+    cloudSessions = [];
+    cloudSessionsLoaded = false;
+  }
+
+  renderHome();
+  renderHistory();
+  await renderProfile();
+  showScreen(currentUser ? 'home' : 'auth');
+}
+
+
 initApp();
 </script>
 
