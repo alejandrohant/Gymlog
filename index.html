@@ -4833,7 +4833,7 @@ function showScreen(name) {
 
   if (currentSession && !goingToSession) {
     if (!editingSessionKey) saveCurrentDraft();
-    stopTimer();
+    renderTimer();
   }
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -7598,7 +7598,7 @@ function showScreen(name) {
 
   if (currentSession && !goingToSession) {
     if (!editingSessionKey) saveCurrentDraft();
-    stopTimer();
+    renderTimer();
   }
 
   activateOnlyScreen(name);
@@ -8028,5 +8028,196 @@ body.auth-locked #detailScreen{display:none!important;}
 body.auth-locked #authScreen.screen.active{display:block!important;}
 body.auth-locked .timer-wrap{display:none!important;}
 </style>
+
+
+<style id="forja-fix-2026-05-24-timer-bottom-final">
+/* FIX FINAL: entrenamiento sin franja negra + temporizador persistente y bien anclado */
+html,
+body{
+  background:#0b0212!important;
+  min-height:100%!important;
+  overflow-x:hidden!important;
+}
+body::before{
+  content:""!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:-1!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
+    linear-gradient(180deg,#160721 0%,#10031b 52%,#08010e 100%)!important;
+}
+body.training-active{
+  overflow:hidden!important;
+  background:#0b0212!important;
+}
+body.training-active::before{
+  content:""!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:-1!important;
+  pointer-events:none!important;
+  display:block!important;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(104,45,152,.24), transparent 36%),
+    linear-gradient(180deg,#160721 0%,#10031b 52%,#08010e 100%)!important;
+}
+body.training-active::after,
+body.timer-active::after,
+#sessionScreen::before,
+#sessionScreen::after{
+  content:none!important;
+  display:none!important;
+  background:transparent!important;
+}
+body.training-active #sessionScreen.screen.active{
+  position:fixed!important;
+  inset:0 auto auto 50%!important;
+  transform:translate3d(-50%,0,0)!important;
+  width:100%!important;
+  max-width:480px!important;
+  height:100svh!important;
+  max-height:100svh!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))!important;
+}
+body.training-active.timer-active #sessionScreen.screen.active{
+  padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))!important;
+}
+body.timer-active > .timer-wrap{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;
+  transform:translate3d(-50%,0,0)!important;
+  width:min(calc(100vw - 36px),430px)!important;
+  max-width:430px!important;
+  min-height:78px!important;
+  height:auto!important;
+  padding:10px 16px!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  border-radius:28px!important;
+  background:linear-gradient(145deg,rgba(42,15,61,.86),rgba(8,1,15,.96)),radial-gradient(circle at 16% 0%,rgba(255,238,190,.08),transparent 34%)!important;
+  border:1px solid rgba(226,194,125,.24)!important;
+  box-shadow:0 18px 38px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,245,214,.10)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.28)!important;
+  backdrop-filter:blur(28px) saturate(1.28)!important;
+  z-index:9800!important;
+  overflow:hidden!important;
+  pointer-events:auto!important;
+  box-sizing:border-box!important;
+}
+body.training-active.timer-active > .timer-wrap{
+  bottom:0!important;
+  width:min(100vw,480px)!important;
+  max-width:480px!important;
+  min-height:88px!important;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))!important;
+  border-radius:28px 28px 0 0!important;
+  background:linear-gradient(145deg,rgba(42,15,61,.92),rgba(5,0,10,.99)),radial-gradient(circle at 16% 0%,rgba(255,238,190,.08),transparent 34%)!important;
+  border-left:1px solid rgba(226,194,125,.22)!important;
+  border-right:1px solid rgba(226,194,125,.22)!important;
+  border-top:1px solid rgba(226,194,125,.28)!important;
+  border-bottom:0!important;
+}
+body.timer-active.keyboard-open > .timer-wrap{
+  bottom:calc(var(--forja-kb-offset,0px) + 8px)!important;
+}
+body:not(.timer-active) > .timer-wrap{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+body.timer-active > .timer-wrap .rest-timer,
+body.timer-active > .timer-wrap .rest-timer.visible{
+  display:block!important;
+  flex:0 0 auto!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+  font-size:clamp(46px,13vw,66px)!important;
+  line-height:.9!important;
+}
+body.timer-active > .timer-wrap .timer-controls,
+body.timer-active > .timer-wrap .timer-controls.visible{
+  display:grid!important;
+  grid-template-columns:repeat(2,48px)!important;
+  grid-auto-rows:34px!important;
+  gap:7px!important;
+  width:auto!important;
+  max-width:none!important;
+  justify-content:end!important;
+  align-items:center!important;
+  flex:0 0 auto!important;
+}
+body.timer-active > .timer-wrap .timer-control-btn{
+  width:48px!important;
+  height:34px!important;
+  min-width:48px!important;
+  min-height:34px!important;
+  padding:0!important;
+  border-radius:17px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:16px!important;
+  line-height:1!important;
+}
+body.timer-active #homeScreen.screen.active,
+body.timer-active #historyScreen.screen.active,
+body.timer-active #profileScreen.screen.active,
+body.timer-active #authScreen.screen.active,
+body.timer-active #detailScreen.screen.active{
+  padding-bottom:calc(250px + env(safe-area-inset-bottom,0px))!important;
+}
+</style>
+<script id="forja-fix-2026-05-24-timer-persist-final">
+(function(){
+  const oldShowScreen = window.showScreen;
+  if (typeof oldShowScreen === 'function') {
+    window.showScreen = function(name){
+      const wasTimerActive = document.body.classList.contains('timer-active');
+      const savedTimer = (typeof forjaTimerState !== 'undefined') ? JSON.parse(JSON.stringify(forjaTimerState || {})) : null;
+      oldShowScreen.call(this, name);
+      if (savedTimer && savedTimer.active) {
+        window.forjaTimerState = savedTimer;
+        try { saveStoredTimer(); } catch(e) {}
+        try { renderTimer(); } catch(e) {}
+        try { restartTimerInterval(); } catch(e) {}
+        document.body.classList.add('timer-active');
+      } else if (wasTimerActive) {
+        try { renderTimer(); } catch(e) {}
+      }
+    };
+  }
+  const oldMinimizeSession = window.minimizeSession;
+  if (typeof oldMinimizeSession === 'function') {
+    window.minimizeSession = function(){
+      const savedTimer = (typeof forjaTimerState !== 'undefined') ? JSON.parse(JSON.stringify(forjaTimerState || {})) : null;
+      oldMinimizeSession.call(this);
+      if (savedTimer && savedTimer.active) {
+        window.forjaTimerState = savedTimer;
+        try { saveStoredTimer(); } catch(e) {}
+        try { renderTimer(); } catch(e) {}
+        try { restartTimerInterval(); } catch(e) {}
+        document.body.classList.add('timer-active');
+      }
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
