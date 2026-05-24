@@ -8657,3 +8657,58 @@ body.training-active .nav{display:none !important;}
 
 </body>
 </html>
+
+<style id="forja-timer-compact-row-final-20260524">
+/* Corrección limpia final: temporizador compacto, botones en una sola fila y pegado visualmente a la barra inferior. */
+body.timer-active > .timer-wrap{
+  grid-template-columns:minmax(76px,1fr) auto!important;
+  gap:8px!important;
+  width:min(calc(100vw - 32px),420px)!important;
+  height:56px!important;
+  min-height:56px!important;
+  max-height:56px!important;
+  padding:7px 11px!important;
+  border-radius:22px!important;
+  bottom:calc(max(8px, calc(env(safe-area-inset-bottom,0px) - 22px)) + 60px)!important;
+  background:linear-gradient(135deg,rgba(59,24,83,.88),rgba(12,3,22,.94))!important;
+  border:1px solid rgba(226,194,125,.18)!important;
+  box-shadow:0 12px 26px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.08)!important;
+}
+body.training-active.timer-active > .timer-wrap{
+  bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 26px))!important;
+}
+body > .timer-wrap .rest-timer,
+body > .timer-wrap .rest-timer.visible{
+  font-size:37px!important;
+  line-height:.88!important;
+  letter-spacing:.01em!important;
+}
+body > .timer-wrap .timer-controls,
+body > .timer-wrap .timer-controls.visible{
+  display:grid!important;
+  grid-template-columns:repeat(4,40px)!important;
+  gap:5px!important;
+  align-items:center!important;
+  justify-content:end!important;
+  max-width:none!important;
+  width:auto!important;
+  margin:0!important;
+}
+body > .timer-wrap .timer-control-btn{
+  width:40px!important;
+  height:34px!important;
+  min-width:40px!important;
+  min-height:34px!important;
+  padding:0!important;
+  border-radius:16px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:14px!important;
+  line-height:1!important;
+}
+body > .timer-wrap .timer-control-btn:nth-child(3),
+body > .timer-wrap .timer-control-btn:nth-child(4){
+  font-size:13px!important;
+}
+</style>
