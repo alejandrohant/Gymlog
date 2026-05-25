@@ -210,6 +210,24 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
   -webkit-backdrop-filter: blur(34px) saturate(1.24);
   backdrop-filter: blur(34px) saturate(1.24);
   z-index: 9000;
+  overflow: visible;
+}
+.nav::after {
+  content: '';
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  bottom: calc(var(--safe-bottom) * -1);
+  height: calc(var(--safe-bottom) + 18px);
+  background: rgba(18, 5, 31, .86);
+  border-left: 1px solid rgba(238, 210, 146, .14);
+  border-right: 1px solid rgba(238, 210, 146, .14);
+  border-bottom: 1px solid rgba(238, 210, 146, .14);
+  border-radius: 0 0 28px 28px;
+  -webkit-backdrop-filter: blur(34px) saturate(1.24);
+  backdrop-filter: blur(34px) saturate(1.24);
+  pointer-events: none;
+  z-index: -1;
 }
 .nav-btn { display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 21px; color: rgba(205,193,216,.68); font-size: 18px; font-weight: 900; }
 .nav-btn.active { color: rgba(245,238,255,.94); background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.065)); border: 1px solid rgba(255,255,255,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 10px 28px rgba(0,0,0,.20); }
