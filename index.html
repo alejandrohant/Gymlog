@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: limpio-estructural-sin-parches-2026-05-25 -->
+<!-- FORJA_BUILD: limpio-estructural-fondo-uniforme-2026-05-25 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -6,7 +6,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
-<meta content="#0b0314" name="theme-color"/>
+<meta content="#12051f" name="theme-color"/>
 <meta content="dark" name="color-scheme"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <title>FORJA — Bitácora de entrenamiento</title>
@@ -16,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
 <style>
 :root {
-  --bg: #08010e;
+  --bg: #12051f;
   --bg-mid: #12051f;
   --text: #f2edf4;
   --muted: rgba(213, 202, 223, .68);
@@ -37,18 +37,24 @@
   --app-bg:
     radial-gradient(circle at 50% -12%, rgba(104, 45, 152, .24), transparent 36%),
     radial-gradient(circle at 8% 0%, rgba(216, 184, 102, .055), transparent 30%),
-    linear-gradient(180deg, #0b0314 0%, #12051f 48%, #08010e 100%);
+    linear-gradient(180deg, #0b0314 0%, #12051f 46%, #12051f 100%);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { width: 100%; min-height: 100dvh; overflow: hidden; background: #0b0314; }
+html, body {
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background-color: var(--bg-mid);
+  background-image: var(--app-bg);
+  background-repeat: no-repeat;
+  background-size: 100% 100dvh;
+}
 body {
-  max-width: 480px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  background-image: var(--app-bg);
-  background-color: #0b0314;
 }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; border: 0; color: inherit; background: none; }
@@ -202,12 +208,12 @@ body.training-active .header { display: none; }
 body.training-active #sessionScreen.screen.active {
   position: fixed; inset: 0 auto auto 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: 100dvh;
   padding: max(174px, calc(var(--safe-top) + 124px)) 18px 28px;
-  background-image: var(--app-bg); background-color: #0b0314; z-index: 3000;
+  background-image: var(--app-bg); background-color: var(--bg-mid); background-size: 100% 100dvh; z-index: 3000;
 }
 body.session-preview-active #sessionScreen.screen.active {
   position: fixed; inset: 0 auto auto 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: 100dvh;
   padding: calc(var(--safe-top) + 24px) 18px calc(var(--nav-h) + 28px);
-  background-image: var(--app-bg); background-color: #0b0314;
+  background-image: var(--app-bg); background-color: var(--bg-mid); background-size: 100% 100dvh;
 }
 .session-legacy-actions { display: none; }
 body.training-active #sessionScreen .session-legacy-actions {
