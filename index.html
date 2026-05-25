@@ -794,6 +794,140 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   font-weight: 500;
   line-height: 1.45;
 }
+.routine-stats-panel,
+.cardio-stats-panel {
+  margin: 0 0 18px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(238,210,146,.12);
+  background: rgba(255,255,255,.025);
+}
+
+.routine-stats-head,
+.cardio-stats-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.routine-stats-label,
+.cardio-stats-label {
+  color: rgba(238,210,146,.78);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.routine-stats-sub,
+.cardio-stats-sub {
+  margin-top: 4px;
+  color: rgba(244,237,248,.52);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.routine-stats-head strong,
+.cardio-stats-head strong {
+  color: rgba(244,237,248,.82);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.routine-stats-list,
+.cardio-stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.routine-stats-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding-top: 10px;
+  border-top: 1px solid rgba(238,210,146,.08);
+}
+
+.routine-stats-name {
+  color: rgba(244,237,248,.82);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.routine-stats-date {
+  margin-top: 4px;
+  color: rgba(244,237,248,.48);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.routine-stats-data {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: right;
+  color: rgba(244,237,248,.54);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.routine-stats-data strong {
+  color: rgba(244,237,248,.86);
+  font-weight: 800;
+}
+
+.cardio-stats-main {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cardio-stats-main > div {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+.cardio-stats-main strong {
+  display: block;
+  color: rgba(244,237,248,.86);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.cardio-stats-main span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(244,237,248,.48);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.cardio-stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(238,210,146,.08);
+  color: rgba(244,237,248,.60);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cardio-stats-row strong {
+  color: rgba(244,237,248,.82);
+  font-weight: 800;
+  white-space: nowrap;
+}
 </style>
 </head>
 <body>
@@ -5277,6 +5411,124 @@ function getExerciseRecordsHtml(sessions) {
     </div>
   `;
 }
+function getRoutineStatsHtml(sessions) {
+  const stats = {};
+
+  (sessions || []).forEach(session => {
+    const key = session.routineId || session.routineName || 'sin_rutina';
+    const name = session.routineName || 'Sesión';
+
+    if (!stats[key]) {
+      stats[key] = {
+        name,
+        sessions: 0,
+        sets: 0,
+        volume: 0,
+        lastDate: session.date || ''
+      };
+    }
+
+    stats[key].sessions += 1;
+    stats[key].sets += getSessionDoneSets(session);
+    stats[key].volume += getSessionVolume(session);
+
+    if (session.date && (!stats[key].lastDate || new Date(session.date) > new Date(stats[key].lastDate))) {
+      stats[key].lastDate = session.date;
+    }
+  });
+
+  const rows = Object.values(stats).sort((a, b) => b.sessions - a.sessions || b.volume - a.volume);
+  if (!rows.length) return '';
+
+  return `
+    <div class="routine-stats-panel">
+      <div class="routine-stats-head">
+        <div>
+          <div class="routine-stats-label">Resumen por rutina</div>
+          <div class="routine-stats-sub">Sesiones, series y volumen por tipo de entrenamiento</div>
+        </div>
+        <strong>${rows.length}</strong>
+      </div>
+
+      <div class="routine-stats-list">
+        ${rows.map(row => `
+          <div class="routine-stats-row">
+            <div>
+              <div class="routine-stats-name">${escapeHtml(row.name)}</div>
+              <div class="routine-stats-date">Última: ${formatDate(row.lastDate)}</div>
+            </div>
+            <div class="routine-stats-data">
+              <span><strong>${row.sessions}</strong> sesiones</span>
+              <span><strong>${row.sets}</strong> series</span>
+              <span><strong>${Math.round(row.volume).toLocaleString()}</strong> vol.</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function getCardioStatsHtml(sessions) {
+  let records = 0;
+  let minutes = 0;
+  let km = 0;
+  const byName = {};
+
+  (sessions || []).forEach(session => {
+    (session.exercises || []).forEach(ex => {
+      if (!isCardioExerciseName(ex.name)) return;
+
+      const done = (ex.sets || []).filter(st => st.done || st.weight || st.reps);
+      if (!done.length) return;
+
+      if (!byName[ex.name]) byName[ex.name] = { name: ex.name, records: 0, minutes: 0, km: 0 };
+
+      done.forEach(st => {
+        const min = parseFloat(st.weight) || 0;
+        const distance = parseFloat(st.reps) || 0;
+
+        records += 1;
+        minutes += min;
+        km += distance;
+
+        byName[ex.name].records += 1;
+        byName[ex.name].minutes += min;
+        byName[ex.name].km += distance;
+      });
+    });
+  });
+
+  const rows = Object.values(byName).sort((a, b) => b.minutes - a.minutes || b.km - a.km);
+  if (!records) return '';
+
+  return `
+    <div class="cardio-stats-panel">
+      <div class="cardio-stats-head">
+        <div>
+          <div class="cardio-stats-label">Cardio</div>
+          <div class="cardio-stats-sub">Resumen según las sesiones visibles</div>
+        </div>
+        <strong>${Math.round(minutes)} min</strong>
+      </div>
+
+      <div class="cardio-stats-main">
+        <div><strong>${records}</strong><span>registros</span></div>
+        <div><strong>${Math.round(km * 10) / 10}</strong><span>km</span></div>
+        <div><strong>${Math.round(minutes)}</strong><span>min</span></div>
+      </div>
+
+      <div class="cardio-stats-list">
+        ${rows.map(row => `
+          <div class="cardio-stats-row">
+            <span>${escapeHtml(row.name)}</span>
+            <strong>${Math.round(row.minutes)} min · ${Math.round(row.km * 10) / 10} km</strong>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
 function renderHistory() {
   const list = document.getElementById('historyList');
   if (!list) return;
@@ -5340,6 +5592,8 @@ function renderHistory() {
   }, 0);
 
   const progressChartsHtml = getProgressChartsHtml(visibleSessions);
+  const routineStatsHtml = getRoutineStatsHtml(visibleSessions);
+  const cardioStatsHtml = getCardioStatsHtml(visibleSessions);
   const exerciseRecordsHtml = getExerciseRecordsHtml(visibleSessions);
   list.innerHTML = `
     ${filtersHtml}
@@ -5364,6 +5618,10 @@ function renderHistory() {
     </div>
 
     ${progressChartsHtml}
+
+    ${routineStatsHtml}
+
+    ${cardioStatsHtml}
 
     ${exerciseRecordsHtml}
 
