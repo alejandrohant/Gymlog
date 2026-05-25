@@ -205,15 +205,14 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
   bottom: 0;
   transform: translateX(-50%);
   width: min(calc(100vw - 32px), 448px);
-  min-height: calc(var(--nav-h) + var(--safe-bottom));
+  height: calc(var(--nav-h) + var(--safe-bottom));
   padding: 7px 7px calc(7px + var(--safe-bottom));
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
-  border-radius: 30px 30px 0 0;
+  border-radius: 30px;
   background: linear-gradient(180deg, rgba(25, 8, 43, .86), rgba(12, 3, 22, .96));
   border: 1px solid rgba(238, 210, 146, .16);
-  border-bottom: 0;
   box-shadow: 0 -8px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.10);
   -webkit-backdrop-filter: blur(34px) saturate(1.24);
   backdrop-filter: blur(34px) saturate(1.24);
