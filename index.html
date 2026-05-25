@@ -1719,23 +1719,11 @@ async function renderProfile() {
         </div>
       </div>
 
-      <div class="premium-profile-stats">
-        <div class="profile-stat">
-          <div class="profile-stat-label">Peso</div>
-          <div class="profile-stat-value">${escapeHtml(profile.weight || '--')}</div>
-        </div>
-        <div class="profile-stat">
-          <div class="profile-stat-label">Estatura</div>
-          <div class="profile-stat-value">${escapeHtml(profile.height || '--')}</div>
-        </div>
-        <div class="profile-stat">
-          <div class="profile-stat-label">Edad</div>
-          <div class="profile-stat-value">${escapeHtml(profile.age || '--')}</div>
-        </div>
-        <div class="profile-stat">
-          <div class="profile-stat-label">Modo</div>
-          <div class="profile-stat-value">Construcción</div>
-        </div>
+      <div class="premium-profile-metrics">
+        <span><strong>${escapeHtml(profile.weight || '--')}</strong> peso</span>
+        <span><strong>${escapeHtml(profile.height || '--')}</strong> estatura</span>
+        <span><strong>${escapeHtml(profile.age || '--')}</strong> edad</span>
+        <span><strong>Construcción</strong> modo</span>
       </div>
 
       <div class="premium-profile-note">
