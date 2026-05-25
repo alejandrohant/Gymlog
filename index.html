@@ -3468,6 +3468,93 @@ body.session-preview-active:not(.training-active) #sessionScreen.screen.active .
   }
 }
 
+
+
+/* === FORJA FINAL SOLO BARRAS + FONDO ENTRENAMIENTO 2026-05-24 ===
+   Alcance cerrado: bajar barra inferior, bajar INICIAR ENTRENAMIENTO y quitar franja negra en entrenamiento en curso.
+   No cambia datos, Supabase, timer, ejercicios, cardio ni lógica. */
+:root{
+  --forja-bottom-edge-final: max(0px, calc(env(safe-area-inset-bottom, 0px) - 34px));
+  --forja-bottom-bg-final:
+    radial-gradient(circle at 50% -14%, rgba(104,45,152,.24), transparent 36%),
+    radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
+    linear-gradient(180deg,#0b0314 0%,#12051f 48%,#08010e 100%);
+}
+
+html,
+body{
+  background-color:#0b0314 !important;
+  background-image:var(--forja-bottom-bg-final) !important;
+}
+
+/* Barra inferior: casi al fondo, sin safe-area levantándola. */
+body:not(.training-active) .nav{
+  position:fixed !important;
+  top:auto !important;
+  bottom:var(--forja-bottom-edge-final) !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translate3d(-50%,0,0) !important;
+  margin:0 !important;
+  z-index:9000 !important;
+}
+
+/* Botón INICIAR ENTRENAMIENTO: casi al fondo, sin quedar flotando a media pantalla. */
+body.session-preview-active:not(.training-active) #sessionScreen.screen.active .finish-btn{
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:var(--forja-bottom-edge-final) !important;
+  transform:translate3d(-50%,0,0) !important;
+  margin:0 !important;
+  z-index:9100 !important;
+}
+body.session-preview-active:not(.training-active) #sessionScreen.screen.active .finish-btn:active{
+  transform:translate3d(-50%,0,0) scale(.985) !important;
+}
+
+/* Espacio interno solo para que el último ejercicio no quede debajo del botón. */
+body.session-preview-active:not(.training-active) #sessionScreen.screen.active{
+  padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+  background-color:#0b0314 !important;
+  background-image:var(--forja-bottom-bg-final) !important;
+}
+body.session-preview-active:not(.training-active) #sessionScreen #exerciseList{
+  padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Entrenamiento en curso: fondo completo hasta el borde inferior, sin franja negra. */
+body.training-active,
+body.training-active html{
+  background-color:#0b0314 !important;
+  background-image:var(--forja-bottom-bg-final) !important;
+}
+body.training-active #sessionScreen.screen.active{
+  position:fixed !important;
+  inset:0 auto 0 50% !important;
+  transform:translate3d(-50%,0,0) !important;
+  width:100% !important;
+  max-width:480px !important;
+  height:100dvh !important;
+  min-height:100dvh !important;
+  max-height:100dvh !important;
+  background-color:#0b0314 !important;
+  background-image:var(--forja-bottom-bg-final) !important;
+  background-attachment:fixed !important;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  box-sizing:border-box !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+body.training-active #sessionScreen.screen.active::before,
+body.training-active #sessionScreen.screen.active::after,
+body.training-active::before,
+body.training-active::after{
+  content:none !important;
+  display:none !important;
+}
+
 </style>
 </head>
 <body style="background-color:#12051f">
