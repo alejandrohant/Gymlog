@@ -4858,7 +4858,32 @@ function renderHistory() {
     return;
   }
 
-  list.innerHTML = sessions.map((s, i) => {
+    const filterOptions = [
+    { id: 'all', name: 'Todos' },
+    ...ROUTINES.map(r => ({ id: r.id, name: r.name }))
+  ];
+
+  const visibleSessions = historyFilter === 'all'
+    ? sessions
+    : sessions.filter(s => s.routineId === historyFilter);
+
+  const filtersHtml = `
+    <div class="history-filter-row">
+      ${filterOptions.map(opt => `
+        <button class="history-filter-chip ${historyFilter === opt.id ? 'active' : ''}" onclick="setHistoryFilter('${safeJsString(opt.id)}')">
+          ${escapeHtml(opt.name)}
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  if (!visibleSessions.length) {
+    list.innerHTML = filtersHtml + `<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No hay sesiones de esta rutina todavía.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtersHtml + visibleSessions.map((s) => {
+    const i = sessions.findIndex(item => sessionKey(item) === sessionKey(s));
     const active = isActiveCloudSession(s);
     const exercises = Array.isArray(s.exercises) ? s.exercises : [];
     const doneSets = exercises.reduce((acc, ex) => acc + ((ex.sets || []).filter(st => st.done).length), 0);
