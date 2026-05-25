@@ -2755,18 +2755,18 @@ body{
   --forja-safe-top: env(safe-area-inset-top, 0px);
   --forja-nav-h: 66px;
   --forja-timer-h: 50px;
-  --forja-bottom-gap: max(4px, calc(var(--forja-safe-bottom) - 28px));
+  --forja-bottom-gap: 6px;
   --forja-bg:
     radial-gradient(circle at 50% -14%, rgba(104,45,152,.24), transparent 36%),
     radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
-    linear-gradient(180deg,#0b0314 0%,#12051f 48%,#08010e 100%);
+    linear-gradient(180deg,#0b0314 0%,#12051f 48%,#12051f 100%);
 }
 html,body{
   width:100%;
   min-height:100dvh;
   margin:0;
   overflow-x:hidden;
-  background-color:#0b0314 !important;
+  background-color:#12051f !important;
   background-image:var(--forja-bg) !important;
 }
 body::before,body::after,body.timer-active::before,body.timer-active::after,body.training-active::before,body.training-active::after,#sessionScreen::before,#sessionScreen::after{
@@ -2783,7 +2783,7 @@ body::before,body::after,body.timer-active::before,body.timer-active::after,body
   height:100dvh !important;
   overflow-y:auto !important;
   -webkit-overflow-scrolling:touch !important;
-  padding-bottom:calc(var(--forja-nav-h) + 22px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
+  padding-bottom:calc(var(--forja-nav-h) + 22px) !important;
   background:transparent !important;
 }
 .nav{
@@ -2840,7 +2840,7 @@ body.session-preview-active .nav{
   display:none !important;
 }
 body.session-preview-active #sessionScreen.screen.active{
-  padding-bottom:calc(92px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
+  padding-bottom:96px !important;
 }
 body.session-preview-active #sessionScreen .session-legacy-actions{
   display:flex !important;
@@ -2880,7 +2880,7 @@ body.session-preview-active #sessionScreen.screen.active .finish-btn{
   position:fixed !important;
   left:50% !important;
   right:auto !important;
-  bottom:max(8px, calc(var(--forja-safe-bottom) - 24px)) !important;
+  bottom:6px !important;
   transform:translate3d(-50%,0,0) !important;
   width:min(calc(100vw - 36px),444px) !important;
   max-width:444px !important;
@@ -2891,7 +2891,7 @@ body.timer-active #historyScreen.screen.active,
 body.timer-active #profileScreen.screen.active,
 body.timer-active #authScreen.screen.active,
 body.timer-active #detailScreen.screen.active{
-  padding-bottom:calc(var(--forja-nav-h) + var(--forja-timer-h) + 22px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
+  padding-bottom:calc(var(--forja-nav-h) + var(--forja-timer-h) + 22px) !important;
 }
 body > .timer-wrap{
   display:none !important;
@@ -3009,12 +3009,12 @@ body.training-active #sessionScreen.screen.active{
   padding-top:max(174px, calc(var(--forja-safe-top) + 124px)) !important;
   padding-left:18px !important;
   padding-right:18px !important;
-  padding-bottom:calc(28px + max(0px,var(--forja-safe-bottom) - 28px)) !important;
+  padding-bottom:28px !important;
   overflow-y:auto !important;
   overflow-x:hidden !important;
   -webkit-overflow-scrolling:touch !important;
   overscroll-behavior:contain !important;
-  background-color:#0b0314 !important;
+  background-color:#12051f !important;
   background-image:var(--forja-bg) !important;
 }
 body.training-active #sessionScreen .session-legacy-actions{
@@ -3117,7 +3117,7 @@ body.training-active .finish-btn{
    Único alcance: home/historial. Conserva funciones y evita que el último item quede bajo la barra. */
 :root{
   --forja-header-fixed-h: 118px;
-  --forja-nav-bottom-real: max(0px, calc(env(safe-area-inset-bottom, 0px) - 30px));
+  --forja-nav-bottom-real: 6px;
   --forja-scroll-bottom-pad: calc(var(--forja-nav-h, 66px) + 18px + var(--forja-nav-bottom-real));
 }
 
@@ -3191,7 +3191,16 @@ body:not(.training-active):not(.session-preview-active) #historyScreen #historyL
   }
 }
 
+
+
+/* === FORJA SANIDAD FINAL: sin franjas inferiores ni desplazamientos de barras === */
+html, body { background-color:#12051f !important; }
+body::before, body::after, .screen::before, .screen::after, #sessionScreen::before, #sessionScreen::after { content:none !important; display:none !important; }
+body:not(.training-active):not(.session-preview-active) .nav { bottom:6px !important; transform:translate3d(-50%,0,0) !important; }
+body.session-preview-active #sessionScreen.screen.active .finish-btn { bottom:6px !important; transform:translate3d(-50%,0,0) !important; }
+
 </style>
+<meta name="theme-color" content="#12051f">
 </head>
 <body style="background-color:#12051f">
 <div class="header">
