@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: limpio-funcional-2026-05-24-bottom-bars-definitivo-low-visible -->
+<!-- FORJA_BUILD: limpio-funcional-2026-05-24-bottom-bars-posicion-final -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -1587,32 +1587,59 @@ body.timer-active:not(.training-active) .screen.active{bottom:calc(var(--forja-n
   .routine-emoji.routine-mark,.history-symbol{width:54px !important;height:54px !important;font-size:28px !important;}
 }
 
-/* === FORJA FIX DEFINITIVO: barras bajas y visibles, sin cambiar lógica === */
+
+
+/* === FORJA FIX FINAL — barras visibles pegadas abajo, sin tocar lógica === */
 :root{
-  --forja-nav-gap:6px !important;
-  --forja-finish-gap:6px !important;
-  --forja-nav-shift-y:52px !important;
-  --forja-finish-shift-y:56px !important;
+  --forja-nav-gap:4px !important;
+  --forja-finish-gap:4px !important;
+  --forja-nav-shift-y:0px !important;
+  --forja-finish-shift-y:0px !important;
+  --forja-bottom-clearance:max(4px, calc(env(safe-area-inset-bottom, 0px) - 30px));
 }
+
 .nav{
   display:grid !important;
   visibility:visible !important;
   opacity:1 !important;
-  bottom:var(--forja-nav-gap) !important;
-  transform:translate3d(-50%,var(--forja-nav-shift-y),0) !important;
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  top:calc(100dvh - var(--forja-nav-h) - var(--forja-bottom-clearance)) !important;
+  transform:translate3d(-50%,0,0) !important;
+  pointer-events:auto !important;
 }
+
 body.session-preview-active #sessionScreen .finish-btn{
-  display:block !important;
+  display:grid !important;
+  place-items:center !important;
   visibility:visible !important;
   opacity:1 !important;
-  bottom:var(--forja-finish-gap) !important;
-  transform:translate3d(-50%,var(--forja-finish-shift-y),0) !important;
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  top:calc(100dvh - 72px - var(--forja-bottom-clearance)) !important;
+  transform:translate3d(-50%,0,0) !important;
+  min-height:62px !important;
+  width:min(calc(100vw - 36px),444px) !important;
+  max-width:444px !important;
+  margin:0 !important;
+  z-index:9300 !important;
+  pointer-events:auto !important;
 }
+
 body.session-preview-active #sessionScreen .finish-btn:active{
-  transform:translate3d(-50%,var(--forja-finish-shift-y),0) scale(.985) !important;
+  transform:translate3d(-50%,0,0) scale(.985) !important;
 }
+
 body.session-preview-active #sessionScreen.screen.active{
-  padding-bottom:calc(106px + var(--forja-finish-shift-y)) !important;
+  padding-bottom:92px !important;
+}
+
+.screen.active{
+  padding-bottom:calc(var(--forja-nav-h) + 14px) !important;
 }
 
 </style>
