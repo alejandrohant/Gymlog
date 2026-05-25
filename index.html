@@ -182,12 +182,21 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
 .empty-icon { font-size: 48px; margin-bottom: 14px; }
 
 .nav {
-  position: fixed; left: 50%; bottom: var(--bottom-edge); transform: translateX(-50%);
-  width: min(calc(100vw - 32px), 448px); height: var(--nav-h); padding: 7px;
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px;
-  border-radius: 28px; background: rgba(18,5,31,.88); border: 1px solid rgba(238,210,146,.14);
-  box-shadow: 0 18px 42px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.10);
-  -webkit-backdrop-filter: blur(34px) saturate(1.24); backdrop-filter: blur(34px) saturate(1.24);
+  position: fixed;
+  left: 50%;
+  bottom: var(--bottom-edge);
+  transform: translateX(-50%);
+  width: min(calc(100vw - 32px), 448px);
+  height: var(--nav-h);
+  padding: 7px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   z-index: 9000;
 }
 .nav-btn { display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 21px; color: rgba(205,193,216,.68); font-size: 18px; font-weight: 900; }
