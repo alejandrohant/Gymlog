@@ -117,7 +117,7 @@ button:active {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   background: transparent;
-  padding: 18px 20px calc(var(--nav-h) + var(--safe-bottom) + 30px);
+  padding: 18px 20px calc(var(--nav-h) + 10px);
 }
 .screen.active { display: block; }
 body:not(.training-active):not(.session-preview-active) #homeScreen.screen.active,
@@ -132,7 +132,7 @@ body:not(.training-active):not(.session-preview-active) #detailScreen.screen.act
   transform: translateX(-50%);
   width: min(100vw, 480px);
   height: auto;
-  padding: 18px 20px calc(var(--nav-h) + var(--safe-bottom) + 28px);
+  padding: 18px 20px calc(var(--nav-h) + 10px);
 }
 body.timer-active:not(.training-active):not(.session-preview-active) .screen.active {
   bottom: 0;
@@ -261,10 +261,10 @@ body.training-active #sessionScreen.screen.active {
   width: 100%;
   max-width: 480px;
   height: auto;
-  padding: max(174px, calc(var(--safe-top) + 124px)) 18px calc(34px + var(--safe-bottom));
+  padding: max(174px, calc(var(--safe-top) + 124px)) 18px 0;
   background-color: #12051f;
   background-image: var(--app-bg);
-  background-size: 100% 100%;
+  background-size: 100% 100dvh;
   background-repeat: no-repeat;
   z-index: 3000;
 }
@@ -276,10 +276,10 @@ body.session-preview-active #sessionScreen.screen.active {
   width: 100%;
   max-width: 480px;
   height: auto;
-  padding: calc(var(--safe-top) + 18px) 18px calc(34px + var(--safe-bottom));
+  padding: calc(var(--safe-top) + 18px) 18px 0;
   background-color: #12051f;
   background-image: var(--app-bg);
-  background-size: 100% 100%;
+  background-size: 100% 100dvh;
   background-repeat: no-repeat;
   z-index: 3000;
 }
@@ -387,7 +387,7 @@ body.session-preview-active .finish-btn {
   bottom: auto;
   width: 100%;
   z-index: 1;
-  margin: 18px 0 28px;
+  margin: 18px 0 0;
   transform: none;
   will-change: auto;
   transition: filter .12s ease;
