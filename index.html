@@ -571,6 +571,49 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   font-weight: 500;
   line-height: 1.4;
 }
+.routine-preview-compare {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(238,210,146,.10);
+}
+
+.routine-preview-compare-label {
+  color: rgba(238,210,146,.76);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.routine-preview-compare-main {
+  color: rgba(244,237,248,.82);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.routine-preview-compare-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 8px;
+  color: rgba(244,237,248,.58);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.routine-preview-compare-grid strong {
+  color: rgba(244,237,248,.86);
+  font-weight: 700;
+}
+
+.routine-preview-compare-text {
+  margin-top: 8px;
+  color: rgba(244,237,248,.58);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
 </style>
 </head>
 <body>
@@ -2153,6 +2196,36 @@ function getRoutineMark(routine) {
 }
 
 
+function getRoutinePreviewComparison(routineId) {
+  const last = getLastSession(routineId);
+
+  if (!last) {
+    return `
+      <div class="routine-preview-compare">
+        <div class="routine-preview-compare-label">Última sesión equivalente</div>
+        <div class="routine-preview-compare-main">Sin registro previo</div>
+        <div class="routine-preview-compare-text">Esta será la primera referencia para comparar progreso.</div>
+      </div>
+    `;
+  }
+
+  const stats = getSessionSummaryStats(last);
+  const bestText = stats.bestSet
+    ? `${escapeHtml(stats.bestSet.exerciseName)} · ${stats.bestSet.weight} lb × ${stats.bestSet.reps}`
+    : 'Sin mejor serie registrada';
+
+  return `
+    <div class="routine-preview-compare">
+      <div class="routine-preview-compare-label">Última sesión equivalente</div>
+      <div class="routine-preview-compare-main">${formatDate(last.date)}</div>
+      <div class="routine-preview-compare-grid">
+        <span><strong>${stats.completedSets}</strong> series</span>
+        <span><strong>${stats.totalVolume}</strong> lb volumen</span>
+      </div>
+      <div class="routine-preview-compare-text">Mejor serie: ${bestText}</div>
+    </div>
+  `;
+}
 function viewRoutine(routineId) {
   if (!currentUser) {
     showScreen('auth');
@@ -2162,27 +2235,34 @@ function viewRoutine(routineId) {
 
   const routine = getRoutineById(routineId);
   if (!routine) { showToast('⚠️ Rutina no encontrada'); return; }
+
+  const comparisonHtml = getRoutinePreviewComparison(routineId);
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('sessionScreen').classList.add('active');
   exitTrainingMode();
   document.body.classList.add('session-preview-active');
+
   const sessionBackBtn = document.querySelector('#sessionScreen .session-hide-btn');
   if (sessionBackBtn) {
     sessionBackBtn.textContent = '←';
     sessionBackBtn.setAttribute('aria-label', 'Regresar');
     sessionBackBtn.setAttribute('title', 'Regresar');
   }
+
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').innerHTML = '<span class="session-kicker">Lista para entrenar</span><div>Toca iniciar para comenzar</div>';
+
   document.getElementById('exerciseList').innerHTML = `
     <div class="session-overview">
       <div class="session-overview-top">
         <div>
-          <div class="session-overview-title">${routine.name}</div>
-          <div class="session-overview-sub">${routine.desc}</div>
+          <div class="session-overview-title">${escapeHtml(routine.name)}</div>
+          <div class="session-overview-sub">${escapeHtml(routine.desc || '')}</div>
         </div>
         <div class="session-progress-ring">${routine.exercises.length}</div>
       </div>
+
       <div class="session-stats-grid">
         <div class="session-stat-card">
           <div class="session-stat-label">Ejercicios</div>
@@ -2194,22 +2274,26 @@ function viewRoutine(routineId) {
         </div>
         <div class="session-stat-card">
           <div class="session-stat-label">Día</div>
-          <div class="session-stat-value" style="font-size:16px;">${routine.day}</div>
+          <div class="session-stat-value" style="font-size:16px;">${escapeHtml(routine.day || '--')}</div>
         </div>
       </div>
+
+      ${comparisonHtml}
     </div>
+
     ${routine.exercises.map((ex, i) => `
       <div class="exercise-card session-preview-card">
         <div class="exercise-topline">
           <div class="exercise-index">${i + 1}</div>
           <div class="exercise-title-block">
-            <div class="exercise-name">${ex.name}</div>
-            <div class="session-preview-meta">${ex.sets} series ${ex.note ? '· ' + ex.note : ''}</div>
+            <div class="exercise-name">${escapeHtml(ex.name)}</div>
+            <div class="session-preview-meta">${ex.sets} series ${ex.note ? '· ' + escapeHtml(ex.note) : ''}</div>
           </div>
         </div>
       </div>
     `).join('')}
   `;
+
   document.querySelector('.finish-btn').textContent = 'INICIAR ENTRENAMIENTO';
   document.querySelector('.finish-btn').onclick = () => { startSession(routineId); };
 }
