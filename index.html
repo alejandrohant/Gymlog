@@ -110,15 +110,16 @@ body:not(.training-active):not(.session-preview-active) #authScreen.screen.activ
 body:not(.training-active):not(.session-preview-active) #detailScreen.screen.active {
   position: fixed;
   top: var(--header-h);
-  bottom: calc(var(--nav-h) + var(--bottom-edge) + 12px);
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: min(100vw, 480px);
   height: auto;
-  padding: 18px 20px;
+  padding: 18px 20px calc(var(--nav-h) + var(--bottom-edge) + 28px);
 }
 body.timer-active:not(.training-active):not(.session-preview-active) .screen.active {
-  bottom: calc(var(--nav-h) + var(--timer-h) + var(--bottom-edge) + 18px);
+  bottom: 0;
+  padding-bottom: calc(var(--nav-h) + var(--timer-h) + var(--bottom-edge) + 34px);
 }
 
 .section-title, .hero-title, .session-title, .profile-name, .detail-title, .edit-title, .action-sheet-title {
@@ -192,11 +193,12 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  border-radius: 28px;
+  background: rgba(18, 5, 31, .86);
+  border: 1px solid rgba(238, 210, 146, .14);
+  box-shadow: 0 18px 42px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.10);
+  -webkit-backdrop-filter: blur(34px) saturate(1.24);
+  backdrop-filter: blur(34px) saturate(1.24);
   z-index: 9000;
 }
 .nav-btn { display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 21px; color: rgba(205,193,216,.68); font-size: 18px; font-weight: 900; }
