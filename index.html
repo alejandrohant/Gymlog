@@ -516,8 +516,19 @@ function resetRoutinesToDefault() {
 
 function getTodayRoutine() {
   const days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  const today = days[new Date().getDay()];
-  return ROUTINES.find(r => normalizeText(r.day) === normalizeText(today)) || null;
+  const todayIndex = new Date().getDay();
+  const today = days[todayIndex];
+
+  const exactRoutine = ROUTINES.find(r => normalizeText(r.day) === normalizeText(today));
+  if (exactRoutine) return exactRoutine;
+
+  for (let offset = 1; offset <= 7; offset++) {
+    const nextDay = days[(todayIndex + offset) % 7];
+    const nextRoutine = ROUTINES.find(r => normalizeText(r.day) === normalizeText(nextDay));
+    if (nextRoutine) return nextRoutine;
+  }
+
+  return ROUTINES[0] || null;
 }
 
 function getRoutineById(routineId) {
