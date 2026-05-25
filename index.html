@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: limpio-funcional-sin-parches-2026-05-24-nav-bottom-final -->
+<!-- FORJA_BUILD: limpio-funcional-sin-parches-2026-05-24-bottom-anchored-v2 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -1310,8 +1310,9 @@
   --forja-max-w: 480px;
   --forja-header-h: 112px;
   --forja-nav-h: 66px;
-  --forja-nav-gap: 6px;
-  --forja-finish-gap: 6px;
+  --forja-nav-gap: 0px;
+  --forja-finish-gap: 0px;
+  --forja-bottom-shift: 72px;
   --forja-bg:
     radial-gradient(circle at 50% -14%, rgba(104,45,152,.24), transparent 36%),
     radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
@@ -1389,8 +1390,8 @@ body::after,
   left:50% !important;
   right:auto !important;
   top:auto !important;
-  bottom:var(--forja-nav-gap) !important;
-  transform:translate3d(-50%,0,0) !important;
+  bottom:0 !important;
+  transform:translate3d(-50%,var(--forja-bottom-shift),0) !important;
   width:min(calc(100vw - 32px),448px) !important;
   max-width:448px !important;
   height:var(--forja-nav-h) !important;
@@ -1446,7 +1447,7 @@ body::after,
   height:auto !important;
   min-height:0 !important;
   margin:0 !important;
-  padding:18px 20px calc(var(--forja-nav-h) + var(--forja-nav-gap) + 20px) !important;
+  padding:18px 20px calc(var(--forja-nav-h) + 20px) !important;
   box-sizing:border-box !important;
   overflow-y:auto !important;
   overflow-x:hidden !important;
@@ -1511,8 +1512,8 @@ body::after,
 body.session-preview-active .nav{display:none !important;}
 body.session-preview-active #sessionScreen.screen.active{
   top:var(--forja-header-h) !important;
-  bottom:calc(72px + var(--forja-finish-gap) + 12px) !important;
-  padding:16px 20px 18px !important;
+  bottom:0 !important;
+  padding:16px 20px calc(88px + var(--forja-safe-bottom)) !important;
 }
 body.session-preview-active #sessionScreen .session-legacy-actions{display:flex !important;position:relative !important;margin:0 0 12px !important;padding:0 !important;background:transparent !important;z-index:3 !important;}
 body.session-preview-active #sessionScreen .session-legacy-actions button:first-child{display:inline-flex !important;align-items:center !important;justify-content:center !important;width:46px !important;height:40px !important;border-radius:999px !important;background:rgba(255,255,255,.06) !important;border:1px solid rgba(201,164,76,.24) !important;color:#d9bc67 !important;font-size:22px !important;}
@@ -1521,8 +1522,8 @@ body.session-preview-active #sessionScreen .finish-btn{
   display:block !important;
   position:fixed !important;
   left:50% !important;
-  bottom:var(--forja-finish-gap) !important;
-  transform:translate3d(-50%,0,0) !important;
+  bottom:0 !important;
+  transform:translate3d(-50%,var(--forja-bottom-shift),0) !important;
   width:min(calc(100vw - 36px),444px) !important;
   max-width:444px !important;
   z-index:8990 !important;
@@ -1560,14 +1561,14 @@ body.training-active .finish-btn{position:static !important;transform:none !impo
 
 /* Temporizador minimizado en pantallas normales */
 body > .timer-wrap{display:none;}
-body.timer-active:not(.training-active) > .timer-wrap{display:grid !important;visibility:visible !important;opacity:1 !important;position:fixed !important;left:50% !important;bottom:calc(var(--forja-nav-gap) + var(--forja-nav-h) + 4px) !important;transform:translate3d(-50%,0,0) !important;width:min(calc(100vw - 32px),420px) !important;height:50px !important;grid-template-columns:minmax(74px,1fr) auto !important;align-items:center !important;gap:8px !important;padding:7px 10px !important;border-radius:22px !important;border:1px solid rgba(226,194,125,.18) !important;background:linear-gradient(135deg,rgba(59,24,83,.86),rgba(12,3,22,.94)) !important;box-shadow:0 12px 26px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.08) !important;z-index:8800 !important;pointer-events:auto !important;}
-body.timer-active:not(.training-active) .screen.active{bottom:calc(var(--forja-nav-h) + var(--forja-nav-gap) + 66px) !important;}
+body.timer-active:not(.training-active) > .timer-wrap{display:grid !important;visibility:visible !important;opacity:1 !important;position:fixed !important;left:50% !important;bottom:calc(var(--forja-nav-h) - var(--forja-bottom-shift) + 8px) !important;transform:translate3d(-50%,0,0) !important;width:min(calc(100vw - 32px),420px) !important;height:50px !important;grid-template-columns:minmax(74px,1fr) auto !important;align-items:center !important;gap:8px !important;padding:7px 10px !important;border-radius:22px !important;border:1px solid rgba(226,194,125,.18) !important;background:linear-gradient(135deg,rgba(59,24,83,.86),rgba(12,3,22,.94)) !important;box-shadow:0 12px 26px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,245,214,.08) !important;z-index:8800 !important;pointer-events:auto !important;}
+body.timer-active:not(.training-active) .screen.active{bottom:calc(var(--forja-nav-h) + 66px) !important;}
 .rest-timer,.rest-timer.visible{display:block !important;margin:0 !important;padding:0 !important;background:transparent !important;border:0 !important;font-family:'Bebas Neue',sans-serif !important;font-size:36px !important;line-height:.88 !important;letter-spacing:.01em !important;color:#a970ff !important;text-shadow:0 0 18px rgba(169,112,255,.44) !important;white-space:nowrap !important;}
 .timer-controls,.timer-controls.visible{display:grid !important;grid-template-columns:repeat(4,38px) !important;gap:5px !important;align-items:center !important;justify-content:end !important;height:32px !important;}
 .timer-control-btn{width:38px !important;height:32px !important;border-radius:16px !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:14px !important;font-weight:900 !important;color:#efd98f !important;background:rgba(255,255,255,.060) !important;border:1px solid rgba(238,210,146,.23) !important;}
 
 @media(max-width:390px){
-  :root{--forja-header-h:106px;--forja-nav-h:64px;}
+  :root{--forja-header-h:106px;--forja-nav-h:64px;--forja-bottom-shift:70px;}
   .screen.active{padding-left:18px !important;padding-right:18px !important;}
   .nav{width:calc(100vw - 24px) !important;}
   .routine-card{grid-template-columns:58px 1fr !important;padding:22px 20px !important;column-gap:17px !important;}
