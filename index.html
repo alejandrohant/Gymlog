@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: base-restaurado-funciones-sin-tocar-layout-2026-05-24 -->
+<!-- FORJA_BUILD: base-restaurado-funciones-barras-abajo-fondo-entrenamiento-2026-05-24 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -3113,84 +3113,44 @@ body.training-active .finish-btn{
 
 
 
-/* === FORJA FIX LIMPIO 2026-05-24: encabezado fijo + scroll sin mover layout ===
-   Único alcance: home/historial. Conserva funciones y evita que el último item quede bajo la barra. */
+/* === FORJA AJUSTE ÚNICO 2026-05-24: barras abajo + fondo uniforme entrenamiento ===
+   Base: archivo restaurado con funciones. No modifica lógica, Supabase, timer ni render de ejercicios. */
 :root{
-  --forja-header-fixed-h: 118px;
-  --forja-nav-bottom-real: max(0px, calc(env(safe-area-inset-bottom, 0px) - 30px));
-  --forja-scroll-bottom-pad: calc(var(--forja-nav-h, 66px) + 18px + var(--forja-nav-bottom-real));
+  --forja-bottom-floor: max(2px, calc(env(safe-area-inset-bottom, 0px) - 36px));
 }
 
-/* La barra inferior vuelve abajo. No depende del bloque de scroll. */
-body:not(.training-active):not(.session-preview-active) .nav{
-  bottom: var(--forja-nav-bottom-real) !important;
+html, body{
+  background-color:#0b0314 !important;
+  background-image:var(--forja-bg) !important;
+  background-attachment:fixed !important;
 }
 
-/* FORJA fijo, sin fondo distinto ni franja. */
-body:not(.training-active):not(.session-preview-active) .header{
-  position: fixed !important;
-  top: 0 !important;
-  left: 50% !important;
-  right: auto !important;
-  transform: translate3d(-50%,0,0) !important;
-  width: min(100vw, 480px) !important;
-  max-width: 480px !important;
-  height: var(--forja-header-fixed-h) !important;
-  min-height: var(--forja-header-fixed-h) !important;
-  margin: 0 !important;
-  padding: calc(env(safe-area-inset-top, 0px) + 18px) 20px 14px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: flex-start !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  z-index: 8800 !important;
-}
-body:not(.training-active):not(.session-preview-active) .header .brand{
-  display: flex !important;
+body:not(.training-active) .nav{
+  bottom:var(--forja-bottom-floor) !important;
 }
 
-/* Solo el contenido se desliza. Termina antes de la barra inferior. */
-body:not(.training-active):not(.session-preview-active) #homeScreen.screen.active,
-body:not(.training-active):not(.session-preview-active) #historyScreen.screen.active{
-  position: fixed !important;
-  top: var(--forja-header-fixed-h) !important;
-  bottom: calc(var(--forja-nav-h, 66px) + var(--forja-nav-bottom-real) + 12px) !important;
-  left: 50% !important;
-  right: auto !important;
-  transform: translate3d(-50%,0,0) !important;
-  width: min(100vw, 480px) !important;
-  max-width: 480px !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  margin: 0 !important;
-  padding: 18px 20px 18px !important;
-  box-sizing: border-box !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain !important;
-  background: transparent !important;
-  z-index: 1 !important;
+body.session-preview-active:not(.training-active) #sessionScreen.screen.active .finish-btn{
+  bottom:var(--forja-bottom-floor) !important;
 }
 
-body:not(.training-active):not(.session-preview-active) #homeScreen .routine-grid,
-body:not(.training-active):not(.session-preview-active) #historyScreen #historyList{
-  padding-bottom: 8px !important;
+body.training-active{
+  background-color:#0b0314 !important;
+  background-image:var(--forja-bg) !important;
+  overflow:hidden !important;
 }
 
-@media (max-width:390px){
-  :root{ --forja-header-fixed-h: 112px; }
-  body:not(.training-active):not(.session-preview-active) #homeScreen.screen.active,
-  body:not(.training-active):not(.session-preview-active) #historyScreen.screen.active{
-    padding-left: 18px !important;
-    padding-right: 18px !important;
-  }
+body.training-active #sessionScreen.screen.active{
+  background-color:#0b0314 !important;
+  background-image:var(--forja-bg) !important;
+  min-height:100dvh !important;
+  height:100dvh !important;
 }
 
+body.training-active #sessionScreen.screen.active::before,
+body.training-active #sessionScreen.screen.active::after{
+  display:none !important;
+  content:none !important;
+}
 </style>
 </head>
 <body style="background-color:#12051f">
