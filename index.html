@@ -614,6 +614,82 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   font-weight: 500;
   line-height: 1.4;
 }
+.exercise-records-panel {
+  margin: 0 0 18px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(238,210,146,.12);
+  background: rgba(255,255,255,.025);
+}
+
+.exercise-records-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.exercise-records-label {
+  color: rgba(238,210,146,.78);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.exercise-records-sub {
+  margin-top: 4px;
+  color: rgba(244,237,248,.52);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.exercise-records-head strong {
+  color: rgba(244,237,248,.82);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.exercise-records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exercise-record-row {
+  padding-top: 10px;
+  border-top: 1px solid rgba(238,210,146,.08);
+}
+
+.exercise-record-name {
+  color: rgba(244,237,248,.82);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.exercise-record-data {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 5px;
+  color: rgba(244,237,248,.54);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.exercise-record-data strong {
+  color: rgba(244,237,248,.86);
+  font-weight: 800;
+}
+
+.exercise-records-more {
+  margin-top: 12px;
+  color: rgba(244,237,248,.48);
+  font-size: 12px;
+  font-weight: 500;
+}
 </style>
 </head>
 <body>
@@ -4821,6 +4897,82 @@ function getSessions() {
   return dedupeSessions(source).filter(s => !shouldHideFromHistory(s));
 }
 
+function getExerciseRecords(sessions) {
+  const records = {};
+
+  (sessions || []).forEach(session => {
+    const date = session.date || '';
+
+    (session.exercises || []).forEach(ex => {
+      if (!ex || !ex.name || isCardioExerciseName(ex.name)) return;
+
+      (ex.sets || []).forEach(st => {
+        if (!st || !st.done) return;
+
+        const weight = parseFloat(st.weight) || 0;
+        const reps = parseFloat(st.reps) || 0;
+        if (weight <= 0 || reps <= 0) return;
+
+        const score = weight * reps;
+        const name = ex.name;
+
+        if (!records[name]) {
+          records[name] = {
+            name,
+            bestWeight: { weight, reps, date },
+            bestSet: { weight, reps, score, date }
+          };
+          return;
+        }
+
+        const currentWeight = records[name].bestWeight;
+        if (weight > currentWeight.weight || (weight === currentWeight.weight && reps > currentWeight.reps)) {
+          records[name].bestWeight = { weight, reps, date };
+        }
+
+        const currentSet = records[name].bestSet;
+        if (score > currentSet.score) {
+          records[name].bestSet = { weight, reps, score, date };
+        }
+      });
+    });
+  });
+
+  return Object.values(records).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function getExerciseRecordsHtml(sessions) {
+  const records = getExerciseRecords(sessions);
+
+  if (!records.length) return '';
+
+  return `
+    <div class="exercise-records-panel">
+      <div class="exercise-records-head">
+        <div>
+          <div class="exercise-records-label">Mejores marcas</div>
+          <div class="exercise-records-sub">Récords por ejercicio registrado</div>
+        </div>
+        <strong>${records.length}</strong>
+      </div>
+
+      <div class="exercise-records-list">
+        ${records.slice(0, 6).map(record => `
+          <div class="exercise-record-row">
+            <div class="exercise-record-name">${escapeHtml(record.name)}</div>
+            <div class="exercise-record-data">
+              <span><strong>${record.bestWeight.weight}</strong> lb × ${record.bestWeight.reps}</span>
+              <span><strong>${Math.round(record.bestSet.score).toLocaleString()}</strong> vol. serie</span>
+              <span>${formatDate(record.bestWeight.date)}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      ${records.length > 6 ? `<div class="exercise-records-more">Mostrando 6 de ${records.length} ejercicios.</div>` : ''}
+    </div>
+  `;
+}
 function renderHistory() {
   const list = document.getElementById('historyList');
   if (!list) return;
@@ -4882,6 +5034,8 @@ function renderHistory() {
       }, 0));
     }, 0);
   }, 0);
+
+  const exerciseRecordsHtml = getExerciseRecordsHtml(visibleSessions);
   list.innerHTML = `
     ${filtersHtml}
 
@@ -4903,6 +5057,8 @@ function renderHistory() {
         <div class="history-summary-value" style="font-size:16px;">${formatDate(visibleSessions[0].date)}</div>
       </div>
     </div>
+
+    ${exerciseRecordsHtml}
 
     ${visibleSessions.map((s) => {
     const i = sessions.findIndex(item => sessionKey(item) === sessionKey(s));
