@@ -202,7 +202,7 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
 .nav {
   position: fixed;
   left: 50%;
-  bottom: 0;
+  bottom: 6px;
   transform: translateX(-50%);
   width: min(calc(100vw - 32px), 448px);
   height: var(--nav-h);
@@ -276,7 +276,7 @@ body.session-preview-active #sessionScreen.screen.active {
   width: 100%;
   max-width: 480px;
   height: auto;
-  padding: calc(var(--safe-top) + 18px) 18px 0;
+  padding: calc(var(--safe-top) + 18px) 18px 18px;
   background-color: #12051f;
   background-image: var(--app-bg);
   background-size: 100% 100vh;
@@ -387,7 +387,7 @@ body.session-preview-active .finish-btn {
   bottom: auto;
   width: 100%;
   z-index: 1;
-  margin: 18px 0 0;
+  margin: 18px 0 18px;
   transform: none;
   will-change: auto;
   transition: filter .12s ease;
