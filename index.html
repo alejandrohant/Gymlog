@@ -33,7 +33,7 @@
   --header-h: 118px;
   --nav-h: 66px;
   --timer-h: 50px;
-  --bottom-edge: max(8px, var(--safe-bottom));
+  --bottom-edge: 0px;
   --app-bg:
     radial-gradient(circle at 50% -12%, rgba(104, 45, 152, .18), transparent 36%),
     radial-gradient(circle at 8% 0%, rgba(216, 184, 102, .045), transparent 30%),
@@ -68,13 +68,12 @@ button { cursor: pointer; border: 0; color: inherit; background: none; }
   transform: scale(.985);
 }
 
-button:active {
-  filter: brightness(.96);
+.tap-card:active {
+  transform: scale(.985);
 }
 
-body.session-preview-active .finish-btn:active {
-  transform: translate3d(-50%, 0, 0);
-  filter: brightness(.94);
+button:active {
+  filter: brightness(.96);
 }
 
 .header {
@@ -363,16 +362,14 @@ body.session-preview-active .session-hide-btn { font-size: 22px; }
 .notes-input { min-height: 72px; resize: none; }
 .finish-btn { width: 100%; padding: 16px; margin: 24px 0 16px; border-radius: 18px; color: #120614; background: linear-gradient(180deg, #efd381 0%, #d0a84e 58%, #b88a32 100%); font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: .11em; box-shadow: 0 12px 26px rgba(209,171,85,.20), inset 0 1px 0 rgba(255,255,255,.44); }
 body.session-preview-active .finish-btn {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--bottom-edge) + 22px);
-  width: min(calc(100vw - 36px), 444px);
-  z-index: 8990;
-  margin: 0;
-  transform: translate3d(-50%, 0, 0);
-  will-change: filter;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  position: relative;
+  left: auto;
+  bottom: auto;
+  width: 100%;
+  z-index: 1;
+  margin: 18px 0 28px;
+  transform: none;
+  will-change: auto;
   transition: filter .12s ease;
   touch-action: manipulation;
 }
