@@ -64,13 +64,17 @@ body {
 }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; border: 0; color: inherit; background: none; }
-button:active,
 .tap-card:active {
   transform: scale(.985);
 }
 
+button:active {
+  filter: brightness(.96);
+}
+
 body.session-preview-active .finish-btn:active {
-  transform: translate3d(-50%, 0, 0) scale(.985);
+  transform: translate3d(-50%, 0, 0);
+  filter: brightness(.94);
 }
 
 .header {
@@ -254,7 +258,7 @@ body.session-preview-active #sessionScreen.screen.active {
   width: 100%;
   max-width: 480px;
   height: 100dvh;
-  padding: calc(var(--safe-top) + 18px) 18px calc(112px + var(--bottom-edge));
+  padding: calc(var(--safe-top) + 18px) 18px calc(170px + var(--bottom-edge));
   background-image: var(--app-bg);
   background-color: var(--bg-mid);
   background-size: 100% 100dvh;
@@ -361,14 +365,15 @@ body.session-preview-active .session-hide-btn { font-size: 22px; }
 body.session-preview-active .finish-btn {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--bottom-edge) + 10px);
+  bottom: calc(var(--bottom-edge) + 22px);
   width: min(calc(100vw - 36px), 444px);
   z-index: 8990;
+  margin: 0;
   transform: translate3d(-50%, 0, 0);
-  will-change: transform;
+  will-change: filter;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition: transform .14s ease, filter .14s ease;
+  transition: filter .12s ease;
   touch-action: manipulation;
 }
 
