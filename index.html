@@ -127,7 +127,7 @@ body:not(.training-active):not(.session-preview-active) #authScreen.screen.activ
 body:not(.training-active):not(.session-preview-active) #detailScreen.screen.active {
   position: fixed;
   top: var(--header-h);
-  bottom: 0;
+  bottom: calc(var(--safe-bottom) * -1);
   left: 50%;
   transform: translateX(-50%);
   width: min(100vw, 480px);
@@ -202,7 +202,7 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
 .nav {
   position: fixed;
   left: 50%;
-  bottom: 0;
+  bottom: calc(var(--safe-bottom) * -1);
   transform: translateX(-50%);
   width: min(calc(100vw - 32px), 448px);
   height: var(--nav-h);
@@ -256,30 +256,30 @@ body.session-preview-active .header {
 
 body.training-active #sessionScreen.screen.active {
   position: fixed;
-  inset: 0 auto 0 50%;
+  inset: 0 auto calc(var(--safe-bottom) * -1) 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
   height: auto;
-  padding: max(174px, calc(var(--safe-top) + 124px)) 18px 0;
+  padding: max(174px, calc(var(--safe-top) + 124px)) 18px var(--safe-bottom);
   background-color: #12051f;
   background-image: var(--app-bg);
-  background-size: 100% 100dvh;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
   z-index: 3000;
 }
 
 body.session-preview-active #sessionScreen.screen.active {
   position: fixed;
-  inset: 0 auto 0 50%;
+  inset: 0 auto calc(var(--safe-bottom) * -1) 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
   height: auto;
-  padding: calc(var(--safe-top) + 18px) 18px 0;
+  padding: calc(var(--safe-top) + 18px) 18px var(--safe-bottom);
   background-color: #12051f;
   background-image: var(--app-bg);
-  background-size: 100% 100dvh;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
   z-index: 3000;
 }
