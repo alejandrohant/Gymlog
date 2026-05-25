@@ -4624,7 +4624,8 @@ list.innerHTML = filtersHtml + visibleSessions.map((s) => {
         </div>
       </div>
     `;
-  }).join('');
+      }).join('')}
+  `;
 }
 
 function showScreen(name) {
@@ -4919,7 +4920,44 @@ function renderHistory() {
     return;
   }
 
-  list.innerHTML = filtersHtml + visibleSessions.map((s) => {
+    const totalSets = visibleSessions.reduce((acc, s) => {
+    const exercises = Array.isArray(s.exercises) ? s.exercises : [];
+    return acc + exercises.reduce((sum, ex) => {
+      return sum + ((ex.sets || []).filter(st => st.done).length);
+    }, 0);
+  }, 0);
+
+  const totalVolume = visibleSessions.reduce((acc, s) => {
+    const exercises = Array.isArray(s.exercises) ? s.exercises : [];
+    return acc + exercises.reduce((sum, ex) => {
+      return sum + ((ex.sets || []).filter(st => st.done).reduce((a, st) => {
+        return a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0);
+      }, 0));
+    }, 0);
+  }, 0);
+  list.innerHTML = `
+    ${filtersHtml}
+
+    <div class="history-summary-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0 0 18px;">
+      <div class="history-summary-card" style="display:block;">
+        <div class="history-summary-label">Sesiones</div>
+        <div class="history-summary-value">${visibleSessions.length}</div>
+      </div>
+      <div class="history-summary-card" style="display:block;">
+        <div class="history-summary-label">Series</div>
+        <div class="history-summary-value">${totalSets}</div>
+      </div>
+      <div class="history-summary-card" style="display:block;">
+        <div class="history-summary-label">Volumen</div>
+        <div class="history-summary-value">${Math.round(totalVolume).toLocaleString()}</div>
+      </div>
+      <div class="history-summary-card" style="display:block;">
+        <div class="history-summary-label">Última</div>
+        <div class="history-summary-value" style="font-size:16px;">${formatDate(visibleSessions[0].date)}</div>
+      </div>
+    </div>
+
+    ${visibleSessions.map((s) => {
     const i = sessions.findIndex(item => sessionKey(item) === sessionKey(s));
     const active = isActiveCloudSession(s);
     const exercises = Array.isArray(s.exercises) ? s.exercises : [];
