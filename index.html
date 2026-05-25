@@ -3302,6 +3302,14 @@ function renderHome() {
   const draft = currentSession || getCurrentDraft();
   const draftSavedAt = getDraftSavedAt();
 
+  const todayExercises = todayRoutine ? (todayRoutine.exercises || []).length : 0;
+  const todaySets = todayRoutine ? (todayRoutine.exercises || []).reduce((acc, ex) => acc + (parseInt(ex.sets, 10) || 0), 0) : 0;
+  const todayLastSession = todayRoutine ? (sessions.find(s => s.routineId === todayRoutine.id) || null) : null;
+  const todayLastText = todayLastSession ? formatDate(todayLastSession.date) : 'sin registro previo';
+  const todayGoal = todayLastSession
+    ? 'Objetivo: igualar o superar la última sesión con técnica limpia.'
+    : 'Objetivo: primer registro limpio de esta rutina.';
+
   const draftCard = draft ? `
     <div class="draft-card tap-card" onclick="resumeSavedSession()">
       <div class="routine-name">Sesión guardada</div>
@@ -3314,7 +3322,32 @@ function renderHome() {
       <div class="eyebrow">FORJA</div>
       <div class="hero-title">${todayRoutine ? 'Hoy toca ' + escapeHtml(todayRoutine.name) : 'Cuerpo en construcción'}</div>
       <div class="hero-sub">${todayRoutine ? escapeHtml(todayRoutine.desc || 'Rutina programada para hoy.') : 'Bitácora de entrenamiento, progreso y disciplina.'}</div>
-      <div class="forja-hero-line"><strong>${totalSessions}</strong> sesiones · <strong>${completedSets}</strong> series hechas · última: <strong>${latest ? formatDate(latest.date) : 'sin registro'}</strong></div>
+
+      <div class="forja-hero-line">
+        <strong>${totalSessions}</strong> sesiones · <strong>${completedSets}</strong> series hechas · última: <strong>${latest ? formatDate(latest.date) : 'sin registro'}</strong>
+      </div>
+
+      ${todayRoutine ? `
+        <div class="session-stats-grid" style="margin-top:14px;">
+          <div class="session-stat-card">
+            <div class="session-stat-label">Ejercicios</div>
+            <div class="session-stat-value">${todayExercises}</div>
+          </div>
+          <div class="session-stat-card">
+            <div class="session-stat-label">Series</div>
+            <div class="session-stat-value">${todaySets}</div>
+          </div>
+          <div class="session-stat-card">
+            <div class="session-stat-label">Última vez</div>
+            <div class="session-stat-value" style="font-size:16px;">${todayLastText}</div>
+          </div>
+        </div>
+
+        <div class="analysis-box" style="margin-top:14px;">
+          <div class="analysis-title">Plan de hoy</div>
+          <div class="analysis-text">${todayGoal}</div>
+        </div>
+      ` : ''}
     </div>
 
     ${draftCard}
@@ -3324,11 +3357,13 @@ function renderHome() {
       const last = sessions.find(s => s.routineId === r.id) || null;
       const lastText = last ? formatDate(last.date) : 'sin sesiones';
       const totalSets = (r.exercises || []).reduce((acc, ex) => acc + ex.sets, 0);
+      const isToday = todayRoutine && todayRoutine.id === r.id;
+
       return `
         <div class="routine-card tap-card" onclick="viewRoutine('${safeJsString(r.id)}')" oncontextmenu="event.preventDefault(); editRoutine('${safeJsString(r.id)}')">
           <div class="routine-emoji routine-mark">${escapeHtml(r.emoji || '🏋️')}</div>
           <div class="routine-info">
-            <div class="routine-name">${escapeHtml(r.name)}</div>
+            <div class="routine-name">${escapeHtml(r.name)}${isToday ? ' · HOY' : ''}</div>
             <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
             <div class="forja-card-line"><strong>${shortDay(r.day)}</strong> · ${totalSets} series · última: ${lastText}</div>
           </div>
