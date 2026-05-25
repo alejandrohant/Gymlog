@@ -770,6 +770,30 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   font-size: 12px;
   font-weight: 600;
 }
+.smart-exercise-note {
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(238,210,146,.08);
+  color: rgba(244,237,248,.60);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.smart-exercise-note-title {
+  color: rgba(238,210,146,.76);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.smart-exercise-note-text {
+  color: rgba(244,237,248,.62);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
 </style>
 </head>
 <body>
@@ -1990,6 +2014,118 @@ async function handleProfilePhoto(event) {
   reader.readAsDataURL(file);
 }
 
+function createRoutineCopy(routine) {
+  const baseId = `${routine.id || 'rutina'}_copia`;
+  let nextId = baseId;
+  let counter = 2;
+
+  while (ROUTINES.some(r => r.id === nextId)) {
+    nextId = `${baseId}_${counter}`;
+    counter += 1;
+  }
+
+  return {
+    ...cloneData(routine),
+    id: nextId,
+    name: `${routine.name} copia`,
+    day: routine.day || 'Lunes',
+    exercises: cloneData(routine.exercises || [])
+  };
+}
+
+function duplicateRoutine(routineId) {
+  const routine = getRoutineById(routineId);
+  if (!routine) return;
+
+  ROUTINES.push(createRoutineCopy(routine));
+  saveRoutinesLocal();
+  renderHome();
+  showToast('✅ Rutina duplicada');
+}
+
+function moveRoutine(routineId, direction) {
+  const index = ROUTINES.findIndex(r => r.id === routineId);
+  if (index < 0) return;
+
+  const nextIndex = index + direction;
+
+  if (nextIndex < 0 || nextIndex >= ROUTINES.length) {
+    showToast('⚠️ No se puede mover más');
+    return;
+  }
+
+  const [routine] = ROUTINES.splice(index, 1);
+  ROUTINES.splice(nextIndex, 0, routine);
+
+  saveRoutinesLocal();
+  renderHome();
+  showToast('✅ Orden actualizado');
+}
+
+function getSmartExerciseNote(ex, lastEx) {
+  if (!ex) return '';
+
+  if (isCardioExercise(ex)) {
+    return `
+      <div class="smart-exercise-note">
+        <div class="smart-exercise-note-title">Nota inteligente</div>
+        <div class="smart-exercise-note-text">Cardio: registra tiempo y distancia reales. Mantén ritmo sostenible y evita cambiar muchas variables el mismo día.</div>
+      </div>
+    `;
+  }
+
+  if (isBodyweightExercise(ex)) {
+    return `
+      <div class="smart-exercise-note">
+        <div class="smart-exercise-note-title">Nota inteligente</div>
+        <div class="smart-exercise-note-text">Peso corporal: prioriza rango completo, control y repeticiones limpias antes de añadir dificultad.</div>
+      </div>
+    `;
+  }
+
+  if (!lastEx) {
+    return `
+      <div class="smart-exercise-note">
+        <div class="smart-exercise-note-title">Nota inteligente</div>
+        <div class="smart-exercise-note-text">Primer registro: elige una carga estable, evita llegar al fallo y deja una referencia clara para la próxima sesión.</div>
+      </div>
+    `;
+  }
+
+  const validSets = getValidSets(lastEx.sets);
+  const best = getBestSet(lastEx.sets);
+  const totalVolume = Math.round(getVolume(lastEx.sets));
+
+  if (!validSets.length || !best) {
+    return `
+      <div class="smart-exercise-note">
+        <div class="smart-exercise-note-title">Nota inteligente</div>
+        <div class="smart-exercise-note-text">La sesión anterior no tiene datos suficientes. Hoy busca completar todas las series con peso y repeticiones bien registradas.</div>
+      </div>
+    `;
+  }
+
+  const reps = validSets.map(s => parseFloat(s.reps) || 0).filter(Boolean);
+  const minReps = reps.length ? Math.min(...reps) : 0;
+  const maxReps = reps.length ? Math.max(...reps) : 0;
+
+  let text = `Última referencia: mejor serie ${best.weight} lb × ${best.reps}, volumen ${totalVolume.toLocaleString()} lb.`;
+
+  if (minReps > 0 && minReps < 8) {
+    text += ' Mantén la carga y busca subir repeticiones antes de aumentar peso.';
+  } else if (minReps >= 10 && maxReps >= 12) {
+    text += ' Puedes intentar una subida pequeña de carga si la técnica se mantiene limpia.';
+  } else {
+    text += ' Objetivo: igualar la carga y sumar al menos una repetición total con buena técnica.';
+  }
+
+  return `
+    <div class="smart-exercise-note">
+      <div class="smart-exercise-note-title">Nota inteligente</div>
+      <div class="smart-exercise-note-text">${text}</div>
+    </div>
+  `;
+}
 function editRoutine(routineId) {
   const routine = getRoutineById(routineId);
   if (!routine) return;
@@ -2032,6 +2168,9 @@ function editRoutine(routineId) {
 
       <div class="mini-actions">
         <button id="cancelRoutineEdit" class="mini-btn">Cancelar</button>
+        <button id="moveRoutineUpBtn" class="mini-btn">Subir</button>
+        <button id="moveRoutineDownBtn" class="mini-btn">Bajar</button>
+        <button id="duplicateRoutineBtn" class="mini-btn">Duplicar</button>
         <button id="resetRoutinesBtn" class="mini-btn danger">Restaurar base</button>
         <button id="saveRoutineEdit" class="mini-btn primary">Guardar</button>
       </div>
@@ -2041,6 +2180,20 @@ function editRoutine(routineId) {
   document.body.appendChild(overlay);
   overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
   document.getElementById('cancelRoutineEdit').onclick = () => overlay.remove();
+    document.getElementById('moveRoutineUpBtn').onclick = () => {
+    moveRoutine(routineId, -1);
+    overlay.remove();
+  };
+
+  document.getElementById('moveRoutineDownBtn').onclick = () => {
+    moveRoutine(routineId, 1);
+    overlay.remove();
+  };
+
+  document.getElementById('duplicateRoutineBtn').onclick = () => {
+    duplicateRoutine(routineId);
+    overlay.remove();
+  };
   document.getElementById('resetRoutinesBtn').onclick = () => {
     overlay.remove();
     resetRoutinesToDefault();
@@ -3738,6 +3891,7 @@ function renderExercises() {
         </div>
       ` : '';
       const insightHtml = getExerciseInsight(lastEx, ex);
+      const smartNoteHtml = getSmartExerciseNote(ex, lastEx);
       const replacementHtml = ex.replaced && ex.originalName ? `<div class="prev-info">↔ Sustituye a: <span>${escapeHtml(ex.originalName)}</span></div>` : '';
 
       const setsHtml = ex.sets.map((set, si) => {
@@ -3793,6 +3947,7 @@ function renderExercises() {
           ${replacementHtml}
           ${prevHtml}
           ${insightHtml}
+          ${smartNoteHtml}
 
           <div class="sets-table">
             <div class="sets-header ${bodyweight ? 'bodyweight-header' : ''}">
