@@ -439,6 +439,28 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   .timer-controls { grid-template-columns: repeat(4, 36px); }
   .timer-control-btn { width: 36px; height: 31px; }
 }
+.today-plan-inline {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(216, 182, 93, 0.22);
+}
+
+.today-plan-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.today-plan-text {
+  color: #f4edf8;
+  font-size: 17px;
+  line-height: 1.45;
+  font-weight: 700;
+  max-width: 92%;
+}
 </style>
 </head>
 <body>
@@ -3343,9 +3365,9 @@ function renderHome() {
           </div>
         </div>
 
-        <div class="analysis-box" style="margin-top:14px;">
-          <div class="analysis-title">Plan de hoy</div>
-          <div class="analysis-text">${todayGoal}</div>
+        <div class="today-plan-inline">
+          <div class="today-plan-label">Plan de hoy</div>
+          <div class="today-plan-text">${todayGoal}</div>
         </div>
       ` : ''}
     </div>
