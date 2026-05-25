@@ -694,15 +694,48 @@ function getExerciseInsight(lastEx, currentEx) {
   const lastReps = getTotalReps(lastEx.sets);
   const lastVolume = Math.round(getVolume(lastEx.sets));
   const best = getBestSet(lastEx.sets);
-  const targetReps = lastReps + 1;
   const bestText = best ? `${best.weight} lb × ${best.reps}` : 'sin mejor serie';
+
+  const validWeights = lastSets
+    .map(s => parseFloat(s.weight))
+    .filter(w => !Number.isNaN(w) && w > 0);
+
+  const mainWeight = validWeights.length
+    ? validWeights.sort((a, b) => b - a)[0]
+    : null;
+
+  const repsList = lastSets
+    .map(s => parseInt(s.reps, 10))
+    .filter(r => !Number.isNaN(r) && r > 0);
+
+  const minReps = repsList.length ? Math.min(...repsList) : 0;
+  const maxReps = repsList.length ? Math.max(...repsList) : 0;
+  const targetReps = lastReps + 1;
+
+  let decision = '';
+  let nextTarget = '';
+
+  if (mainWeight && minReps >= 12 && lastSets.length >= 3) {
+    decision = `Puedes considerar subir ligeramente la carga la próxima vez.`;
+    nextTarget = `Hoy confirma control técnico con ${mainWeight} lb o sube solo si no pierdes rango ni estabilidad.`;
+  } else if (mainWeight && maxReps < 8) {
+    decision = `No conviene subir peso todavía.`;
+    nextTarget = `Mantén ${mainWeight} lb y busca sumar repeticiones limpias antes de aumentar carga.`;
+  } else if (mainWeight) {
+    decision = `Mantén la carga principal y busca progresión por repeticiones.`;
+    nextTarget = `Objetivo concreto: mínimo ${targetReps} repeticiones totales con ${mainWeight} lb o una ejecución más limpia.`;
+  } else {
+    decision = `Prioridad: registrar datos consistentes.`;
+    nextTarget = `Repite estructura, anota peso real y busca superar al menos 1 repetición total.`;
+  }
 
   return `
     <div class="analysis-box">
       <div class="analysis-title">Objetivo de hoy</div>
       <div class="analysis-text">
         Anterior: ${lastSets.length} series, ${lastReps} repeticiones totales, ${lastVolume.toLocaleString()} lb de volumen. Mejor serie: ${bestText}.<br>
-        Hoy intenta mínimo ${targetReps} repeticiones totales con técnica limpia. Sube peso solo si completas todas las series sin perder control.
+        ${decision}<br>
+        ${nextTarget}
       </div>
     </div>
   `;
