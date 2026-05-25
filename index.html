@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: limpio-funcional-2026-05-24-bottom-bars-definitivo-low-visible -->
+<!-- FORJA_BUILD: limpio-funcional-2026-05-24-barras-fijas-causa-raiz -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -1310,10 +1310,8 @@
   --forja-max-w: 480px;
   --forja-header-h: 112px;
   --forja-nav-h: 66px;
-  --forja-nav-gap: 6px;
-  --forja-finish-gap: 6px;
-  --forja-nav-shift-y: 52px;
-  --forja-finish-shift-y: 56px;
+  --forja-nav-gap: 4px;
+  --forja-finish-gap: 4px;
   --forja-bg:
     radial-gradient(circle at 50% -14%, rgba(104,45,152,.24), transparent 36%),
     radial-gradient(circle at 8% 0%, rgba(216,184,102,.055), transparent 30%),
@@ -1392,7 +1390,7 @@ body::after,
   right:auto !important;
   top:auto !important;
   bottom:var(--forja-nav-gap) !important;
-  transform:translate3d(-50%,var(--forja-nav-shift-y),0) !important;
+  transform:translate3d(-50%,0,0) !important;
   width:min(calc(100vw - 32px),448px) !important;
   max-width:448px !important;
   height:var(--forja-nav-h) !important;
@@ -1439,10 +1437,10 @@ body::after,
 .screen.active{
   display:block !important;
   position:fixed !important;
-  left:50% !important;
+  left:max(0px,calc((100vw - var(--forja-max-w)) / 2)) !important;
   top:var(--forja-header-h) !important;
   bottom:0 !important;
-  transform:translate3d(-50%,0,0) !important;
+  transform:none !important;
   width:min(100vw,var(--forja-max-w)) !important;
   max-width:var(--forja-max-w) !important;
   height:auto !important;
@@ -1514,11 +1512,7 @@ body.session-preview-active.forja-session-screen-active .nav{display:none !impor
 body.session-preview-active #sessionScreen.screen.active{
   top:var(--forja-header-h) !important;
   bottom:0 !important;
-  left:0 !important;
-  right:0 !important;
-  margin:0 auto !important;
-  transform:none !important;
-  padding:16px 20px calc(86px + var(--forja-finish-gap)) !important;
+  padding:16px 20px calc(88px + var(--forja-finish-gap)) !important;
 }
 body.session-preview-active #sessionScreen .session-legacy-actions{display:flex !important;position:relative !important;margin:0 0 12px !important;padding:0 !important;background:transparent !important;z-index:3 !important;}
 body.session-preview-active #sessionScreen .session-legacy-actions button:first-child{display:inline-flex !important;align-items:center !important;justify-content:center !important;width:46px !important;height:40px !important;border-radius:999px !important;background:rgba(255,255,255,.06) !important;border:1px solid rgba(201,164,76,.24) !important;color:#d9bc67 !important;font-size:22px !important;}
@@ -1528,7 +1522,7 @@ body.session-preview-active #sessionScreen .finish-btn{
   position:fixed !important;
   left:50% !important;
   bottom:var(--forja-finish-gap) !important;
-  transform:translate3d(-50%,var(--forja-finish-shift-y),0) !important;
+  transform:translate3d(-50%,0,0) !important;
   width:min(calc(100vw - 36px),444px) !important;
   max-width:444px !important;
   margin:0 !important;
@@ -1538,7 +1532,7 @@ body.session-preview-active #sessionScreen .finish-btn{
 /* Entrenamiento en curso */
 
 body.session-preview-active #sessionScreen .finish-btn:active{
-  transform:translate3d(-50%,var(--forja-finish-shift-y),0) scale(.985) !important;
+  transform:translate3d(-50%,0,0) scale(.985) !important;
 }
 
 body.training-active{overflow:hidden !important;background-color:#12051f !important;background-image:var(--forja-bg) !important;}
@@ -1585,34 +1579,6 @@ body.timer-active:not(.training-active) .screen.active{bottom:calc(var(--forja-n
   .routine-card{grid-template-columns:58px 1fr !important;padding:22px 20px !important;column-gap:17px !important;}
   .routine-name,.history-name{font-size:21px !important;}
   .routine-emoji.routine-mark,.history-symbol{width:54px !important;height:54px !important;font-size:28px !important;}
-}
-
-/* === FORJA FIX DEFINITIVO: barras bajas y visibles, sin cambiar lógica === */
-:root{
-  --forja-nav-gap:6px !important;
-  --forja-finish-gap:6px !important;
-  --forja-nav-shift-y:52px !important;
-  --forja-finish-shift-y:56px !important;
-}
-.nav{
-  display:grid !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  bottom:var(--forja-nav-gap) !important;
-  transform:translate3d(-50%,var(--forja-nav-shift-y),0) !important;
-}
-body.session-preview-active #sessionScreen .finish-btn{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  bottom:var(--forja-finish-gap) !important;
-  transform:translate3d(-50%,var(--forja-finish-shift-y),0) !important;
-}
-body.session-preview-active #sessionScreen .finish-btn:active{
-  transform:translate3d(-50%,var(--forja-finish-shift-y),0) scale(.985) !important;
-}
-body.session-preview-active #sessionScreen.screen.active{
-  padding-bottom:calc(106px + var(--forja-finish-shift-y)) !important;
 }
 
 </style>
