@@ -179,7 +179,25 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
 .forja-hero-line, .forja-card-line, .forja-history-details span { color: rgba(184,170,199,.72); font-size: 15px; line-height: 1.45; }
 .forja-hero-line strong, .forja-card-line strong, .forja-history-details strong { color: var(--gold-soft); font-weight: 900; }
 
-.routine-card { min-height: 132px; padding: 24px; display: grid; grid-template-columns: 64px 1fr; align-items: center; column-gap: 20px; }
+.routine-card { min-height: 132px; padding: 24px 70px 24px 24px; display: grid; grid-template-columns: 64px 1fr; align-items: center; column-gap: 20px; }
+
+.routine-edit-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: rgba(238,210,146,.86);
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(238,210,146,.18);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
 .routine-emoji.routine-mark, .history-symbol {
   width: 58px; height: 58px; min-width: 58px; border-radius: 20px; display: grid; place-items: center;
   font-family: 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif; font-size: 30px;
@@ -464,7 +482,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   .screen { padding-left: 18px; padding-right: 18px; }
   .dashboard-hero { padding: 25px 22px; }
   .hero-title { font-size: 38px; }
-  .routine-card { grid-template-columns: 58px 1fr; padding: 22px 20px; column-gap: 17px; }
+  .routine-card { grid-template-columns: 58px 1fr; padding: 22px 64px 22px 20px; column-gap: 17px; }
   .history-card { padding: 22px 20px; }
   .history-clean-top { grid-template-columns: 58px 1fr auto; gap: 15px; }
   .routine-name, .history-name { font-size: 21px; }
@@ -3933,6 +3951,7 @@ function renderHome() {
             <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
             <div class="forja-card-line"><strong>${shortDay(r.day)}</strong> · ${totalSets} series · última: ${lastText}</div>
           </div>
+          <button class="routine-edit-btn" onclick="event.stopPropagation(); editRoutine('${safeJsString(r.id)}')" aria-label="Editar rutina" title="Editar rutina">⋯</button>
         </div>
       `;
     }).join('')}
