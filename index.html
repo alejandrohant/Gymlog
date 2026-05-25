@@ -403,7 +403,8 @@ body.session-preview-active .finish-btn {
 .profile-badge-value, .detail-badge-value, .hero-badge-value { color: var(--gold-soft); font-family: 'Bebas Neue', sans-serif; font-size: 30px; }
 .profile-badge-label, .detail-badge-label, .hero-badge-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
 .profile-note, .detail-notes { margin-top: 14px; padding: 14px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--line-soft); }
-.profile-actions, .detail-actions, .mini-actions, .action-sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.profile-actions { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+.detail-actions, .mini-actions, .action-sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
 .action-sheet-grid { grid-template-columns: 1fr; }
 .ghost-btn, .mini-btn, .delete-btn, .history-share-all-btn { min-height: 42px; padding: 10px 14px; border-radius: 16px; color: var(--gold-soft); background: rgba(255,255,255,.045); border: 1px solid rgba(238,210,146,.16); font-weight: 900; }
 .mini-btn.primary { color: #120614; background: linear-gradient(180deg, #efd381, #b88a32); }
@@ -492,152 +493,6 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   color: #120614;
   background: linear-gradient(180deg, #efd381, #b88a32);
   border-color: rgba(238, 210, 146, .45);
-}
-.premium-profile {
-  overflow: hidden;
-}
-
-.premium-profile-top {
-  display: grid;
-  grid-template-columns: 96px 1fr auto;
-  gap: 22px;
-  align-items: center;
-}
-
-.premium-profile-photo {
-  width: 96px;
-  height: 128px;
-  border-radius: 22px;
-  overflow: hidden;
-  border: 1px solid rgba(238,210,146,.18);
-  background: rgba(255,255,255,.04);
-  cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-}
-
-.premium-profile-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.premium-profile-photo span {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  font-size: 34px;
-}
-
-.premium-profile-main {
-  min-width: 0;
-}
-
-.premium-profile-main .profile-name {
-  line-height: .95;
-  margin-top: 8px;
-  word-break: break-word;
-}
-
-.premium-profile-main .profile-sub {
-  margin-top: 8px;
-  line-height: 1.25;
-}
-
-.premium-profile-badge {
-  min-width: 112px;
-  padding: 22px 18px;
-  border-radius: 24px;
-  border: 1px solid rgba(238,210,146,.18);
-  background: rgba(255,255,255,.035);
-  text-align: center;
-}
-
-.premium-profile-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-top: 28px;
-}
-
-.premium-profile-note {
-  margin-top: 24px;
-  padding: 22px 24px;
-  border-radius: 22px;
-  border: 1px solid rgba(238,210,146,.14);
-  background: rgba(255,255,255,.025);
-  color: var(--text);
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.45;
-}
-
-.premium-profile-actions {
-  margin-top: 22px;
-  display: flex;
-}
-
-.premium-profile-actions .ghost-btn {
-  width: 100%;
-  min-height: 58px;
-}
-
-@media (max-width: 620px) {
-  .premium-profile-top {
-    grid-template-columns: 78px 1fr;
-    gap: 16px;
-  }
-
-  .premium-profile-photo {
-    width: 78px;
-    height: 104px;
-    border-radius: 18px;
-  }
-
-  .premium-profile-badge {
-    grid-column: 1 / -1;
-    width: 100%;
-    min-width: 0;
-    padding: 16px;
-  }
-
-  .premium-profile-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .premium-profile-note {
-    font-size: 16px;
-    padding: 18px;
-  }
-}
-.profile-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 10px;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(238,210,146,.10);
-  color: rgba(244,237,248,.58);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.45;
-  letter-spacing: 0;
-}
-
-.profile-line span {
-  white-space: nowrap;
-}
-
-.profile-line span:not(:last-child)::after {
-  content: '·';
-  margin-left: 10px;
-  color: rgba(238,210,146,.32);
-}
-
-.profile-line strong {
-  color: rgba(244,237,248,.90);
-  font-weight: 700;
 }
 </style>
 </head>
@@ -1662,49 +1517,6 @@ function saveProfileLocal(profile) {
   localStorage.setItem('forja_profile', JSON.stringify(profile));
 }
 
-function paintProfile(profile) {
-  const target = document.getElementById('profileContent');
-  if (!target) return;
-  profile = profile || getDefaultProfile();
-  target.innerHTML = `
-    <div class="profile-shell">
-      <div class="profile-head">
-        <div style="display:flex;gap:14px;align-items:center;">
-          <div class="profile-avatar">${profile.photo ? `<img src="${profile.photo}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;">` : '👤'}</div>
-          <div>
-            <div class="eyebrow">Perfil</div>
-            <div class="profile-name">${escapeHtml(profile.name || 'Alejandro')}</div>
-            <div class="profile-sub">Objetivo actual: ${escapeHtml(profile.goal || 'Ganar músculo')}</div>
-          </div>
-        </div>
-        <div class="profile-badge">
-          <div class="profile-badge-value">${escapeHtml(profile.split || 'PPL')}</div>
-          <div class="profile-badge-label">División</div>
-        </div>
-      </div>
-
-      <div class="profile-line">
-        <span><strong>${profile.weight || '--'}</strong> peso</span>
-        <span><strong>${profile.height || '--'}</strong> estatura</span>
-        <span><strong>${profile.age || '--'}</strong> edad</span>
-        <span><strong>Construcción</strong> modo</span>
-      </div>
-
-      <div class="profile-note">
-        <div class="profile-note-title">Nota personal</div>
-        <div style="line-height:1.55;color:var(--text);font-size:14px;">${escapeHtml(profile.note || 'Sin nota guardada todavía.')}</div>
-      </div>
-
-      <div class="profile-actions">
-        <button onclick="editProfile()" class="ghost-btn">Editar perfil</button>
-        <button onclick="document.getElementById('profilePhotoInput').click()" class="ghost-btn">Cambiar foto</button>
-      </div>
-
-      <input id="profilePhotoInput" type="file" accept="image/*" style="display:none" onchange="handleProfilePhoto(event)">
-    </div>
-  `;
-}
-
 async function renderProfile() {
   let profile = getProfileLocal();
 
@@ -1729,38 +1541,37 @@ async function renderProfile() {
     }
   }
 
+  const meta = [
+    profile.weight ? `${escapeHtml(profile.weight)} peso` : null,
+    profile.height ? `${escapeHtml(profile.height)} estatura` : null,
+    profile.age ? `${escapeHtml(profile.age)} edad` : null
+  ].filter(Boolean).join(' · ');
+
   document.getElementById('profileContent').innerHTML = `
-    <div class="profile-shell premium-profile">
-      <div class="premium-profile-top">
-        <div class="premium-profile-photo" onclick="document.getElementById('profilePhotoInput').click()">
-          ${profile.photo ? `<img src="${profile.photo}" alt="Foto de perfil">` : `<span>👤</span>`}
+    <div class="profile-shell">
+      <div class="profile-head">
+        <div style="display:flex;gap:14px;align-items:center;min-width:0;">
+          <div class="profile-avatar" onclick="document.getElementById('profilePhotoInput').click()">
+            ${profile.photo ? `<img src="${profile.photo}" alt="Foto de perfil">` : '👤'}
+          </div>
+          <div style="min-width:0;">
+            <div class="eyebrow">Perfil</div>
+            <div class="profile-name">${escapeHtml(profile.name || 'Sin nombre')}</div>
+            <div class="profile-sub">${escapeHtml(profile.goal || 'Sin objetivo definido')}${meta ? ` · ${meta}` : ''}</div>
+          </div>
         </div>
-
-        <div class="premium-profile-main">
-          <div class="eyebrow">Perfil</div>
-          <div class="profile-name">${escapeHtml(profile.name || 'Sin nombre')}</div>
-          <div class="profile-sub">${escapeHtml(profile.goal || 'Sin objetivo definido')}</div>
-        </div>
-
-        <div class="premium-profile-badge">
+        <div class="profile-badge">
           <div class="profile-badge-value">${escapeHtml(profile.split || '--')}</div>
           <div class="profile-badge-label">División</div>
         </div>
       </div>
 
-      <div class="premium-profile-metrics">
-        <span><strong>${escapeHtml(profile.weight || '--')}</strong> peso</span>
-        <span><strong>${escapeHtml(profile.height || '--')}</strong> estatura</span>
-        <span><strong>${escapeHtml(profile.age || '--')}</strong> edad</span>
-        <span><strong>Construcción</strong> modo</span>
-      </div>
-
-      <div class="premium-profile-note">
+      <div class="profile-note">
         <div class="profile-note-title">Nota personal</div>
         <div>${escapeHtml(profile.note || 'Sin nota guardada todavía.')}</div>
       </div>
 
-      <div class="premium-profile-actions">
+      <div class="profile-actions">
         <button onclick="editProfile()" class="ghost-btn">Editar perfil</button>
       </div>
 
