@@ -126,11 +126,11 @@ body:not(.training-active):not(.session-preview-active) #detailScreen.screen.act
   transform: translateX(-50%);
   width: min(100vw, 480px);
   height: auto;
-  padding: 18px 20px calc(var(--nav-h) + var(--bottom-edge) + 28px);
+  padding: 18px 20px calc(var(--nav-h) + 28px);
 }
 body.timer-active:not(.training-active):not(.session-preview-active) .screen.active {
   bottom: 0;
-  padding-bottom: calc(var(--nav-h) + var(--timer-h) + var(--bottom-edge) + 34px);
+  padding-bottom: calc(var(--nav-h) + var(--timer-h) + 34px);
 }
 
 .section-title, .hero-title, .session-title, .profile-name, .detail-title, .edit-title, .action-sheet-title {
@@ -196,7 +196,7 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
 .nav {
   position: fixed;
   left: 50%;
-  bottom: var(--bottom-edge);
+  bottom: 0;
   transform: translateX(-50%);
   width: min(calc(100vw - 32px), 448px);
   height: var(--nav-h);
@@ -218,7 +218,7 @@ body.training-active .nav, body.session-preview-active .nav, body.auth-locked .n
 
 .timer-wrap { display: none; }
 body.timer-active > .timer-wrap {
-  position: fixed; left: 50%; bottom: calc(var(--bottom-edge) + var(--nav-h) + 4px); transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: calc(var(--nav-h) + 4px); transform: translateX(-50%);
   width: min(calc(100vw - 32px), 420px); height: var(--timer-h); padding: 7px 10px;
   display: grid; grid-template-columns: minmax(74px, 1fr) auto; align-items: center; gap: 8px;
   border-radius: 22px; border: 1px solid rgba(226,194,125,.18);
