@@ -526,6 +526,51 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   background: linear-gradient(180deg, #efd381, #b88a32);
   border-color: rgba(238, 210, 146, .45);
 }
+.forja-week-panel {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(238,210,146,.10);
+}
+
+.forja-week-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  color: rgba(238,210,146,.78);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.forja-week-top strong {
+  color: rgba(244,237,248,.82);
+  font-size: 18px;
+  letter-spacing: 2px;
+}
+
+.forja-week-bar {
+  height: 6px;
+  margin-top: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,.06);
+}
+
+.forja-week-bar > div {
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(238,210,146,.72);
+}
+
+.forja-week-text {
+  margin-top: 9px;
+  color: rgba(244,237,248,.58);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
 </style>
 </head>
 <body>
@@ -3235,6 +3280,37 @@ function safeJsString(value) {
   return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
+function getWeekStartMonday(date = new Date()) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getWeekStatus(sessions) {
+  const weekStart = getWeekStartMonday();
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 7);
+
+  const weekSessions = (sessions || []).filter(s => {
+    const d = new Date(s.date);
+    return d >= weekStart && d < weekEnd;
+  });
+
+  const doneIds = new Set(weekSessions.map(s => s.routineId).filter(Boolean));
+  const completed = ROUTINES.filter(r => doneIds.has(r.id));
+  const pending = ROUTINES.filter(r => !doneIds.has(r.id));
+
+  return {
+    completedCount: completed.length,
+    totalCount: ROUTINES.length,
+    pendingCount: pending.length,
+    pendingNames: pending.map(r => r.name).join(', '),
+    completedNames: completed.map(r => r.name).join(', ')
+  };
+}
 function renderHome() {
   const grid = document.getElementById('routineGrid');
   if (!grid) return;
@@ -3255,6 +3331,8 @@ function renderHome() {
     ? 'Objetivo: igualar o superar la última sesión con técnica limpia.'
     : 'Objetivo: primer registro limpio de esta rutina.';
 
+  const weekStatus = getWeekStatus(sessions);
+
   const draftCard = draft ? `
     <div class="draft-card tap-card" onclick="resumeSavedSession()">
       <div class="routine-name">Sesión guardada</div>
@@ -3270,6 +3348,22 @@ function renderHome() {
 
       <div class="forja-hero-line">
         <strong>${totalSessions}</strong> sesiones · <strong>${completedSets}</strong> series hechas · última: <strong>${latest ? formatDate(latest.date) : 'sin registro'}</strong>
+      </div>
+
+      <div class="forja-week-panel">
+        <div class="forja-week-top">
+          <span>Semana actual</span>
+          <strong>${weekStatus.completedCount}/${weekStatus.totalCount}</strong>
+        </div>
+        <div class="forja-week-bar">
+          <div style="width:${Math.round((weekStatus.completedCount / weekStatus.totalCount) * 100)}%;"></div>
+        </div>
+        <div class="forja-week-text">
+          ${weekStatus.pendingCount === 0
+            ? 'Semana completa.'
+            : `Pendiente: ${escapeHtml(weekStatus.pendingNames)}`
+          }
+        </div>
       </div>
 
       ${todayRoutine ? `
