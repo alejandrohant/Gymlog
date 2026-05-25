@@ -3437,8 +3437,8 @@ function renderExercises() {
 
           ${ex.note ? `<div class="prev-info">⚠️ ${ex.note}</div>` : ''}
 
-          <div class="exercise-tools">
-            <div></div>
+          <div class="exercise-tools" style="justify-content:space-between;">
+            <button class="ghost-link" onclick="deleteExercise(${ei})" style="color:#ff6b6b;">🗑️ Eliminar ejercicio</button>
             <button class="ghost-link" onclick="replaceExercise(${ei})">✏️ Cambiar ejercicio</button>
           </div>
 
@@ -3464,6 +3464,26 @@ function renderExercises() {
     }).join('')}
     <button class="add-set-btn" onclick="addExerciseToSession()">+ Agregar ejercicio</button>
   `;
+}
+
+function deleteExercise(ei) {
+  if (!currentSession?.exercises?.[ei]) return;
+
+  if (currentSession.exercises.length <= 1) {
+    showToast('⚠️ Debe quedar al menos un ejercicio');
+    return;
+  }
+
+  const ex = currentSession.exercises[ei];
+  const hasData = ex.sets?.some(st => st.done || st.weight || st.reps) || ex.notes;
+
+  if (hasData && !confirm(`¿Eliminar "${ex.name}" y sus datos de esta sesión?`)) return;
+  if (!hasData && !confirm(`¿Eliminar "${ex.name}" de esta sesión?`)) return;
+
+  currentSession.exercises.splice(ei, 1);
+  saveCurrentDraft();
+  renderExercises();
+  showToast('🗑️ Ejercicio eliminado');
 }
 
 function addSet(ei) {
