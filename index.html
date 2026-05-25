@@ -690,6 +690,86 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   font-size: 12px;
   font-weight: 500;
 }
+.progress-chart-panel {
+  margin: 0 0 18px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(238,210,146,.12);
+  background: rgba(255,255,255,.025);
+}
+
+.progress-chart-head {
+  margin-bottom: 16px;
+}
+
+.progress-chart-label {
+  color: rgba(238,210,146,.78);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.progress-chart-sub {
+  margin-top: 4px;
+  color: rgba(244,237,248,.52);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.progress-chart-block {
+  margin-top: 16px;
+}
+
+.progress-chart-title {
+  color: rgba(244,237,248,.76);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.progress-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.progress-bar-row {
+  display: grid;
+  grid-template-columns: 48px 1fr 54px;
+  gap: 10px;
+  align-items: center;
+}
+
+.progress-bar-date {
+  color: rgba(244,237,248,.48);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.progress-bar-track {
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,.06);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(238,210,146,.72);
+}
+
+.progress-bar-fill.soft {
+  background: rgba(244,237,248,.42);
+}
+
+.progress-bar-value {
+  text-align: right;
+  color: rgba(244,237,248,.62);
+  font-size: 12px;
+  font-weight: 600;
+}
 </style>
 </head>
 <body>
@@ -4897,6 +4977,75 @@ function getSessions() {
   return dedupeSessions(source).filter(s => !shouldHideFromHistory(s));
 }
 
+function getSessionDoneSets(session) {
+  const exercises = Array.isArray(session?.exercises) ? session.exercises : [];
+  return exercises.reduce((acc, ex) => {
+    return acc + ((ex.sets || []).filter(st => st.done).length);
+  }, 0);
+}
+
+function getSessionVolume(session) {
+  const exercises = Array.isArray(session?.exercises) ? session.exercises : [];
+  return exercises.reduce((acc, ex) => {
+    if (!ex || isCardioExerciseName(ex.name)) return acc;
+    return acc + ((ex.sets || []).filter(st => st.done).reduce((sum, st) => {
+      return sum + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0);
+    }, 0));
+  }, 0);
+}
+
+function getProgressChartsHtml(sessions) {
+  const chartSessions = (sessions || []).slice(0, 8).reverse();
+
+  if (!chartSessions.length) return '';
+
+  const volumes = chartSessions.map(s => getSessionVolume(s));
+  const sets = chartSessions.map(s => getSessionDoneSets(s));
+
+  const maxVolume = Math.max(...volumes, 1);
+  const maxSets = Math.max(...sets, 1);
+
+  return `
+    <div class="progress-chart-panel">
+      <div class="progress-chart-head">
+        <div>
+          <div class="progress-chart-label">Gráficas de progreso</div>
+          <div class="progress-chart-sub">Últimas ${chartSessions.length} sesiones visibles</div>
+        </div>
+      </div>
+
+      <div class="progress-chart-block">
+        <div class="progress-chart-title">Volumen por sesión</div>
+        <div class="progress-bars">
+          ${chartSessions.map((s, i) => `
+            <div class="progress-bar-row">
+              <div class="progress-bar-date">${formatDate(s.date)}</div>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" style="width:${Math.max(6, Math.round((volumes[i] / maxVolume) * 100))}%;"></div>
+              </div>
+              <div class="progress-bar-value">${Math.round(volumes[i]).toLocaleString()}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="progress-chart-block">
+        <div class="progress-chart-title">Series por sesión</div>
+        <div class="progress-bars">
+          ${chartSessions.map((s, i) => `
+            <div class="progress-bar-row">
+              <div class="progress-bar-date">${formatDate(s.date)}</div>
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill soft" style="width:${Math.max(6, Math.round((sets[i] / maxSets) * 100))}%;"></div>
+              </div>
+              <div class="progress-bar-value">${sets[i]}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
 function getExerciseRecords(sessions) {
   const records = {};
 
@@ -5035,6 +5184,7 @@ function renderHistory() {
     }, 0);
   }, 0);
 
+  const progressChartsHtml = getProgressChartsHtml(visibleSessions);
   const exerciseRecordsHtml = getExerciseRecordsHtml(visibleSessions);
   list.innerHTML = `
     ${filtersHtml}
@@ -5057,6 +5207,8 @@ function renderHistory() {
         <div class="history-summary-value" style="font-size:16px;">${formatDate(visibleSessions[0].date)}</div>
       </div>
     </div>
+
+    ${progressChartsHtml}
 
     ${exerciseRecordsHtml}
 
