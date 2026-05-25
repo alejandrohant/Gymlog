@@ -610,6 +610,35 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     padding: 18px;
   }
 }
+.profile-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(238,210,146,.10);
+  color: rgba(244,237,248,.58);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+.profile-line span {
+  white-space: nowrap;
+}
+
+.profile-line span:not(:last-child)::after {
+  content: '·';
+  margin-left: 10px;
+  color: rgba(238,210,146,.32);
+}
+
+.profile-line strong {
+  color: rgba(244,237,248,.90);
+  font-weight: 700;
+}
 </style>
 </head>
 <body>
@@ -1654,11 +1683,11 @@ function paintProfile(profile) {
         </div>
       </div>
 
-      <div class="profile-grid">
-        <div class="profile-stat"><div class="profile-stat-label">Peso</div><div class="profile-stat-value">${escapeHtml(profile.weight || '--')}</div></div>
-        <div class="profile-stat"><div class="profile-stat-label">Estatura</div><div class="profile-stat-value">${escapeHtml(profile.height || '--')}</div></div>
-        <div class="profile-stat"><div class="profile-stat-label">Edad</div><div class="profile-stat-value">${escapeHtml(profile.age || '--')}</div></div>
-        <div class="profile-stat"><div class="profile-stat-label">Modo</div><div class="profile-stat-value">Construcción</div></div>
+      <div class="profile-line">
+        <span><strong>${profile.weight || '--'}</strong> peso</span>
+        <span><strong>${profile.height || '--'}</strong> estatura</span>
+        <span><strong>${profile.age || '--'}</strong> edad</span>
+        <span><strong>Construcción</strong> modo</span>
       </div>
 
       <div class="profile-note">
