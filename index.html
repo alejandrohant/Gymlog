@@ -2465,15 +2465,16 @@ async function finishSession() {
   exitTrainingMode();
   await loadCloudSessions();
   setSessionsLocal(getFinishedSessions());
-  showToast(wasEditing ? '✅ Cambios guardados' : '✅ Sesión guardada');
+
   const finishBtn = document.querySelector('.finish-btn');
   if (finishBtn) {
     finishBtn.textContent = 'INICIAR ENTRENAMIENTO';
     finishBtn.onclick = null;
   }
+
   renderHome();
   renderHistory();
-  setTimeout(() => { showScreen(wasEditing ? 'history' : 'home'); }, 900);
+  showPostSessionSummary(finishedSession, wasEditing);
 }
 
 
@@ -3821,6 +3822,171 @@ function stopTimer() {
   renderTimer();
 }
 
+function getSessionBestSet(session) {
+  const allSets = (session.exercises || []).flatMap(ex => {
+    return (ex.sets || [])
+      .filter(st => st.done && !isCardioExerciseName(ex.name))
+      .map(st => ({
+        exerciseName: ex.name,
+        weight: parseFloat(st.weight) || 0,
+        reps: parseFloat(st.reps) || 0
+      }));
+  });
+
+  if (!allSets.length) return null;
+
+  return allSets.reduce((best, set) => {
+    const score = set.weight * set.reps;
+    const bestScore = best.weight * best.reps;
+    return score > bestScore ? set : best;
+  }, allSets[0]);
+}
+
+function getSessionSummaryStats(session) {
+  const exercises = session.exercises || [];
+
+  const completedSets = exercises.reduce((acc, ex) => {
+    return acc + (ex.sets || []).filter(st => st.done).length;
+  }, 0);
+
+  const totalVolume = exercises.reduce((acc, ex) => {
+    if (isCardioExerciseName(ex.name)) return acc;
+    return acc + getVolume(ex.sets || []);
+  }, 0);
+
+  const cardio = exercises
+    .filter(ex => isCardioExerciseName(ex.name))
+    .flatMap(ex => ex.sets || [])
+    .filter(st => st.done);
+
+  const cardioMinutes = cardio.reduce((acc, st) => acc + (parseFloat(st.weight) || 0), 0);
+  const cardioKm = cardio.reduce((acc, st) => acc + (parseFloat(st.reps) || 0), 0);
+
+  return {
+    exercisesCount: exercises.length,
+    completedSets,
+    totalVolume: Math.round(totalVolume),
+    cardioMinutes,
+    cardioKm,
+    bestSet: getSessionBestSet(session)
+  };
+}
+
+function showPostSessionSummary(session, wasEditing = false) {
+  const stats = getSessionSummaryStats(session);
+  const bestText = stats.bestSet
+    ? `${escapeHtml(stats.bestSet.exerciseName)} · ${stats.bestSet.weight} lb × ${stats.bestSet.reps}`
+    : 'Sin mejor serie registrada';
+
+  const cardioText = stats.cardioMinutes || stats.cardioKm
+    ? `<div class="history-summary-card"><div class="history-summary-label">Cardio</div><div class="history-summary-value">${stats.cardioMinutes || 0} min · ${stats.cardioKm || 0} km</div></div>`
+    : '';
+
+  const oldOverlay = document.getElementById('postSessionSummaryOverlay');
+  if (oldOverlay) oldOverlay.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'postSessionSummaryOverlay';
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(10, 3, 18, 0.82);
+    backdrop-filter: blur(14px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      width: 100%;
+      max-width: 440px;
+      border-radius: 26px;
+      padding: 22px;
+      background: linear-gradient(180deg, rgba(45,24,69,.98), rgba(18,5,31,.98));
+      border: 1px solid rgba(205,180,120,.22);
+      box-shadow: 0 24px 70px rgba(0,0,0,.45);
+      color: #f7f2ea;
+      font-family: 'DM Sans', sans-serif;
+    ">
+      <div style="
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 34px;
+        letter-spacing: 1.6px;
+        color: #d8b65d;
+        margin-bottom: 4px;
+      ">
+        Sesión guardada
+      </div>
+
+      <div style="font-size: 14px; color: #bfb3cc; line-height: 1.45; margin-bottom: 18px;">
+        ${wasEditing ? 'Cambios guardados correctamente.' : 'Entrenamiento terminado correctamente.'}<br>
+        <strong style="color:#f7f2ea;">${escapeHtml(session.routineName || 'Rutina')}</strong>
+      </div>
+
+      <div class="history-summary-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:0 0 14px;">
+        <div class="history-summary-card" style="display:block;">
+          <div class="history-summary-label">Ejercicios</div>
+          <div class="history-summary-value">${stats.exercisesCount}</div>
+        </div>
+        <div class="history-summary-card" style="display:block;">
+          <div class="history-summary-label">Series hechas</div>
+          <div class="history-summary-value">${stats.completedSets}</div>
+        </div>
+        <div class="history-summary-card" style="display:block;">
+          <div class="history-summary-label">Volumen</div>
+          <div class="history-summary-value">${stats.totalVolume.toLocaleString()} lb</div>
+        </div>
+        ${cardioText}
+      </div>
+
+      <div class="analysis-box" style="margin: 14px 0 18px;">
+        <div class="analysis-title">Mejor serie</div>
+        <div class="analysis-text">${bestText}</div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button id="summaryGoHome" style="
+          flex:1;
+          padding:14px;
+          border-radius:14px;
+          border:1px solid rgba(205,180,120,.24);
+          background:rgba(255,255,255,.04);
+          color:#d8b65d;
+          font-family:'Bebas Neue', sans-serif;
+          font-size:19px;
+          letter-spacing:1px;
+        ">Inicio</button>
+
+        <button id="summaryGoHistory" style="
+          flex:1;
+          padding:14px;
+          border-radius:14px;
+          border:none;
+          background:#d8b65d;
+          color:#12051f;
+          font-family:'Bebas Neue', sans-serif;
+          font-size:19px;
+          letter-spacing:1px;
+        ">Ver historial</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('summaryGoHome').onclick = () => {
+    overlay.remove();
+    showScreen('home');
+  };
+
+  document.getElementById('summaryGoHistory').onclick = () => {
+    overlay.remove();
+    showScreen('history');
+  };
+}
 function toggleSet(ei, si) {
   if (!currentSession?.exercises?.[ei]?.sets?.[si]) return;
   const ex = currentSession.exercises[ei];
