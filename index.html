@@ -202,11 +202,11 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
 .nav {
   position: fixed;
   left: 50%;
-  bottom: 0;
+  bottom: max(6px, calc(var(--safe-bottom) - 28px));
   transform: translateX(-50%);
   width: min(calc(100vw - 32px), 448px);
-  height: calc(var(--nav-h) + var(--safe-bottom));
-  padding: 7px 7px calc(7px + var(--safe-bottom));
+  height: var(--nav-h);
+  padding: 7px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
