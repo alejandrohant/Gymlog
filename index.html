@@ -2105,7 +2105,6 @@ function startSession(routineId) {
   }
 
   editingSessionKey = null;
-  document.body.classList.remove('session-preview-active');
   const routine = getRoutineById(routineId);
   if (!routine) { showToast('⚠️ Rutina no encontrada'); return; }
 
@@ -2118,6 +2117,8 @@ function startSession(routineId) {
   } else if (!confirm('¿Iniciar entrenamiento de ' + routine.name + '?')) {
     return;
   }
+
+  document.body.classList.remove('session-preview-active');
 
   currentSession = {
     routineId,
