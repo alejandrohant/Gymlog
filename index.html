@@ -195,7 +195,7 @@ body.timer-active:not(.training-active):not(.session-preview-active) .screen.act
 .nav {
   position: fixed;
   left: 50%;
-  bottom: 0;
+  bottom: calc(var(--safe-bottom) * -1);
   transform: translateX(-50%);
   width: min(calc(100vw - 32px), 448px);
   height: var(--nav-h);
