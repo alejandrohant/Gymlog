@@ -3983,8 +3983,12 @@ function openShareMenu(index) {
           CSV de esta sesión
         </button>
 
+        <button class="mini-btn primary" style="width:100%;padding:13px;" onclick="handleShareMenuOption(${index}, 'imagen')">
+          Infografía con foto
+        </button>
+
         <button class="mini-btn" style="width:100%;padding:13px;" onclick="handleShareMenuOption(${index}, 'redes')">
-          Redes sociales
+          Texto para redes
         </button>
 
         <button class="mini-btn danger" style="width:100%;padding:13px;" onclick="closeShareMenu()">
@@ -4017,6 +4021,12 @@ async function handleShareMenuOption(index, type) {
   if (type === 'csv') {
     exportSessionCsv(index);
     closeShareMenu();
+    return;
+  }
+
+  if (type === 'imagen') {
+    closeShareMenu();
+    openSocialImageBuilder(index);
     return;
   }
 
@@ -4061,6 +4071,347 @@ async function shareSessionSocialTxt(index) {
 
   const filename = `${safeFileName(session.routineName)}-${formatDateForFile(session.date)}-redes.txt`;
   copyTextToClipboard(text, '✅ Resumen para redes copiado', filename);
+}
+let forjaSocialImageSession = null;
+let forjaSocialImageFile = null;
+
+function closeSocialImageBuilder() {
+  const overlay = document.getElementById('socialImageBuilderOverlay');
+  if (overlay) overlay.remove();
+  forjaSocialImageSession = null;
+  forjaSocialImageFile = null;
+}
+
+function openSocialImageBuilder(source) {
+  const session = typeof source === 'number' ? getSessionByIndex(source) : normalizeSession(source);
+  if (!session) return;
+
+  forjaSocialImageSession = cloneData(stripCloudMeta(session));
+  forjaSocialImageFile = null;
+
+  closeSocialImageBuilder();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'socialImageBuilderOverlay';
+  overlay.className = 'edit-overlay';
+
+  overlay.innerHTML = `
+    <div class="edit-overlay-card">
+      <div class="edit-title">Infografía para redes</div>
+
+      <div style="font-size:13px;color:var(--muted);line-height:1.45;margin-bottom:14px;">
+        Sube una foto vertical. FORJA pondrá encima una tarjeta transparente con borde dorado.
+      </div>
+
+      <input id="forjaSocialPhotoInput" type="file" accept="image/*" style="display:none" onchange="handleForjaSocialPhotoInput(this)">
+
+      <button class="mini-btn primary full" style="width:100%;margin-top:4px;" onclick="document.getElementById('forjaSocialPhotoInput').click()">
+        Subir foto
+      </button>
+
+      <div id="forjaSocialPhotoName" style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.4;">
+        Ninguna foto seleccionada. Si no subes foto, se usará fondo FORJA.
+      </div>
+
+      <div style="margin-top:14px;padding:14px;border-radius:22px;border:1px solid rgba(238,210,146,.18);background:rgba(255,255,255,.025);">
+        <div style="color:var(--gold-soft);font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">
+          Contenido de la tarjeta
+        </div>
+        <div style="color:var(--text);font-size:15px;font-weight:900;">
+          ${escapeHtml(session.routineName)}
+        </div>
+        <div style="margin-top:6px;color:var(--muted);font-size:13px;">
+          ${formatDateFull(new Date(session.date))}
+        </div>
+      </div>
+
+      <div class="mini-actions">
+        <button class="mini-btn danger" onclick="closeSocialImageBuilder()">Cancelar</button>
+        <button class="mini-btn" onclick="downloadForjaSocialImage()">Descargar PNG</button>
+        <button class="mini-btn primary full" onclick="shareForjaSocialImage()">Compartir PNG</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.onclick = event => {
+    if (event.target === overlay) closeSocialImageBuilder();
+  };
+}
+
+function handleForjaSocialPhotoInput(input) {
+  const file = input?.files?.[0] || null;
+  forjaSocialImageFile = file;
+
+  const label = document.getElementById('forjaSocialPhotoName');
+  if (label) {
+    label.textContent = file
+      ? `Foto seleccionada: ${file.name}`
+      : 'Ninguna foto seleccionada.';
+  }
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      resolve(null);
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function drawCoverImage(ctx, img, canvasW, canvasH) {
+  const scale = Math.max(canvasW / img.width, canvasH / img.height);
+  const drawW = img.width * scale;
+  const drawH = img.height * scale;
+  const drawX = (canvasW - drawW) / 2;
+  const drawY = (canvasH - drawH) / 2;
+  ctx.drawImage(img, drawX, drawY, drawW, drawH);
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+  const words = String(text || '').split(' ');
+  const lines = [];
+  let line = '';
+
+  words.forEach(word => {
+    const testLine = line ? `${line} ${word}` : word;
+    if (ctx.measureText(testLine).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = testLine;
+    }
+  });
+
+  if (line) lines.push(line);
+
+  const visibleLines = lines.slice(0, maxLines);
+  visibleLines.forEach((item, index) => {
+    const finalText = index === maxLines - 1 && lines.length > maxLines
+      ? item.replace(/\s+\S*$/, '') + '…'
+      : item;
+
+    ctx.fillText(finalText, x, y + index * lineHeight);
+  });
+
+  return y + visibleLines.length * lineHeight;
+}
+
+function getForjaSocialImageFileName(session) {
+  return `${safeFileName(session.routineName)}-${formatDateForFile(session.date)}-forja.png`;
+}
+
+async function createForjaSocialImageBlob(session, photoFile) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080;
+  canvas.height = 1920;
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const photo = await loadImageFromFile(photoFile);
+
+  if (photo) {
+    drawCoverImage(ctx, photo, w, h);
+  } else {
+    const bg = ctx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#2a123c');
+    bg.addColorStop(0.55, '#12051f');
+    bg.addColorStop(1, '#07020d');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  const shade = ctx.createLinearGradient(0, 0, 0, h);
+  shade.addColorStop(0, 'rgba(0,0,0,0.10)');
+  shade.addColorStop(0.42, 'rgba(0,0,0,0.24)');
+  shade.addColorStop(1, 'rgba(0,0,0,0.72)');
+  ctx.fillStyle = shade;
+  ctx.fillRect(0, 0, w, h);
+
+  const stats = getSessionSummaryStats(session);
+  const totals = getSessionTotals(session);
+  const best = stats.bestSet;
+  const bestExercise = best ? best.exerciseName : 'Sin mejor serie';
+  const bestData = best ? `${best.weight} lb × ${best.reps}` : '--';
+
+  const cardX = 72;
+  const cardY = 990;
+  const cardW = 936;
+  const cardH = 760;
+  const radius = 58;
+
+  drawRoundedRect(ctx, cardX, cardY, cardW, cardH, radius);
+  ctx.fillStyle = 'rgba(18, 5, 31, 0.38)';
+  ctx.fill();
+
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(240, 215, 138, 0.82)';
+  ctx.stroke();
+
+  ctx.save();
+  drawRoundedRect(ctx, cardX + 14, cardY + 14, cardW - 28, cardH - 28, radius - 14);
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  ctx.fillStyle = '#f0d78a';
+  ctx.font = '700 42px Arial';
+  ctx.fillText('FORJA', cardX + 58, cardY + 58);
+
+  ctx.fillStyle = 'rgba(242,237,244,0.74)';
+  ctx.font = '700 28px Arial';
+  ctx.fillText('ENTRENAMIENTO COMPLETADO', cardX + 58, cardY + 112);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 96px Arial';
+  drawWrappedText(ctx, String(session.routineName || 'Rutina').toUpperCase(), cardX + 58, cardY + 178, cardW - 116, 94, 2);
+
+  ctx.fillStyle = 'rgba(242,237,244,0.72)';
+  ctx.font = '500 30px Arial';
+  ctx.fillText(formatDateFull(new Date(session.date)), cardX + 58, cardY + 370);
+
+  const statY = cardY + 448;
+  const statW = (cardW - 116 - 28) / 3;
+  const labels = [
+    { label: 'SERIES', value: stats.completedSets },
+    { label: 'REPS', value: totals.totalReps },
+    { label: 'VOLUMEN', value: `${Math.round(stats.totalVolume).toLocaleString()} lb` }
+  ];
+
+  labels.forEach((item, index) => {
+    const x = cardX + 58 + index * (statW + 14);
+
+    drawRoundedRect(ctx, x, statY, statW, 142, 26);
+    ctx.fillStyle = 'rgba(255,255,255,0.085)';
+    ctx.fill();
+
+    ctx.fillStyle = '#f0d78a';
+    ctx.font = '800 24px Arial';
+    ctx.fillText(item.label, x + 24, statY + 26);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = item.label === 'VOLUMEN' ? '900 36px Arial' : '900 56px Arial';
+    ctx.fillText(String(item.value), x + 24, statY + 70);
+  });
+
+  const bestY = cardY + 638;
+  ctx.fillStyle = '#f0d78a';
+  ctx.font = '800 26px Arial';
+  ctx.fillText('MEJOR SERIE', cardX + 58, bestY);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 34px Arial';
+  drawWrappedText(ctx, bestExercise, cardX + 58, bestY + 42, cardW - 116, 40, 1);
+
+  ctx.fillStyle = 'rgba(242,237,244,0.80)';
+  ctx.font = '700 32px Arial';
+  ctx.fillText(bestData, cardX + 58, bestY + 92);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
+  ctx.font = '700 28px Arial';
+  ctx.fillText('Alejandro · Cuerpo en construcción', w / 2, 1810);
+
+  return new Promise(resolve => {
+    canvas.toBlob(blob => resolve(blob), 'image/png', 0.95);
+  });
+}
+
+function downloadBlobFile(filename, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function downloadForjaSocialImage() {
+  if (!forjaSocialImageSession) {
+    showToast('⚠️ No hay sesión para generar');
+    return;
+  }
+
+  try {
+    const blob = await createForjaSocialImageBlob(forjaSocialImageSession, forjaSocialImageFile);
+    if (!blob) throw new Error('No se pudo generar PNG');
+
+    downloadBlobFile(getForjaSocialImageFileName(forjaSocialImageSession), blob);
+    showToast('✅ PNG descargado');
+  } catch (error) {
+    console.error('downloadForjaSocialImage', error);
+    showToast('❌ No se pudo generar imagen');
+  }
+}
+
+async function shareForjaSocialImage() {
+  if (!forjaSocialImageSession) {
+    showToast('⚠️ No hay sesión para generar');
+    return;
+  }
+
+  try {
+    const blob = await createForjaSocialImageBlob(forjaSocialImageSession, forjaSocialImageFile);
+    if (!blob) throw new Error('No se pudo generar PNG');
+
+    const filename = getForjaSocialImageFileName(forjaSocialImageSession);
+    const file = new File([blob], filename, { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: `${forjaSocialImageSession.routineName} — FORJA`,
+        text: 'Entrenamiento completado en FORJA.',
+        files: [file]
+      });
+      showToast('✅ Imagen compartida');
+      return;
+    }
+
+    downloadBlobFile(filename, blob);
+    showToast('⚠️ Compartir no disponible; descargué PNG');
+  } catch (error) {
+    if (error && error.name === 'AbortError') return;
+    console.error('shareForjaSocialImage', error);
+    showToast('❌ No se pudo compartir imagen');
+  }
 }
 function exportSessions() {
   const sessions = getSessions();
@@ -4932,9 +5283,8 @@ function showPostSessionSummary(session, wasEditing = false) {
         <div class="analysis-text">${bestText}</div>
       </div>
 
-      <div style="display:flex; gap:10px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         <button id="summaryGoHome" style="
-          flex:1;
           padding:14px;
           border-radius:14px;
           border:1px solid rgba(205,180,120,.24);
@@ -4946,7 +5296,18 @@ function showPostSessionSummary(session, wasEditing = false) {
         ">Inicio</button>
 
         <button id="summaryGoHistory" style="
-          flex:1;
+          padding:14px;
+          border-radius:14px;
+          border:1px solid rgba(205,180,120,.24);
+          background:rgba(255,255,255,.04);
+          color:#d8b65d;
+          font-family:'Bebas Neue', sans-serif;
+          font-size:19px;
+          letter-spacing:1px;
+        ">Historial</button>
+
+        <button id="summaryCreateImage" style="
+          grid-column:1 / -1;
           padding:14px;
           border-radius:14px;
           border:none;
@@ -4955,7 +5316,7 @@ function showPostSessionSummary(session, wasEditing = false) {
           font-family:'Bebas Neue', sans-serif;
           font-size:19px;
           letter-spacing:1px;
-        ">Ver historial</button>
+        ">Infografía con foto</button>
       </div>
     </div>
   `;
@@ -4970,6 +5331,11 @@ function showPostSessionSummary(session, wasEditing = false) {
   document.getElementById('summaryGoHistory').onclick = () => {
     overlay.remove();
     showScreen('history');
+  };
+
+  document.getElementById('summaryCreateImage').onclick = () => {
+    overlay.remove();
+    openSocialImageBuilder(session);
   };
 }
 function toggleSet(ei, si) {
