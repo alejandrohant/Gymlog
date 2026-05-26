@@ -454,6 +454,13 @@ body.session-preview-active .finish-btn {
   margin-bottom: 6px;
 }
 .profile-actions { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+.profile-progress-shell { margin-top: 18px; }
+.profile-progress-title { margin: 0 0 10px 2px; color: rgba(238,210,146,.78); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 3px; text-transform: uppercase; }
+.profile-progress-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.profile-progress-btn { min-height: 46px; padding: 11px 12px; border-radius: 18px; color: rgba(244,237,248,.74); background: rgba(255,255,255,.045); border: 1px solid rgba(238,210,146,.16); font-size: 12px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+.profile-progress-btn.active { color: #120614; background: linear-gradient(180deg, #efd381, #b88a32); border-color: rgba(238,210,146,.45); }
+.profile-progress-content { margin-top: 14px; }
+.profile-progress-empty { padding: 16px; border-radius: 22px; color: rgba(244,237,248,.58); background: rgba(255,255,255,.025); border: 1px solid rgba(238,210,146,.10); font-size: 13px; line-height: 1.45; }
 .detail-actions, .mini-actions, .action-sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
 .action-sheet-grid { grid-template-columns: 1fr; }
 .ghost-btn, .mini-btn, .delete-btn, .history-share-all-btn { min-height: 42px; padding: 10px 14px; border-radius: 16px; color: var(--gold-soft); background: rgba(255,255,255,.045); border: 1px solid rgba(238,210,146,.16); font-weight: 900; }
@@ -968,8 +975,8 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 </div>
 <div class="nav">
 <button aria-label="Rutinas" class="nav-btn" onclick="showScreen('home')" title="Rutinas">🏋️</button>
-<button aria-label="Historial" class="nav-btn" onclick="showScreen('history')" title="Historial">📊</button>
-<button aria-label="Perfil" class="nav-btn" onclick="showScreen('profile')" title="Perfil">👤</button>
+<button aria-label="Historial" class="nav-btn" onclick="showScreen('history')" title="Historial">📋</button>
+<button aria-label="Progreso" class="nav-btn" onclick="showScreen('profile')" title="Progreso">📈</button>
 <button aria-label="Cuenta" class="nav-btn active" onclick="showScreen('auth')" title="Cuenta">🔐</button>
 </div>
 <div class="screen" id="homeScreen">
@@ -1000,7 +1007,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 <div id="detailContent"></div>
 </div>
 <div class="screen" id="profileScreen">
-<div class="section-title">PERFIL</div>
+<div class="section-title">PROGRESO</div>
 <div id="profileContent"></div>
 </div>
 <div class="screen active" id="authScreen">
@@ -1022,6 +1029,7 @@ let timerPausedRemainingMs = null;
 let audioCtx = null;
 let cloudSessions = [];
 let historyFilter = 'all';
+let profileProgressPanel = '';
 let editingSessionKey = null;
 
 let __forjaLongPressTimer = null;
@@ -1999,6 +2007,9 @@ async function renderProfile() {
     profile.age ? `${escapeHtml(profile.age)} edad` : null
   ].filter(Boolean).join(' · ');
 
+  const sessions = currentUser ? getSessions() : [];
+  const progressHtml = getProfileProgressHtml(sessions);
+
   document.getElementById('profileContent').innerHTML = `
     <div class="profile-shell">
       <div class="profile-head">
@@ -2021,6 +2032,11 @@ async function renderProfile() {
       <div class="profile-note">
         <div class="profile-note-title">Nota personal</div>
         <div>${escapeHtml(profile.note || 'Sin nota guardada todavía.')}</div>
+      </div>
+
+      <div class="profile-progress-shell">
+        <div class="profile-progress-title">Panel de progreso</div>
+        ${progressHtml}
       </div>
 
       <div class="profile-actions">
@@ -2590,7 +2606,7 @@ function showScreen(name) {
     renderHome();
     if (currentUser) refreshCloudHistory().then(renderHome);
   }
-  if (name === 'profile') { try { renderProfile(); } catch (error) { console.warn('renderProfile', error); } }
+  if (name === 'profile') { try { renderProfile(); ensureCloudHistoryReady(false).then(renderProfile); } catch (error) { console.warn('renderProfile', error); } }
   if (name === 'auth') renderAuthStatus();
 }
 
@@ -5081,7 +5097,7 @@ function showScreen(name) {
     return;
   }
 
-  if (name === 'profile') { try { renderProfile(); } catch (error) { console.warn('renderProfile', error); } }
+  if (name === 'profile') { try { renderProfile(); ensureCloudHistoryReady(false).then(renderProfile); } catch (error) { console.warn('renderProfile', error); } }
 }
 
 async function initApp() {
@@ -5548,6 +5564,59 @@ function getCardioStatsHtml(sessions) {
     </div>
   `;
 }
+function setProfileProgressPanel(panelId) {
+  profileProgressPanel = profileProgressPanel === panelId ? '' : panelId;
+  renderProfile();
+}
+
+function getProfileProgressHtml(sessions) {
+  const tabs = [
+    { id: 'charts', label: 'Gráficas' },
+    { id: 'routines', label: 'Rutinas' },
+    { id: 'records', label: 'Récords' },
+    { id: 'cardio', label: 'Cardio' }
+  ];
+
+  const buttonsHtml = `
+    <div class="profile-progress-actions">
+      ${tabs.map(tab => `
+        <button class="profile-progress-btn ${profileProgressPanel === tab.id ? 'active' : ''}" onclick="setProfileProgressPanel('${tab.id}')">
+          ${tab.label}
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  if (!currentUser) {
+    return buttonsHtml + `<div class="profile-progress-content"><div class="profile-progress-empty">Inicia sesión para ver tu progreso sincronizado.</div></div>`;
+  }
+
+  if (!cloudSessionsLoaded && (!sessions || sessions.length === 0)) {
+    ensureCloudHistoryReady(true).then(() => renderProfile());
+    return buttonsHtml + `<div class="profile-progress-content"><div class="profile-progress-empty">Sincronizando progreso con Supabase…</div></div>`;
+  }
+
+  if (!sessions || sessions.length === 0) {
+    return buttonsHtml + `<div class="profile-progress-content"><div class="profile-progress-empty">Todavía no hay sesiones suficientes para mostrar progreso.</div></div>`;
+  }
+
+  let panelHtml = '';
+
+  if (profileProgressPanel === 'charts') panelHtml = getProgressChartsHtml(sessions);
+  if (profileProgressPanel === 'routines') panelHtml = getRoutineStatsHtml(sessions);
+  if (profileProgressPanel === 'records') panelHtml = getExerciseRecordsHtml(sessions);
+  if (profileProgressPanel === 'cardio') panelHtml = getCardioStatsHtml(sessions);
+
+  if (!profileProgressPanel) {
+    panelHtml = `<div class="profile-progress-empty">Elige una sección para ver tu progreso sin saturar la pantalla.</div>`;
+  }
+
+  if (!panelHtml) {
+    panelHtml = `<div class="profile-progress-empty">No hay datos para esta sección todavía.</div>`;
+  }
+
+  return buttonsHtml + `<div class="profile-progress-content">${panelHtml}</div>`;
+}
 function renderHistory() {
   const list = document.getElementById('historyList');
   if (!list) return;
@@ -5594,55 +5663,8 @@ function renderHistory() {
     return;
   }
 
-    const totalSets = visibleSessions.reduce((acc, s) => {
-    const exercises = Array.isArray(s.exercises) ? s.exercises : [];
-    return acc + exercises.reduce((sum, ex) => {
-      return sum + ((ex.sets || []).filter(st => st.done).length);
-    }, 0);
-  }, 0);
-
-  const totalVolume = visibleSessions.reduce((acc, s) => {
-    const exercises = Array.isArray(s.exercises) ? s.exercises : [];
-    return acc + exercises.reduce((sum, ex) => {
-      return sum + ((ex.sets || []).filter(st => st.done).reduce((a, st) => {
-        return a + (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0);
-      }, 0));
-    }, 0);
-  }, 0);
-
-  const progressChartsHtml = getProgressChartsHtml(visibleSessions);
-  const routineStatsHtml = getRoutineStatsHtml(visibleSessions);
-  const cardioStatsHtml = getCardioStatsHtml(visibleSessions);
-  const exerciseRecordsHtml = getExerciseRecordsHtml(visibleSessions);
   list.innerHTML = `
     ${filtersHtml}
-
-    <div class="history-summary-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0 0 18px;">
-      <div class="history-summary-card" style="display:block;">
-        <div class="history-summary-label">Sesiones</div>
-        <div class="history-summary-value">${visibleSessions.length}</div>
-      </div>
-      <div class="history-summary-card" style="display:block;">
-        <div class="history-summary-label">Series</div>
-        <div class="history-summary-value">${totalSets}</div>
-      </div>
-      <div class="history-summary-card" style="display:block;">
-        <div class="history-summary-label">Volumen</div>
-        <div class="history-summary-value">${Math.round(totalVolume).toLocaleString()}</div>
-      </div>
-      <div class="history-summary-card" style="display:block;">
-        <div class="history-summary-label">Última</div>
-        <div class="history-summary-value" style="font-size:16px;">${formatDate(visibleSessions[0].date)}</div>
-      </div>
-    </div>
-
-    ${progressChartsHtml}
-
-    ${routineStatsHtml}
-
-    ${cardioStatsHtml}
-
-    ${exerciseRecordsHtml}
 
     ${visibleSessions.map((s) => {
     const i = sessions.findIndex(item => sessionKey(item) === sessionKey(s));
