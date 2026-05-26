@@ -4086,10 +4086,10 @@ function openSocialImageBuilder(source) {
   const session = typeof source === 'number' ? getSessionByIndex(source) : normalizeSession(source);
   if (!session) return;
 
+  closeSocialImageBuilder();
+
   forjaSocialImageSession = cloneData(stripCloudMeta(session));
   forjaSocialImageFile = null;
-
-  closeSocialImageBuilder();
 
   const overlay = document.createElement('div');
   overlay.id = 'socialImageBuilderOverlay';
