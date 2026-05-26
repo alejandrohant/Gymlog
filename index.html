@@ -2451,6 +2451,193 @@ function getSmartExerciseNote(ex, lastEx) {
     </div>
   `;
 }
+function getRoutineExerciseCatalog(extraExercises = []) {
+  const cardioExercises = [
+    { name: 'Bicicleta', sets: 1, type: 'cardio' },
+    { name: 'Caminadora', sets: 1, type: 'cardio' },
+    { name: 'Elíptica', sets: 1, type: 'cardio' },
+    { name: 'Escaladora', sets: 1, type: 'cardio' }
+  ];
+
+  const source = [
+    ...cardioExercises,
+    ...((DEFAULT_ROUTINES || []).flatMap(r => r.exercises || [])),
+    ...((ROUTINES || []).flatMap(r => r.exercises || [])),
+    ...(extraExercises || [])
+  ];
+
+  const map = new Map();
+
+  source.forEach(ex => {
+    const name = String(ex?.name || '').trim();
+    if (!name) return;
+
+    const key = normalizeText(name);
+    if (!map.has(key)) {
+      map.set(key, {
+        name,
+        sets: Math.max(1, parseInt(ex.sets, 10) || 3),
+        note: ex.note || '',
+        type: ex.type || (isCardioExerciseName(name) ? 'cardio' : null),
+        bodyweight: ex.bodyweight === true || isBodyweightExerciseName(name)
+      });
+    }
+  });
+
+  return Array.from(map.values())
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+}
+
+function routineExerciseOptionsHtml(selectedName = '') {
+  const catalog = getRoutineExerciseCatalog(selectedName ? [{ name: selectedName }] : []);
+  const selectedKey = normalizeText(selectedName);
+
+  return `
+    <option value="">Seleccionar ejercicio</option>
+    ${catalog.map(ex => `
+      <option value="${escapeHtml(ex.name)}" ${normalizeText(ex.name) === selectedKey ? 'selected' : ''}>
+        ${escapeHtml(ex.name)}
+      </option>
+    `).join('')}
+    <option value="__custom__">+ Escribir ejercicio nuevo</option>
+  `;
+}
+
+function routineExerciseRowHtml(ex = {}, index = 0) {
+  const name = ex.name || '';
+  const sets = Math.max(1, parseInt(ex.sets, 10) || 3);
+  const note = ex.note || '';
+
+  return `
+    <div class="routine-exercise-editor-row" style="margin-top:12px;padding:12px;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid rgba(238,210,146,.12);">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="routine-exercise-number" style="width:28px;height:28px;border-radius:10px;display:grid;place-items:center;background:rgba(216,184,102,.10);color:var(--gold-soft);font-size:12px;font-weight:900;">
+            ${index + 1}
+          </div>
+          <div style="color:var(--gold-soft);font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;">
+            Ejercicio
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;">
+          <button type="button" class="ghost-link" onclick="moveRoutineExerciseEditorRow(this, -1)">↑</button>
+          <button type="button" class="ghost-link" onclick="moveRoutineExerciseEditorRow(this, 1)">↓</button>
+          <button type="button" class="ghost-link" style="color:#ff8b91;" onclick="deleteRoutineExerciseEditorRow(this)">Eliminar</button>
+        </div>
+      </div>
+
+      <select class="form-select routine-exercise-select" onchange="handleRoutineExerciseSelect(this)">
+        ${routineExerciseOptionsHtml(name)}
+      </select>
+
+      <input class="form-input routine-exercise-custom" placeholder="Nombre del ejercicio nuevo" style="display:none;margin-top:8px;">
+
+      <div style="display:grid;grid-template-columns:88px 1fr;gap:10px;margin-top:10px;">
+        <div>
+          <label class="form-label" style="margin-top:0;">Series</label>
+          <input type="number" min="1" class="form-input routine-exercise-sets" value="${sets}" inputmode="numeric">
+        </div>
+        <div>
+          <label class="form-label" style="margin-top:0;">Nota</label>
+          <input class="form-input routine-exercise-note" value="${escapeHtml(note)}" placeholder="Opcional">
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function refreshRoutineExerciseEditorIndexes() {
+  document.querySelectorAll('#routineExerciseRows .routine-exercise-editor-row').forEach((row, index) => {
+    const number = row.querySelector('.routine-exercise-number');
+    if (number) number.textContent = index + 1;
+  });
+}
+
+function handleRoutineExerciseSelect(select) {
+  const row = select.closest('.routine-exercise-editor-row');
+  if (!row) return;
+
+  const customInput = row.querySelector('.routine-exercise-custom');
+  if (!customInput) return;
+
+  if (select.value === '__custom__') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.value = '';
+    customInput.style.display = 'none';
+  }
+}
+
+function addRoutineExerciseEditorRow() {
+  const container = document.getElementById('routineExerciseRows');
+  if (!container) return;
+
+  container.insertAdjacentHTML('beforeend', routineExerciseRowHtml({ name: '', sets: 3 }, container.children.length));
+  refreshRoutineExerciseEditorIndexes();
+}
+
+function deleteRoutineExerciseEditorRow(button) {
+  const container = document.getElementById('routineExerciseRows');
+  const row = button.closest('.routine-exercise-editor-row');
+  if (!container || !row) return;
+
+  if (container.children.length <= 1) {
+    showToast('⚠️ Debe quedar al menos un ejercicio');
+    return;
+  }
+
+  row.remove();
+  refreshRoutineExerciseEditorIndexes();
+}
+
+function moveRoutineExerciseEditorRow(button, direction) {
+  const row = button.closest('.routine-exercise-editor-row');
+  const container = document.getElementById('routineExerciseRows');
+  if (!row || !container) return;
+
+  if (direction < 0 && row.previousElementSibling) {
+    container.insertBefore(row, row.previousElementSibling);
+  }
+
+  if (direction > 0 && row.nextElementSibling) {
+    container.insertBefore(row.nextElementSibling, row);
+  }
+
+  refreshRoutineExerciseEditorIndexes();
+}
+
+function collectRoutineExercisesFromEditor() {
+  const rows = Array.from(document.querySelectorAll('#routineExerciseRows .routine-exercise-editor-row'));
+
+  return rows.map(row => {
+    const select = row.querySelector('.routine-exercise-select');
+    const custom = row.querySelector('.routine-exercise-custom');
+    const setsInput = row.querySelector('.routine-exercise-sets');
+    const noteInput = row.querySelector('.routine-exercise-note');
+
+    const selectedName = select?.value || '';
+    const customName = custom?.value.trim() || '';
+    const name = selectedName === '__custom__' ? customName : selectedName;
+    const sets = Math.max(1, parseInt(setsInput?.value, 10) || 3);
+    const note = noteInput?.value.trim() || '';
+
+    if (!name) return null;
+
+    const catalogItem = getRoutineExerciseCatalog([{ name }])
+      .find(ex => normalizeText(ex.name) === normalizeText(name));
+
+    return {
+      name,
+      sets,
+      ...(note ? { note } : {}),
+      ...(catalogItem?.type ? { type: catalogItem.type } : {}),
+      ...(catalogItem?.bodyweight ? { bodyweight: true } : {})
+    };
+  }).filter(Boolean);
+}
+
 function editRoutine(routineId) {
   const routine = getRoutineById(routineId);
   if (!routine) return;
@@ -2458,7 +2645,6 @@ function editRoutine(routineId) {
   const oldOverlay = document.getElementById('routineEditOverlay');
   if (oldOverlay) oldOverlay.remove();
 
-  const exercisesText = routine.exercises.map(ex => `${ex.name} | ${ex.sets}${ex.note ? ' | ' + ex.note : ''}`).join('\n');
   const overlay = document.createElement('div');
   overlay.id = 'routineEditOverlay';
   overlay.className = 'edit-overlay';
@@ -2486,9 +2672,16 @@ function editRoutine(routineId) {
       <input id="routineDescInput" class="form-input" value="${escapeHtml(routine.desc || '')}">
 
       <label class="form-label">Ejercicios</label>
-      <textarea id="routineExercisesInput" class="form-textarea" style="min-height:220px;">${escapeHtml(exercisesText)}</textarea>
+      <div id="routineExerciseRows">
+        ${(routine.exercises || []).map((ex, index) => routineExerciseRowHtml(ex, index)).join('')}
+      </div>
+
+      <button type="button" class="add-set-btn" style="margin-top:12px;" onclick="addRoutineExerciseEditorRow()">
+        + Agregar ejercicio
+      </button>
+
       <div style="font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px;">
-        Usa una línea por ejercicio: Nombre | series | nota opcional
+        Selecciona ejercicios de la lista, ajusta series y agrega nota opcional.
       </div>
 
       <div class="mini-actions">
@@ -2504,8 +2697,10 @@ function editRoutine(routineId) {
 
   document.body.appendChild(overlay);
   overlay.onclick = (event) => { if (event.target === overlay) overlay.remove(); };
+
   document.getElementById('cancelRoutineEdit').onclick = () => overlay.remove();
-    document.getElementById('moveRoutineUpBtn').onclick = () => {
+
+  document.getElementById('moveRoutineUpBtn').onclick = () => {
     moveRoutine(routineId, -1);
     overlay.remove();
   };
@@ -2519,24 +2714,18 @@ function editRoutine(routineId) {
     duplicateRoutine(routineId);
     overlay.remove();
   };
+
   document.getElementById('resetRoutinesBtn').onclick = () => {
     overlay.remove();
     resetRoutinesToDefault();
   };
+
   document.getElementById('saveRoutineEdit').onclick = () => {
     const name = document.getElementById('routineNameInput').value.trim();
     const day = document.getElementById('routineDayInput').value.trim();
     const emoji = document.getElementById('routineEmojiInput').value.trim() || '🏋️';
     const desc = document.getElementById('routineDescInput').value.trim();
-    const rawExercises = document.getElementById('routineExercisesInput').value.split('\n').map(line => line.trim()).filter(Boolean);
-
-    const exercises = rawExercises.map(line => {
-      const parts = line.split('|').map(part => part.trim());
-      const exName = parts[0] || '';
-      const sets = Math.max(1, parseInt(parts[1], 10) || 3);
-      const note = parts[2] || '';
-      return { name: exName, sets, ...(note ? { note } : {}) };
-    }).filter(ex => ex.name);
+    const exercises = collectRoutineExercisesFromEditor();
 
     if (!name || !exercises.length) {
       showToast('⚠️ Falta nombre o ejercicios');
@@ -2548,6 +2737,7 @@ function editRoutine(routineId) {
     routine.emoji = emoji;
     routine.desc = desc;
     routine.exercises = exercises;
+
     saveRoutinesLocal();
     overlay.remove();
     renderHome();
