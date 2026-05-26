@@ -1094,6 +1094,9 @@ const DEFAULT_ROUTINES = [
 ];
 
 let ROUTINES = getRoutinesLocal();
+let routinesCloudLoaded = false;
+let routinesCloudSaveTimer = null;
+let routinesCloudSaveBusy = false;
 
 
 function cloneData(value) {
@@ -1117,25 +1120,179 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
-function getRoutinesLocal() {
+function readSavedRoutinesLocalOnly() {
   try {
     const savedRaw = localStorage.getItem('forja_routines') || localStorage.getItem('gymlog_routines');
     const saved = JSON.parse(savedRaw || 'null');
     if (Array.isArray(saved) && saved.length) return saved;
   } catch (e) {
-    console.warn('getRoutinesLocal', e);
+    console.warn('readSavedRoutinesLocalOnly', e);
   }
-  return cloneData(DEFAULT_ROUTINES);
+  return null;
 }
 
-function saveRoutinesLocal() {
+function getRoutinesLocal() {
+  return cloneData(readSavedRoutinesLocalOnly() || DEFAULT_ROUTINES);
+}
+
+function cacheRoutinesLocal() {
   localStorage.setItem('forja_routines', JSON.stringify(ROUTINES));
 }
 
-function resetRoutinesToDefault() {
+function saveRoutinesLocal() {
+  cacheRoutinesLocal();
+  queueRoutinesCloudSave();
+}
+
+function routineToCloudRow(routine, index) {
+  return {
+    user_id: currentUser.id,
+    id: String(routine.id || `rutina_${index + 1}`),
+    name: routine.name || 'Rutina',
+    day: routine.day || '',
+    emoji: routine.emoji || '🏋️',
+    description: routine.desc || '',
+    exercises: Array.isArray(routine.exercises) ? routine.exercises : [],
+    sort_order: index,
+    source: routine.source || 'custom',
+    updated_at: new Date().toISOString()
+  };
+}
+
+function cloudRowToRoutine(row) {
+  return {
+    id: row.id,
+    name: row.name || 'Rutina',
+    day: row.day || '',
+    emoji: row.emoji || '🏋️',
+    desc: row.description || '',
+    exercises: Array.isArray(row.exercises) ? row.exercises : []
+  };
+}
+
+async function loadCloudRoutines(bootstrapIfEmpty = true) {
+  if (!currentUser) {
+    ROUTINES = getRoutinesLocal();
+    routinesCloudLoaded = false;
+    return ROUTINES;
+  }
+
+  const response = await withTimeout(
+    supabaseClient
+      .from('routines')
+      .select('id, name, day, emoji, description, exercises, sort_order')
+      .eq('user_id', currentUser.id)
+      .order('sort_order', { ascending: true }),
+    12000,
+    { data: null, error: new Error('Supabase tardó demasiado en cargar rutinas.') }
+  );
+
+  const data = response?.data || [];
+  const error = response?.error || null;
+
+  if (error) {
+    console.error('loadCloudRoutines', error);
+    showToast('❌ No se pudieron cargar rutinas');
+    ROUTINES = getRoutinesLocal();
+    return ROUTINES;
+  }
+
+  if (data.length) {
+    ROUTINES = data.map(cloudRowToRoutine);
+    cacheRoutinesLocal();
+    routinesCloudLoaded = true;
+    return ROUTINES;
+  }
+
+  if (bootstrapIfEmpty) {
+    ROUTINES = cloneData(readSavedRoutinesLocalOnly() || DEFAULT_ROUTINES);
+    cacheRoutinesLocal();
+    await replaceCloudRoutines();
+    routinesCloudLoaded = true;
+    return ROUTINES;
+  }
+
+  ROUTINES = [];
+  routinesCloudLoaded = true;
+  return ROUTINES;
+}
+
+async function saveAllRoutinesCloud() {
+  if (!currentUser || routinesCloudSaveBusy) return false;
+
+  routinesCloudSaveBusy = true;
+
+  try {
+    const rows = ROUTINES.map(routineToCloudRow);
+
+    const { error } = await supabaseClient
+      .from('routines')
+      .upsert(rows, { onConflict: 'user_id,id' });
+
+    if (error) throw error;
+
+    routinesCloudLoaded = true;
+    return true;
+  } catch (error) {
+    console.error('saveAllRoutinesCloud', error);
+    showToast('❌ No se pudieron guardar rutinas');
+    return false;
+  } finally {
+    routinesCloudSaveBusy = false;
+  }
+}
+
+function queueRoutinesCloudSave() {
+  if (!currentUser) return;
+  clearTimeout(routinesCloudSaveTimer);
+  routinesCloudSaveTimer = setTimeout(() => {
+    saveAllRoutinesCloud();
+  }, 450);
+}
+
+async function replaceCloudRoutines() {
+  if (!currentUser) return false;
+
+  const rows = ROUTINES.map(routineToCloudRow);
+
+  const deleteResponse = await supabaseClient
+    .from('routines')
+    .delete()
+    .eq('user_id', currentUser.id);
+
+  if (deleteResponse.error) {
+    console.error('replaceCloudRoutines delete', deleteResponse.error);
+    showToast('❌ No se pudieron reemplazar rutinas');
+    return false;
+  }
+
+  if (!rows.length) return true;
+
+  const insertResponse = await supabaseClient
+    .from('routines')
+    .insert(rows);
+
+  if (insertResponse.error) {
+    console.error('replaceCloudRoutines insert', insertResponse.error);
+    showToast('❌ No se pudieron guardar rutinas base');
+    return false;
+  }
+
+  routinesCloudLoaded = true;
+  return true;
+}
+
+async function ensureRoutinesReady(force = false) {
+  if (!currentUser) return ROUTINES;
+  if (!force && routinesCloudLoaded && Array.isArray(ROUTINES) && ROUTINES.length) return ROUTINES;
+  return await loadCloudRoutines(true);
+}
+
+async function resetRoutinesToDefault() {
   if (!confirm('¿Restaurar la rutina base? Se perderán los cambios hechos a las rutinas.')) return;
   ROUTINES = cloneData(DEFAULT_ROUTINES);
-  saveRoutinesLocal();
+  cacheRoutinesLocal();
+  if (currentUser) await replaceCloudRoutines();
   renderHome();
   showToast('✅ Rutina base restaurada');
 }
@@ -4902,8 +5059,11 @@ async function afterLogin(user) {
   }
 
   cloudSessionsLoaded = false;
+  routinesCloudLoaded = false;
   setAuthLocked(false);
   renderAuthLoggedIn();
+
+  try { await loadCloudRoutines(true); } catch (error) { console.warn('loadCloudRoutines inicial', error); }
 
   // La interfaz no debe quedarse vacía esperando Supabase.
   try { renderHome(); } catch (error) { console.warn('renderHome inicial', error); }
@@ -4913,6 +5073,7 @@ async function afterLogin(user) {
 
   // Supabase sincroniza después, sin bloquear Rutinas, Historial ni Perfil.
   Promise.resolve().then(async () => {
+    try { await loadCloudRoutines(false); } catch (error) { console.warn('loadCloudRoutines post-sync', error); }
     try { await syncLocalSessionsToCloud(); } catch (error) { console.warn('syncLocalSessionsToCloud', error); }
     try { await refreshCloudHistory(true); } catch (error) { console.warn('refreshCloudHistory', error); }
     try { renderHome(); } catch (error) { console.warn('renderHome post-sync', error); }
@@ -5093,7 +5254,10 @@ function showScreen(name) {
 
   if (name === 'home') {
     renderHome();
-    ensureCloudHistoryReady(false).then(renderHome);
+    Promise.all([
+      ensureRoutinesReady(false),
+      ensureCloudHistoryReady(false)
+    ]).then(renderHome);
     return;
   }
 
