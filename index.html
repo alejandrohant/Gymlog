@@ -478,25 +478,8 @@ body.session-preview-active .session-hide-btn { font-size: 22px; }
   text-transform: uppercase;
 }
 .add-set-btn { width: 100%; height: 42px; border-radius: 14px; color: var(--gold-soft); background: rgba(216,184,102,.08); border: 1px solid rgba(216,184,102,.16); font-weight: 900; }
-.add-exercise-session-btn {
-  position: relative;
-  z-index: 5;
-  width: 100%;
-  min-height: 58px;
-  margin: 18px 0 10px;
-  padding: 0 18px;
-  border-radius: 18px;
-  color: #120614;
-  background: linear-gradient(180deg, #efd381, #b88a32);
-  border: 1px solid rgba(238,210,146,.42);
-  font-weight: 900;
-  letter-spacing: .04em;
-  touch-action: manipulation;
-  pointer-events: auto;
-}
-
-.add-exercise-session-btn:active {
-  transform: scale(.985);
+.add-exercise-text {
+  pointer-events: none;
 }
 .notes-shell { padding: 0 16px 16px; }
 .notes-input { min-height: 72px; resize: none; }
@@ -5097,8 +5080,8 @@ function renderExercises() {
         </div>
       `;
     }).join('')}
-    <button type="button" class="add-exercise-session-btn" onclick="addExerciseToSession()">
-      + Agregar ejercicio
+    <button type="button" class="add-set-btn" onclick="addExerciseToSession()" style="margin-top:18px; touch-action:manipulation;">
+      <span class="add-exercise-text">+ Agregar ejercicio</span>
     </button>
   `;
 }
