@@ -478,6 +478,26 @@ body.session-preview-active .session-hide-btn { font-size: 22px; }
   text-transform: uppercase;
 }
 .add-set-btn { width: 100%; height: 42px; border-radius: 14px; color: var(--gold-soft); background: rgba(216,184,102,.08); border: 1px solid rgba(216,184,102,.16); font-weight: 900; }
+.add-exercise-session-btn {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  min-height: 58px;
+  margin: 18px 0 10px;
+  padding: 0 18px;
+  border-radius: 18px;
+  color: #120614;
+  background: linear-gradient(180deg, #efd381, #b88a32);
+  border: 1px solid rgba(238,210,146,.42);
+  font-weight: 900;
+  letter-spacing: .04em;
+  touch-action: manipulation;
+  pointer-events: auto;
+}
+
+.add-exercise-session-btn:active {
+  transform: scale(.985);
+}
 .notes-shell { padding: 0 16px 16px; }
 .notes-input { min-height: 72px; resize: none; }
 .finish-btn { width: 100%; padding: 16px; margin: 24px 0 16px; border-radius: 18px; color: #120614; background: linear-gradient(180deg, #efd381 0%, #d0a84e 58%, #b88a32 100%); font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: .11em; box-shadow: 0 12px 26px rgba(209,171,85,.20), inset 0 1px 0 rgba(255,255,255,.44); }
@@ -5077,7 +5097,9 @@ function renderExercises() {
         </div>
       `;
     }).join('')}
-    <button class="add-set-btn" onclick="addExerciseToSession()">+ Agregar ejercicio</button>
+    <button type="button" class="add-exercise-session-btn" onclick="addExerciseToSession()">
+      + Agregar ejercicio
+    </button>
   `;
 }
 
