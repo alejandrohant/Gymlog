@@ -409,6 +409,74 @@ body.session-preview-active .session-hide-btn { font-size: 22px; }
 .set-input.completed { color: var(--success); border-color: rgba(71,255,138,.50); }
 .set-check { width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--muted); background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.10); }
 .set-check.done { color: #03130a; background: linear-gradient(180deg, #47ff8a, #2fdb72); border-color: transparent; }
+.cardio-set-row {
+  grid-template-columns: 30px 1fr;
+  align-items: stretch;
+}
+
+.cardio-time-panel {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(238,210,146,.10);
+}
+
+.cardio-time-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+}
+
+.cardio-time-display {
+  margin-top: 6px;
+  color: var(--gold-soft);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  line-height: .92;
+  letter-spacing: .04em;
+}
+
+.cardio-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cardio-action-btn {
+  min-height: 38px;
+  border-radius: 14px;
+  color: var(--gold-soft);
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(238,210,146,.18);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.cardio-action-btn.done {
+  color: #03130a;
+  background: linear-gradient(180deg, #47ff8a, #2fdb72);
+  border-color: transparent;
+}
+
+.cardio-km-grid {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cardio-km-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+}
 .add-set-btn { width: 100%; height: 42px; border-radius: 14px; color: var(--gold-soft); background: rgba(216,184,102,.08); border: 1px solid rgba(216,184,102,.16); font-weight: 900; }
 .notes-shell { padding: 0 16px 16px; }
 .notes-input { min-height: 72px; resize: none; }
@@ -4699,6 +4767,181 @@ function getSummaryForExercise(sets, exName) {
   return `${done.length} series · ${w} lbs · ~${avgR} reps`;
 }
 
+let forjaCardioTimerInterval = null;
+
+function getCardioTimer(set) {
+  if (!set.cardioTimer || typeof set.cardioTimer !== 'object') {
+    set.cardioTimer = { elapsedMs: 0, startedAt: null, running: false };
+  }
+
+  set.cardioTimer.elapsedMs = Math.max(0, Number(set.cardioTimer.elapsedMs) || 0);
+  set.cardioTimer.startedAt = set.cardioTimer.startedAt ? Number(set.cardioTimer.startedAt) : null;
+  set.cardioTimer.running = set.cardioTimer.running === true;
+
+  return set.cardioTimer;
+}
+
+function getCardioElapsedMs(set) {
+  const timer = getCardioTimer(set);
+  let elapsed = timer.elapsedMs;
+
+  if (timer.running && timer.startedAt) {
+    elapsed += Math.max(0, Date.now() - timer.startedAt);
+  }
+
+  if (elapsed <= 0) {
+    const manualMinutes = parseFloat(set.weight);
+    if (!Number.isNaN(manualMinutes) && manualMinutes > 0) {
+      elapsed = manualMinutes * 60000;
+    }
+  }
+
+  return Math.max(0, elapsed);
+}
+
+function formatCardioElapsed(ms) {
+  const totalSeconds = Math.floor(Math.max(0, ms) / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatCardioMinutesValue(ms) {
+  const minutes = Math.max(0, ms) / 60000;
+  const rounded = Math.round(minutes * 10) / 10;
+  return String(rounded).replace(/\.0$/, '');
+}
+
+function updateCardioDoneUi(ei, si) {
+  const set = currentSession?.exercises?.[ei]?.sets?.[si];
+  if (!set) return;
+
+  const row = document.getElementById(`setrow-${ei}-${si}`);
+  const kmInput = document.getElementById(`reps-${ei}-${si}`);
+  const hiddenTime = document.getElementById(`weight-${ei}-${si}`);
+  const finishBtn = document.getElementById(`cardio-finish-${ei}-${si}`);
+
+  if (hiddenTime) hiddenTime.value = set.weight || '';
+  if (kmInput) kmInput.className = `set-input ${set.done ? 'completed' : ''}`;
+
+  if (finishBtn) {
+    finishBtn.className = `cardio-action-btn ${set.done ? 'done' : ''}`;
+    finishBtn.textContent = set.done ? '✓' : '✓';
+  }
+
+  if (row) row.dataset.done = set.done ? '1' : '0';
+}
+
+function updateCardioTimerDisplay(ei, si) {
+  const set = currentSession?.exercises?.[ei]?.sets?.[si];
+  if (!set) return;
+
+  const display = document.getElementById(`cardio-time-${ei}-${si}`);
+  const playBtn = document.getElementById(`cardio-play-${ei}-${si}`);
+  const pauseBtn = document.getElementById(`cardio-pause-${ei}-${si}`);
+  const timer = getCardioTimer(set);
+
+  if (display) {
+    display.textContent = set.done && set.weight
+      ? `${set.weight} min`
+      : formatCardioElapsed(getCardioElapsedMs(set));
+  }
+
+  if (playBtn) playBtn.textContent = timer.running ? '▶' : '▶';
+  if (pauseBtn) pauseBtn.textContent = timer.running ? '⏸' : '⏸';
+
+  updateCardioDoneUi(ei, si);
+}
+
+function updateCardioTimerDisplays() {
+  if (!currentSession) return;
+
+  document.querySelectorAll('[data-cardio-timer="1"]').forEach(el => {
+    const ei = parseInt(el.dataset.ei, 10);
+    const si = parseInt(el.dataset.si, 10);
+    if (!Number.isNaN(ei) && !Number.isNaN(si)) {
+      updateCardioTimerDisplay(ei, si);
+    }
+  });
+}
+
+function startCardioTimer(ei, si) {
+  const set = currentSession?.exercises?.[ei]?.sets?.[si];
+  if (!set) return;
+
+  const timer = getCardioTimer(set);
+  if (timer.running) return;
+
+  set.done = false;
+  set.weight = '';
+  timer.startedAt = Date.now();
+  timer.running = true;
+
+  saveCurrentDraft();
+  updateSessionCounters();
+  updateCardioTimerDisplay(ei, si);
+}
+
+function pauseCardioTimer(ei, si) {
+  const set = currentSession?.exercises?.[ei]?.sets?.[si];
+  if (!set) return;
+
+  const timer = getCardioTimer(set);
+  if (!timer.running) return;
+
+  timer.elapsedMs = getCardioElapsedMs(set);
+  timer.startedAt = null;
+  timer.running = false;
+
+  saveCurrentDraft();
+  updateCardioTimerDisplay(ei, si);
+}
+
+function finishCardioTimer(ei, si) {
+  const set = currentSession?.exercises?.[ei]?.sets?.[si];
+  if (!set) return;
+
+  const timer = getCardioTimer(set);
+  const elapsedMs = getCardioElapsedMs(set);
+
+  if (elapsedMs <= 0 && !set.weight) {
+    showToast('⚠️ Inicia el cronómetro o escribe minutos');
+    return;
+  }
+
+  timer.elapsedMs = elapsedMs;
+  timer.startedAt = null;
+  timer.running = false;
+
+  set.weight = formatCardioMinutesValue(elapsedMs);
+  set.reps = document.getElementById(`reps-${ei}-${si}`)?.value || set.reps || '';
+  set.done = true;
+
+  saveCurrentDraft();
+  updateSessionCounters();
+  updateCardioTimerDisplay(ei, si);
+  showToast('✅ Cardio terminado');
+}
+
+function ensureCardioTimerInterval() {
+  if (forjaCardioTimerInterval) return;
+  forjaCardioTimerInterval = setInterval(updateCardioTimerDisplays, 1000);
+}
+
+window.addEventListener('visibilitychange', () => {
+  if (!document.hidden) updateCardioTimerDisplays();
+}, { passive: true });
+
+window.addEventListener('focus', updateCardioTimerDisplays, { passive: true });
+window.addEventListener('pageshow', updateCardioTimerDisplays, { passive: true });
+
+ensureCardioTimerInterval();
 function renderExercises() {
   const list = document.getElementById('exerciseList');
   if (!list || !currentSession) return;
@@ -4742,12 +4985,35 @@ function renderExercises() {
 
       const setsHtml = ex.sets.map((set, si) => {
         if (cardio) {
+          const timer = getCardioTimer(set);
+          const elapsedText = set.done && set.weight
+            ? `${set.weight} min`
+            : formatCardioElapsed(getCardioElapsedMs(set));
+
           return `
-            <div class="set-row" id="setrow-${ei}-${si}" ontouchstart="forjaSetSwipeStart(event)" ontouchend="forjaSetSwipeEnd(event,${ei},${si})">
+            <div class="set-row cardio-set-row" id="setrow-${ei}-${si}" data-done="${set.done ? '1' : '0'}" ontouchstart="forjaSetSwipeStart(event)" ontouchend="forjaSetSwipeEnd(event,${ei},${si})">
               <div class="set-num">${si + 1}</div>
-              <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="weight-${ei}-${si}" placeholder="min" value="${set.weight || ''}" onchange="updateSet(${ei},${si},'weight',this.value)" inputmode="decimal">
-              <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="km" value="${set.reps || ''}" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="decimal">
-              <button class="set-check ${set.done ? 'done' : ''}" onclick="toggleSet(${ei},${si})">${set.done ? '✓' : ''}</button>
+
+              <div class="cardio-time-panel">
+                <div class="cardio-time-label">Tiempo</div>
+
+                <div class="cardio-time-display" id="cardio-time-${ei}-${si}" data-cardio-timer="1" data-ei="${ei}" data-si="${si}">
+                  ${elapsedText}
+                </div>
+
+                <input type="hidden" id="weight-${ei}-${si}" value="${set.weight || ''}">
+
+                <div class="cardio-actions">
+                  <button type="button" class="cardio-action-btn" id="cardio-play-${ei}-${si}" onclick="startCardioTimer(${ei},${si})">▶</button>
+                  <button type="button" class="cardio-action-btn" id="cardio-pause-${ei}-${si}" onclick="pauseCardioTimer(${ei},${si})">⏸</button>
+                  <button type="button" class="cardio-action-btn ${set.done ? 'done' : ''}" id="cardio-finish-${ei}-${si}" onclick="finishCardioTimer(${ei},${si})">✓</button>
+                </div>
+
+                <div class="cardio-km-grid">
+                  <div class="cardio-km-label">KM</div>
+                  <input type="number" class="set-input ${set.done ? 'completed' : ''}" id="reps-${ei}-${si}" placeholder="km" value="${set.reps || ''}" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="decimal">
+                </div>
+              </div>
             </div>
           `;
         }
@@ -4838,7 +5104,22 @@ function deleteExercise(ei) {
 function addSet(ei) {
   const ex = currentSession.exercises[ei];
   const lastSet = ex.sets[ex.sets.length - 1];
-  ex.sets.push({ weight: isBodyweightExercise(ex) ? '0' : (lastSet?.weight || ''), reps: lastSet?.reps || '', done: false });
+
+  if (isCardioExercise(ex)) {
+    ex.sets.push({
+      weight: '',
+      reps: lastSet?.reps || '',
+      done: false,
+      cardioTimer: { elapsedMs: 0, startedAt: null, running: false }
+    });
+  } else {
+    ex.sets.push({
+      weight: isBodyweightExercise(ex) ? '0' : (lastSet?.weight || ''),
+      reps: lastSet?.reps || '',
+      done: false
+    });
+  }
+
   saveCurrentDraft();
   renderExercises();
 }
