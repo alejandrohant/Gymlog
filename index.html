@@ -1019,7 +1019,13 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 <script>
 const SUPABASE_URL = 'https://zflsvgnvxtozinucrnsp.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_4470upMpfTWgS6H6cOiG_g_Uc6fLe2h';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});
 
 let currentUser = null;
 let currentSession = null;
@@ -5557,15 +5563,21 @@ function renderAuthLoggedIn() {
 
 async function getAuthUserFast() {
   if (!supabaseClient?.auth) return null;
-  try {
-    const result = await withTimeout(supabaseClient.auth.getSession(), 3500, null);
-    const user = result?.data?.session?.user || null;
-    if (user) return user;
-  } catch (error) {
-    console.warn('getSession', error);
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const result = await withTimeout(supabaseClient.auth.getSession(), 10000, null);
+      const user = result?.data?.session?.user || null;
+      if (user) return user;
+    } catch (error) {
+      console.warn('getSession', error);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 350));
   }
+
   try {
-    const result = await withTimeout(supabaseClient.auth.getUser(), 3500, null);
+    const result = await withTimeout(supabaseClient.auth.getUser(), 10000, null);
     return result?.data?.user || null;
   } catch (error) {
     console.warn('getUser', error);
@@ -5820,11 +5832,15 @@ if (supabaseClient?.auth?.onAuthStateChange) {
     if (authBusy && !user) return;
 
     if (!user) {
-      currentUser = null;
-      cloudSessions = [];
-      cloudSessionsLoaded = false;
-      if (authEventReady || authBootDone) renderAuthLoggedOut('Inicia sesión para usar FORJA.');
       authEventReady = true;
+
+      if (event === 'SIGNED_OUT') {
+        currentUser = null;
+        cloudSessions = [];
+        cloudSessionsLoaded = false;
+        renderAuthLoggedOut('Inicia sesión para usar FORJA.');
+      }
+
       return;
     }
 
@@ -5832,6 +5848,32 @@ if (supabaseClient?.auth?.onAuthStateChange) {
     if (!currentUser || currentUser.id !== user.id) await afterLogin(user);
   });
 }
+
+let forjaAuthRestoreBusy = false;
+
+async function restoreAuthAfterResume() {
+  if (forjaAuthRestoreBusy || currentUser || authBusy) return;
+
+  forjaAuthRestoreBusy = true;
+
+  try {
+    const user = await getAuthUserFast();
+    if (!user) return;
+    await afterLogin(user);
+  } catch (error) {
+    console.warn('restoreAuthAfterResume', error);
+  } finally {
+    forjaAuthRestoreBusy = false;
+  }
+}
+
+window.addEventListener('focus', restoreAuthAfterResume);
+
+window.addEventListener('pageshow', restoreAuthAfterResume, { passive: true });
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) restoreAuthAfterResume();
+}, { passive: true });
 
 
 // Recuperación local y fuente Supabase completa
