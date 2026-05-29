@@ -1499,16 +1499,28 @@ function getDraftOwnerId() {
 
 function saveCurrentDraft() {
   if (!currentSession) return;
+
+  currentSession.updatedAt = new Date().toISOString();
+
+  const editingFinishedSession = !!editingSessionKey && !isActiveCloudSession(currentSession);
+
   try {
-    localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify({
-      owner: getDraftOwnerId(),
-      savedAt: new Date().toISOString(),
-      session: stripCloudMeta(currentSession)
-    }));
+    if (editingFinishedSession) {
+      localStorage.removeItem(CURRENT_SESSION_KEY);
+    } else {
+      localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify({
+        owner: getDraftOwnerId(),
+        savedAt: new Date().toISOString(),
+        session: stripCloudMeta(currentSession)
+      }));
+    }
   } catch (e) {
     console.warn('saveCurrentDraft', e);
   }
-  queueCurrentSessionCloudSave(false);
+
+  if (!editingFinishedSession) {
+    queueCurrentSessionCloudSave(false);
+  }
 }
 
 function getCurrentDraft() {
@@ -1684,173 +1696,6 @@ function readSessionsArrayFromStorageKey(key) {
   } catch {
     return [];
   }
-}
-
-function getSessionsLocal() {
-  /* Caché local mínima. NO es la fuente oficial del historial. */
-  return dedupeSessions(readSessionsArrayFromStorageKey('gymlog_sessions'));
-}
-
-function getLegacyLocalSessionsForCloudMigration() {
-  /* Migración automática una sola vía: local antiguo -> Supabase.
-     No lee gymlog_current_session para no meter entrenamientos en curso al historial. */
-  const legacy = [
-    ...readSessionsArrayFromStorageKey('gymlog_sessions'),
-    ...readSessionsArrayFromStorageKey('forja_sessions')
-  ];
-  return dedupeSessions(legacy);
-}
-
-function setSessionsLocal(sessions) {
-  /* Solo caché de lectura rápida / respaldo. El historial oficial vive en Supabase. */
-  localStorage.setItem('gymlog_sessions', JSON.stringify(dedupeSessions(sessions).map(stripCloudMeta)));
-}
-
-function isSameSessionIdentity(a, b) {
-  return !!sessionKey(a) && sessionKey(a) === sessionKey(b);
-}
-
-function shouldHideFromHistory(session) {
-  /* El historial debe ser igual en cualquier navegador: Supabase es la fuente oficial.
-     Solo se oculta la sesión activa real de ESTE navegador. Si una fila quedó
-     marcada como active por un guardado viejo, no se pierde del historial. */
-  if (!isActiveCloudSession(session)) return false;
-  const live = currentSession || getActiveDraftSession();
-  return !!live && isSameSessionIdentity(live, session);
-}
-
-function getSessions() {
-  /* Con usuario activo NO se mezcla localStorage como historial paralelo.
-     localStorage queda solo como caché/migración para que Safari y la web app
-     no muestren historiales distintos. */
-  const source = currentUser ? (cloudSessions || []) : getSessionsLocal();
-  return dedupeSessions(source).filter(s => !shouldHideFromHistory(s));
-}
-
-
-function getFinishedSessions() {
-  return getSessions();
-}
-
-
-function getLastSession(routineId) {
-  const sessions = getFinishedSessions();
-  return sessions.find(s => s.routineId === routineId) || null;
-}
-
-function getLastExerciseData(routineId, exerciseName) {
-  const last = getLastSession(routineId);
-  if (!last) return null;
-  return last.exercises.find(e => e.name === exerciseName) || null;
-}
-
-async function loadCloudSessions() {
-  if (!currentUser) {
-    cloudSessions = [];
-    cloudSessionsLoaded = false;
-    return [];
-  }
-
-  const response = await withTimeout(
-    supabaseClient
-      .from('sessions')
-      .select('id, routine_id, routine_name, date, data_json')
-      .eq('user_id', currentUser.id)
-      .order('date', { ascending: false }),
-    12000,
-    { data: null, error: new Error('Supabase tardó demasiado en responder.') }
-  );
-
-  const data = response?.data || [];
-  const error = response?.error || null;
-
-  if (error) {
-    console.error('loadCloudSessions', error);
-    showToast('❌ ' + (error.message || 'No se pudo cargar historial'));
-    cloudSessionsLoaded = true;
-    cloudSessions = dedupeSessions(cloudSessions || []);
-    return cloudSessions;
-  }
-
-  cloudSessions = dedupeSessions((data || []).map(row => ({
-    ...(row.data_json || {}),
-    _cloudId: row.id,
-    routineId: row.data_json?.routineId || row.routine_id,
-    routineName: row.data_json?.routineName || row.routine_name,
-    date: row.data_json?.date || row.date,
-  })));
-
-  cloudSessionsLoaded = true;
-  setSessionsLocal(cloudSessions);
-  return cloudSessions;
-}
-
-async function refreshCloudHistory(force = false) {
-  if (!currentUser) return [];
-  if (cloudHistoryRefreshPromise && !force) return cloudHistoryRefreshPromise;
-  cloudHistoryRefreshPromise = loadCloudSessions().finally(() => {
-    cloudHistoryRefreshPromise = null;
-  });
-  return cloudHistoryRefreshPromise;
-}
-
-async function syncLocalSessionsToCloud() {
-  if (!currentUser) return true;
-
-  const legacyLocalSessions = getLegacyLocalSessionsForCloudMigration();
-
-  const existingResponse = await withTimeout(
-    supabaseClient
-      .from('sessions')
-      .select('id, routine_name, date')
-      .eq('user_id', currentUser.id),
-    12000,
-    { data: null, error: new Error('Supabase tardó demasiado en responder al preparar sincronización.') }
-  );
-  const existingRows = existingResponse?.data || [];
-  const fetchError = existingResponse?.error || null;
-
-  if (fetchError) {
-    console.error('syncLocalSessionsToCloud', fetchError);
-    showToast('❌ ' + fetchError.message);
-    await loadCloudSessions();
-    return false;
-  }
-
-  const existingKeys = new Set(
-    (existingRows || []).map(row => `${row.routine_name}__${row.date}`)
-  );
-
-  const rows = legacyLocalSessions
-    .filter(session => !existingKeys.has(sessionKey(session)))
-    .map(session => {
-      const clean = stripCloudMeta(session);
-      return {
-        user_id: currentUser.id,
-        routine_id: clean.routineId,
-        routine_name: clean.routineName,
-        date: clean.date,
-        data_json: clean,
-      };
-    });
-
-  if (rows.length) {
-    const insertResponse = await withTimeout(
-      supabaseClient.from('sessions').insert(rows),
-      12000,
-      { error: new Error('Supabase tardó demasiado en guardar el historial local.') }
-    );
-    const error = insertResponse?.error || null;
-    if (error) {
-      console.error('syncLocalSessionsToCloud insert', error);
-      showToast('❌ ' + error.message);
-      await loadCloudSessions();
-      return false;
-    }
-  }
-
-  await loadCloudSessions();
-  return true;
 }
 
 let currentSessionCloudTimer = null;
@@ -2822,56 +2667,6 @@ function editRoutine(routineId) {
   };
 }
 
-async function signUp() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value.trim();
-  if (!email || !password) { showToast('⚠️ Pon correo y contraseña'); return; }
-  const { data, error } = await supabaseClient.auth.signUp({ email, password });
-  if (error) { showToast('❌ ' + error.message); return; }
-
-  currentUser = data.user || null;
-  await renderAuthStatus();
-  await renderProfile();
-  if (currentUser) await syncLocalSessionsToCloud();
-  await refreshCloudHistory(true);
-  renderHome();
-  renderHistory();
-  showToast('✅ Cuenta creada');
-  if (currentUser) showScreen('home');
-}
-
-async function signIn() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value.trim();
-  if (!email || !password) { showToast('⚠️ Pon correo y contraseña'); return; }
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) { showToast('❌ ' + error.message); return; }
-
-  currentUser = data.user || null;
-  await renderAuthStatus();
-  await renderProfile();
-  if (currentUser) await syncLocalSessionsToCloud();
-  await refreshCloudHistory(true);
-  renderHome();
-  renderHistory();
-  showToast('✅ Sesión iniciada');
-  if (currentUser) showScreen('home');
-}
-
-async function signOut() {
-  const { error } = await supabaseClient.auth.signOut();
-  if (error) { showToast('❌ ' + error.message); return; }
-  currentUser = null;
-  cloudSessions = [];
-  localStorage.removeItem('gymlog_profile');
-  await renderAuthStatus();
-  await renderProfile();
-  renderHome();
-  renderHistory();
-  showToast('👋 Sesión cerrada');
-  showScreen('auth');
-}
-
 async function getAccountDisplayName() {
   if (!currentUser) return '';
 
@@ -2923,117 +2718,10 @@ function setupTrainingSwipeToHide() {
   }, { passive: true });
 }
 
-async function renderAuthStatus() {
-  const { data } = await supabaseClient.auth.getUser();
-  currentUser = data.user || null;
-
-  const panel = document.getElementById('authPanel');
-  if (!panel) return;
-
-  if (!currentUser) {
-    panel.innerHTML = `
-      <div class="exercise-card" style="padding:20px;">
-        <input id="authEmail" type="email" placeholder="Correo"
-          style="width:100%;margin-bottom:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
-
-        <input id="authPassword" type="password" placeholder="Contraseña"
-          style="width:100%;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;">
-
-        <div style="display:flex;gap:10px;">
-          <button onclick="signUp()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-            CREAR CUENTA
-          </button>
-
-          <button onclick="signIn()" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-            ENTRAR
-          </button>
-        </div>
-
-        <div id="authStatus" style="margin-top:14px;font-size:13px;color:var(--muted);">
-          Sin sesión
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  const displayName = await getAccountDisplayName();
-  const initial = (displayName || 'A').trim().charAt(0).toUpperCase();
-
-  panel.innerHTML = `
-    <div class="exercise-card" style="padding:20px;">
-      <div style="display:flex;gap:14px;align-items:center;margin-bottom:18px;">
-        <div style="width:58px;height:58px;border-radius:18px;background:linear-gradient(180deg, rgba(201,164,76,0.22), rgba(201,164,76,0.08));border:1px solid rgba(201,164,76,0.18);display:grid;place-items:center;color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;">
-          ${initial}
-        </div>
-        <div style="min-width:0;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1.4px;color:var(--accent);line-height:0.95;">
-            ${displayName}
-          </div>
-          <div style="margin-top:6px;font-size:13px;color:var(--muted);word-break:break-word;">
-            ${currentUser.email}
-          </div>
-        </div>
-      </div>
-
-      <div style="padding:12px 14px;margin-bottom:14px;border-radius:14px;background:rgba(71,255,138,0.08);border:1px solid rgba(71,255,138,0.15);color:#86efac;font-size:13px;">
-        Sesión iniciada
-      </div>
-
-      <button onclick="signOut()" style="width:100%;padding:12px;background:#ff4444;border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer">
-        CERRAR SESIÓN
-      </button>
-    </div>
-  `;
-}
-
 function setHistoryFilter(filterId) {
   historyFilter = filterId || 'all';
   renderHistory();
 }
-function showScreen(name) {
-  if (!currentUser && name !== 'auth') {
-    name = 'auth';
-    showToast('🔒 Inicia sesión primero');
-  }
-
-  const goingToSession = name === 'session';
-  if (!goingToSession) document.body.classList.remove('session-preview-active');
-
-  if (currentSession && !goingToSession) {
-    if (!editingSessionKey) saveCurrentDraft();
-    renderTimer();
-  }
-
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-  const targetScreen = document.getElementById(name + 'Screen');
-  if (targetScreen) targetScreen.classList.add('active');
-
-  if (name === 'session' && currentSession) enterTrainingMode();
-  else exitTrainingMode();
-
-  const navMap = { home: 0, history: 1, profile: 2, auth: 3 };
-  if (navMap[name] !== undefined) {
-    document.querySelectorAll('.nav-btn')[navMap[name]].classList.add('active');
-  }
-
-  if (name === 'history') {
-    renderHistory();
-    if (currentUser) refreshCloudHistory(true).then(() => {
-      renderHistory();
-      renderHome();
-    });
-  }
-  if (name === 'home') {
-    renderHome();
-    if (currentUser) refreshCloudHistory().then(renderHome);
-  }
-  if (name === 'profile') { try { renderProfile(); ensureCloudHistoryReady(false).then(renderProfile); } catch (error) { console.warn('renderProfile', error); } }
-  if (name === 'auth') renderAuthStatus();
-}
-
 async function deleteActiveCloudSession(session) {
   const s = normalizeSession(session);
   if (!currentUser || !s || !isActiveCloudSession(s)) return;
@@ -3279,7 +2967,6 @@ function updateSessionCounters() {
 
   const completedEl = document.getElementById('completedSetsCounter');
   if (completedEl) completedEl.textContent = completed;
-  saveCurrentDraft();
 }
 
 
@@ -4555,26 +4242,6 @@ window.addEventListener('pageshow', () => {
   });
 }, { passive: true });
 
-async function initApp() {
-  await renderAuthStatus();
-
-  if (currentUser) {
-    await syncLocalSessionsToCloud();
-    await refreshCloudHistory(true);
-  } else {
-    cloudSessions = [];
-    cloudSessionsLoaded = false;
-  }
-
-  renderHome();
-  renderHistory();
-  await renderProfile();
-  showScreen(currentUser ? 'home' : 'auth');
-}
-
-/* Auth listener anterior eliminado: la sesión se controla solo en el bloque final. */
-
-
 function routineEmojiBySession(session) {
   const byId = (typeof getRoutineById === 'function' && session?.routineId) ? getRoutineById(session.routineId) : null;
   const byName = Array.isArray(ROUTINES) ? ROUTINES.find(r => r.name === session?.routineName) : null;
@@ -4881,14 +4548,11 @@ function startCardioTimer(ei, si) {
   const timer = getCardioTimer(set);
   if (timer.running) return;
 
-  set.done = false;
-  set.weight = '';
   timer.startedAt = Date.now();
   timer.running = true;
 
-  saveCurrentDraft();
-  updateSessionCounters();
   updateCardioTimerDisplay(ei, si);
+  saveCurrentDraft();
 }
 
 function pauseCardioTimer(ei, si) {
@@ -4902,8 +4566,8 @@ function pauseCardioTimer(ei, si) {
   timer.startedAt = null;
   timer.running = false;
 
-  saveCurrentDraft();
   updateCardioTimerDisplay(ei, si);
+  saveCurrentDraft();
 }
 
 function finishCardioTimer(ei, si) {
@@ -5296,7 +4960,11 @@ function addExerciseToSession() {
       type: selected.type || (isCardioExerciseName(selected.name) ? 'cardio' : null),
       sets: Array.from({ length: setCount }, (_, i) => {
         const lastSet = lastEx?.sets?.[i];
-        return { weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false };
+        const baseSet = { weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false };
+        if (selected.type === 'cardio' || isCardioExerciseName(selected.name)) {
+          baseSet.cardioTimer = { elapsedMs: 0, startedAt: null, running: false };
+        }
+        return baseSet;
       })
     });
 
@@ -5524,7 +5192,8 @@ function showPostSessionSummary(session, wasEditing = false) {
 
       <div style="font-size: 14px; color: #bfb3cc; line-height: 1.45; margin-bottom: 18px;">
         ${wasEditing ? 'Cambios guardados correctamente.' : 'Entrenamiento terminado correctamente.'}<br>
-        <strong style="color:#f7f2ea;">${escapeHtml(session.routineName || 'Rutina')}</strong>
+        <strong style="color:#f7f2ea;">${escapeHtml(session.routineName || 'Rutina')}</strong><br>
+        Si quieres compartir o generar tarjeta, ve a Historial.
       </div>
 
       <div class="history-summary-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:0 0 14px;">
@@ -5571,17 +5240,6 @@ function showPostSessionSummary(session, wasEditing = false) {
           letter-spacing:1px;
         ">Historial</button>
 
-        <button id="summaryCreateImage" style="
-          grid-column:1 / -1;
-          padding:14px;
-          border-radius:14px;
-          border:none;
-          background:#d8b65d;
-          color:#12051f;
-          font-family:'Bebas Neue', sans-serif;
-          font-size:19px;
-          letter-spacing:1px;
-        ">Tarjeta transparente</button>
       </div>
     </div>
   `;
@@ -5596,11 +5254,6 @@ function showPostSessionSummary(session, wasEditing = false) {
   document.getElementById('summaryGoHistory').onclick = () => {
     overlay.remove();
     showScreen('history');
-  };
-
-  document.getElementById('summaryCreateImage').onclick = () => {
-    overlay.remove();
-    openSocialImageBuilder(session);
   };
 }
 function toggleSet(ei, si) {
