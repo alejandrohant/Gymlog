@@ -4285,13 +4285,38 @@ function renderHome() {
   const grid = document.getElementById('routineGrid');
   if (!grid) return;
 
-  const sessions = getSessions();
+  try {
+    if (!Array.isArray(ROUTINES) || !ROUTINES.length) {
+      ROUTINES = cloneData(DEFAULT_ROUTINES);
+      cacheRoutinesLocal();
+    }
+  } catch (error) {
+    console.warn('renderHome routines fallback', error);
+    ROUTINES = cloneData(DEFAULT_ROUTINES);
+  }
+
+  let sessions = [];
+  try {
+    sessions = getSessions();
+    if (!Array.isArray(sessions)) sessions = [];
+  } catch (error) {
+    console.warn('renderHome sessions fallback', error);
+    sessions = [];
+  }
+
   const totalSessions = sessions.length;
-  const completedSets = sessions.reduce((acc, s) => acc + (s.exercises || []).reduce((sum, ex) => sum + ((ex.sets || []).filter(st => st.done).length), 0), 0);
-  const latest = sessions[0];
+  const completedSets = sessions.reduce((acc, s) => acc + (Array.isArray(s.exercises) ? s.exercises : []).reduce((sum, ex) => sum + ((Array.isArray(ex.sets) ? ex.sets : []).filter(st => st.done).length), 0), 0);
+  const latest = sessions[0] || null;
   const todayRoutine = getTodayRoutine();
-  const draft = currentSession || getCurrentDraft();
-  const draftSavedAt = getDraftSavedAt();
+
+  let draft = null;
+  let draftSavedAt = null;
+  try {
+    draft = currentSession || getCurrentDraft();
+    draftSavedAt = getDraftSavedAt();
+  } catch (error) {
+    console.warn('renderHome draft fallback', error);
+  }
 
   const todayExercises = todayRoutine ? (todayRoutine.exercises || []).length : 0;
   const todaySets = todayRoutine ? (todayRoutine.exercises || []).reduce((acc, ex) => acc + (parseInt(ex.sets, 10) || 0), 0) : 0;
@@ -4301,12 +4326,30 @@ function renderHome() {
     ? 'Objetivo: igualar o superar la última sesión con técnica limpia.'
     : 'Objetivo: primer registro limpio de esta rutina.';
 
-  const weekStatus = getWeekStatus(sessions);
+  let weekStatus = null;
+  try {
+    weekStatus = getWeekStatus(sessions);
+  } catch (error) {
+    console.warn('renderHome week fallback', error);
+  }
+
+  if (!weekStatus || !Number.isFinite(weekStatus.totalCount)) {
+    weekStatus = {
+      completedCount: 0,
+      totalCount: ROUTINES.length,
+      pendingCount: ROUTINES.length,
+      pendingNames: ROUTINES.map(r => r.name).join(', '),
+      completedNames: ''
+    };
+  }
+
+  const weekTotal = Math.max(1, weekStatus.totalCount || ROUTINES.length || 1);
+  const weekPercent = Math.max(0, Math.min(100, Math.round(((weekStatus.completedCount || 0) / weekTotal) * 100)));
 
   const draftCard = draft ? `
     <div class="draft-card tap-card" onclick="resumeSavedSession()">
       <div class="routine-name">Sesión guardada</div>
-      <div class="routine-meta">${escapeHtml(draft.routineName)} sin terminar${draftSavedAt ? ` · ${formatDate(draftSavedAt)}` : ''}</div>
+      <div class="routine-meta">${escapeHtml(draft.routineName || 'Entrenamiento')} sin terminar${draftSavedAt ? ` · ${formatDate(draftSavedAt)}` : ''}</div>
     </div>
   ` : '';
 
@@ -4323,15 +4366,15 @@ function renderHome() {
       <div class="forja-week-panel">
         <div class="forja-week-top">
           <span>Semana actual</span>
-          <strong>${weekStatus.completedCount}/${weekStatus.totalCount}</strong>
+          <strong>${weekStatus.completedCount || 0}/${weekStatus.totalCount || ROUTINES.length}</strong>
         </div>
         <div class="forja-week-bar">
-          <div style="width:${Math.round((weekStatus.completedCount / weekStatus.totalCount) * 100)}%;"></div>
+          <div style="width:${weekPercent}%;"></div>
         </div>
         <div class="forja-week-text">
           ${weekStatus.pendingCount === 0
             ? 'Semana completa.'
-            : `Pendiente: ${escapeHtml(weekStatus.pendingNames)}`
+            : `Pendiente: ${escapeHtml(weekStatus.pendingNames || ROUTINES.map(r => r.name).join(', '))}`
           }
         </div>
       </div>
@@ -4365,14 +4408,14 @@ function renderHome() {
     ${ROUTINES.map(r => {
       const last = sessions.find(s => s.routineId === r.id) || null;
       const lastText = last ? formatDate(last.date) : 'sin sesiones';
-      const totalSets = (r.exercises || []).reduce((acc, ex) => acc + ex.sets, 0);
+      const totalSets = (r.exercises || []).reduce((acc, ex) => acc + (parseInt(ex.sets, 10) || 0), 0);
       const isToday = todayRoutine && todayRoutine.id === r.id;
 
       return `
         <div class="routine-card tap-card" onclick="viewRoutine('${safeJsString(r.id)}')" oncontextmenu="event.preventDefault(); editRoutine('${safeJsString(r.id)}')">
           <div class="routine-emoji routine-mark">${escapeHtml(r.emoji || '🏋️')}</div>
           <div class="routine-info">
-            <div class="routine-name">${escapeHtml(r.name)}${isToday ? ' · HOY' : ''}</div>
+            <div class="routine-name">${escapeHtml(r.name || 'Rutina')}${isToday ? ' · HOY' : ''}</div>
             <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
             <div class="forja-card-line"><strong>${shortDay(r.day)}</strong> · ${totalSets} series · última: ${lastText}</div>
           </div>
@@ -5727,11 +5770,11 @@ function showScreen(name) {
   }
 
   if (name === 'home') {
-    renderHome();
+    try { renderHome(); } catch (error) { console.error('renderHome', error); }
     Promise.all([
       ensureRoutinesReady(false),
       ensureCloudHistoryReady(false)
-    ]).then(renderHome);
+    ]).then(() => { try { renderHome(); } catch (error) { console.error('renderHome post-sync', error); } });
     return;
   }
 
@@ -5855,6 +5898,11 @@ function getAllRecoverableLocalSessions() {
 
 function getSessionsLocal() {
   return dedupeSessions(getAllRecoverableLocalSessions());
+}
+
+function setSessionsLocal(sessions) {
+  const clean = dedupeSessions(Array.isArray(sessions) ? sessions : []).map(stripCloudMeta);
+  localStorage.setItem('gymlog_sessions', JSON.stringify(clean));
 }
 
 function getLegacyLocalSessionsForCloudMigration() {
