@@ -1496,31 +1496,23 @@ const CURRENT_SESSION_KEY = 'gymlog_current_session';
 function getDraftOwnerId() {
   return currentUser?.id || 'local';
 }
-
 function saveCurrentDraft() {
   if (!currentSession) return;
 
-  currentSession.updatedAt = new Date().toISOString();
-
-  const editingFinishedSession = !!editingSessionKey && !isActiveCloudSession(currentSession);
+  // Editar un entrenamiento ya guardado no debe crear ni sobrescribir una sesión activa.
+  if (editingSessionKey) return;
 
   try {
-    if (editingFinishedSession) {
-      localStorage.removeItem(CURRENT_SESSION_KEY);
-    } else {
-      localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify({
-        owner: getDraftOwnerId(),
-        savedAt: new Date().toISOString(),
-        session: stripCloudMeta(currentSession)
-      }));
-    }
+    localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify({
+      owner: getDraftOwnerId(),
+      savedAt: new Date().toISOString(),
+      session: stripCloudMeta(currentSession)
+    }));
   } catch (e) {
     console.warn('saveCurrentDraft', e);
   }
 
-  if (!editingFinishedSession) {
-    queueCurrentSessionCloudSave(false);
-  }
+  queueCurrentSessionCloudSave(false);
 }
 
 function getCurrentDraft() {
@@ -1696,6 +1688,41 @@ function readSessionsArrayFromStorageKey(key) {
   } catch {
     return [];
   }
+}
+
+function setSessionsLocal(sessions) {
+  /* Solo caché de lectura rápida / respaldo. El historial oficial vive en Supabase. */
+  localStorage.setItem('gymlog_sessions', JSON.stringify(dedupeSessions(sessions).map(stripCloudMeta)));
+}
+
+function isSameSessionIdentity(a, b) {
+  return !!sessionKey(a) && sessionKey(a) === sessionKey(b);
+}
+
+function shouldHideFromHistory(session) {
+  /* El historial debe ser igual en cualquier navegador: Supabase es la fuente oficial.
+     Solo se oculta la sesión activa real de ESTE navegador. Si una fila quedó
+     marcada como active por un guardado viejo, no se pierde del historial. */
+  if (!isActiveCloudSession(session)) return false;
+  const live = currentSession || getActiveDraftSession();
+  return !!live && isSameSessionIdentity(live, session);
+}
+
+
+function getFinishedSessions() {
+  return getSessions();
+}
+
+
+function getLastSession(routineId) {
+  const sessions = getFinishedSessions();
+  return sessions.find(s => s.routineId === routineId) || null;
+}
+
+function getLastExerciseData(routineId, exerciseName) {
+  const last = getLastSession(routineId);
+  if (!last) return null;
+  return last.exercises.find(e => e.name === exerciseName) || null;
 }
 
 let currentSessionCloudTimer = null;
@@ -2722,6 +2749,7 @@ function setHistoryFilter(filterId) {
   historyFilter = filterId || 'all';
   renderHistory();
 }
+
 async function deleteActiveCloudSession(session) {
   const s = normalizeSession(session);
   if (!currentUser || !s || !isActiveCloudSession(s)) return;
@@ -4236,6 +4264,9 @@ window.addEventListener('pageshow', () => {
   });
 }, { passive: true });
 
+/* Auth listener anterior eliminado: la sesión se controla solo en el bloque final. */
+
+
 function routineEmojiBySession(session) {
   const byId = (typeof getRoutineById === 'function' && session?.routineId) ? getRoutineById(session.routineId) : null;
   const byName = Array.isArray(ROUTINES) ? ROUTINES.find(r => r.name === session?.routineName) : null;
@@ -4285,38 +4316,13 @@ function renderHome() {
   const grid = document.getElementById('routineGrid');
   if (!grid) return;
 
-  try {
-    if (!Array.isArray(ROUTINES) || !ROUTINES.length) {
-      ROUTINES = cloneData(DEFAULT_ROUTINES);
-      cacheRoutinesLocal();
-    }
-  } catch (error) {
-    console.warn('renderHome routines fallback', error);
-    ROUTINES = cloneData(DEFAULT_ROUTINES);
-  }
-
-  let sessions = [];
-  try {
-    sessions = getSessions();
-    if (!Array.isArray(sessions)) sessions = [];
-  } catch (error) {
-    console.warn('renderHome sessions fallback', error);
-    sessions = [];
-  }
-
+  const sessions = getSessions();
   const totalSessions = sessions.length;
-  const completedSets = sessions.reduce((acc, s) => acc + (Array.isArray(s.exercises) ? s.exercises : []).reduce((sum, ex) => sum + ((Array.isArray(ex.sets) ? ex.sets : []).filter(st => st.done).length), 0), 0);
-  const latest = sessions[0] || null;
+  const completedSets = sessions.reduce((acc, s) => acc + (s.exercises || []).reduce((sum, ex) => sum + ((ex.sets || []).filter(st => st.done).length), 0), 0);
+  const latest = sessions[0];
   const todayRoutine = getTodayRoutine();
-
-  let draft = null;
-  let draftSavedAt = null;
-  try {
-    draft = currentSession || getCurrentDraft();
-    draftSavedAt = getDraftSavedAt();
-  } catch (error) {
-    console.warn('renderHome draft fallback', error);
-  }
+  const draft = currentSession || getCurrentDraft();
+  const draftSavedAt = getDraftSavedAt();
 
   const todayExercises = todayRoutine ? (todayRoutine.exercises || []).length : 0;
   const todaySets = todayRoutine ? (todayRoutine.exercises || []).reduce((acc, ex) => acc + (parseInt(ex.sets, 10) || 0), 0) : 0;
@@ -4326,30 +4332,12 @@ function renderHome() {
     ? 'Objetivo: igualar o superar la última sesión con técnica limpia.'
     : 'Objetivo: primer registro limpio de esta rutina.';
 
-  let weekStatus = null;
-  try {
-    weekStatus = getWeekStatus(sessions);
-  } catch (error) {
-    console.warn('renderHome week fallback', error);
-  }
-
-  if (!weekStatus || !Number.isFinite(weekStatus.totalCount)) {
-    weekStatus = {
-      completedCount: 0,
-      totalCount: ROUTINES.length,
-      pendingCount: ROUTINES.length,
-      pendingNames: ROUTINES.map(r => r.name).join(', '),
-      completedNames: ''
-    };
-  }
-
-  const weekTotal = Math.max(1, weekStatus.totalCount || ROUTINES.length || 1);
-  const weekPercent = Math.max(0, Math.min(100, Math.round(((weekStatus.completedCount || 0) / weekTotal) * 100)));
+  const weekStatus = getWeekStatus(sessions);
 
   const draftCard = draft ? `
     <div class="draft-card tap-card" onclick="resumeSavedSession()">
       <div class="routine-name">Sesión guardada</div>
-      <div class="routine-meta">${escapeHtml(draft.routineName || 'Entrenamiento')} sin terminar${draftSavedAt ? ` · ${formatDate(draftSavedAt)}` : ''}</div>
+      <div class="routine-meta">${escapeHtml(draft.routineName)} sin terminar${draftSavedAt ? ` · ${formatDate(draftSavedAt)}` : ''}</div>
     </div>
   ` : '';
 
@@ -4366,15 +4354,15 @@ function renderHome() {
       <div class="forja-week-panel">
         <div class="forja-week-top">
           <span>Semana actual</span>
-          <strong>${weekStatus.completedCount || 0}/${weekStatus.totalCount || ROUTINES.length}</strong>
+          <strong>${weekStatus.completedCount}/${weekStatus.totalCount}</strong>
         </div>
         <div class="forja-week-bar">
-          <div style="width:${weekPercent}%;"></div>
+          <div style="width:${Math.round((weekStatus.completedCount / weekStatus.totalCount) * 100)}%;"></div>
         </div>
         <div class="forja-week-text">
           ${weekStatus.pendingCount === 0
             ? 'Semana completa.'
-            : `Pendiente: ${escapeHtml(weekStatus.pendingNames || ROUTINES.map(r => r.name).join(', '))}`
+            : `Pendiente: ${escapeHtml(weekStatus.pendingNames)}`
           }
         </div>
       </div>
@@ -4408,14 +4396,14 @@ function renderHome() {
     ${ROUTINES.map(r => {
       const last = sessions.find(s => s.routineId === r.id) || null;
       const lastText = last ? formatDate(last.date) : 'sin sesiones';
-      const totalSets = (r.exercises || []).reduce((acc, ex) => acc + (parseInt(ex.sets, 10) || 0), 0);
+      const totalSets = (r.exercises || []).reduce((acc, ex) => acc + ex.sets, 0);
       const isToday = todayRoutine && todayRoutine.id === r.id;
 
       return `
         <div class="routine-card tap-card" onclick="viewRoutine('${safeJsString(r.id)}')" oncontextmenu="event.preventDefault(); editRoutine('${safeJsString(r.id)}')">
           <div class="routine-emoji routine-mark">${escapeHtml(r.emoji || '🏋️')}</div>
           <div class="routine-info">
-            <div class="routine-name">${escapeHtml(r.name || 'Rutina')}${isToday ? ' · HOY' : ''}</div>
+            <div class="routine-name">${escapeHtml(r.name)}${isToday ? ' · HOY' : ''}</div>
             <div class="routine-meta">${escapeHtml(r.desc || '')}</div>
             <div class="forja-card-line"><strong>${shortDay(r.day)}</strong> · ${totalSets} series · última: ${lastText}</div>
           </div>
@@ -4487,13 +4475,13 @@ function getCardioTimer(set) {
 
   return set.cardioTimer;
 }
-
 function getCardioElapsedMs(set) {
   const timer = getCardioTimer(set);
   let elapsed = timer.elapsedMs;
 
   if (timer.running && timer.startedAt) {
     elapsed += Math.max(0, Date.now() - timer.startedAt);
+    return Math.max(0, elapsed);
   }
 
   if (elapsed <= 0) {
@@ -4577,10 +4565,14 @@ function updateCardioTimerDisplays() {
     }
   });
 }
-
 function startCardioTimer(ei, si) {
   const set = currentSession?.exercises?.[ei]?.sets?.[si];
   if (!set) return;
+
+  if (set.done) {
+    showToast('✅ Cardio ya marcado');
+    return;
+  }
 
   const timer = getCardioTimer(set);
   if (timer.running) return;
@@ -4588,6 +4580,7 @@ function startCardioTimer(ei, si) {
   timer.startedAt = Date.now();
   timer.running = true;
 
+  ensureCardioTimerInterval();
   updateCardioTimerDisplay(ei, si);
   saveCurrentDraft();
 }
@@ -4603,10 +4596,9 @@ function pauseCardioTimer(ei, si) {
   timer.startedAt = null;
   timer.running = false;
 
-  updateCardioTimerDisplay(ei, si);
   saveCurrentDraft();
+  updateCardioTimerDisplay(ei, si);
 }
-
 function finishCardioTimer(ei, si) {
   const set = currentSession?.exercises?.[ei]?.sets?.[si];
   if (!set) return;
@@ -4627,9 +4619,9 @@ function finishCardioTimer(ei, si) {
   set.reps = document.getElementById(`reps-${ei}-${si}`)?.value || set.reps || '';
   set.done = true;
 
-  saveCurrentDraft();
   updateSessionCounters();
   updateCardioTimerDisplay(ei, si);
+  saveCurrentDraft();
   showToast('✅ Cardio terminado');
 }
 
@@ -4997,11 +4989,7 @@ function addExerciseToSession() {
       type: selected.type || (isCardioExerciseName(selected.name) ? 'cardio' : null),
       sets: Array.from({ length: setCount }, (_, i) => {
         const lastSet = lastEx?.sets?.[i];
-        const baseSet = { weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false };
-        if (selected.type === 'cardio' || isCardioExerciseName(selected.name)) {
-          baseSet.cardioTimer = { elapsedMs: 0, startedAt: null, running: false };
-        }
-        return baseSet;
+        return { weight: lastSet?.weight || '', reps: lastSet?.reps || '', done: false };
       })
     });
 
@@ -5177,7 +5165,6 @@ function getSessionSummaryStats(session) {
     bestSet: getSessionBestSet(session)
   };
 }
-
 function showPostSessionSummary(session, wasEditing = false) {
   const stats = getSessionSummaryStats(session);
   const bestText = stats.bestSet
@@ -5230,7 +5217,7 @@ function showPostSessionSummary(session, wasEditing = false) {
       <div style="font-size: 14px; color: #bfb3cc; line-height: 1.45; margin-bottom: 18px;">
         ${wasEditing ? 'Cambios guardados correctamente.' : 'Entrenamiento terminado correctamente.'}<br>
         <strong style="color:#f7f2ea;">${escapeHtml(session.routineName || 'Rutina')}</strong><br>
-        Si quieres compartir o generar tarjeta, ve a Historial.
+        <span style="display:block;margin-top:8px;color:#d8b65d;">Si quieres compartir o generar tarjeta, ve a Historial.</span>
       </div>
 
       <div class="history-summary-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:0 0 14px;">
@@ -5269,14 +5256,13 @@ function showPostSessionSummary(session, wasEditing = false) {
         <button id="summaryGoHistory" style="
           padding:14px;
           border-radius:14px;
-          border:1px solid rgba(205,180,120,.24);
-          background:rgba(255,255,255,.04);
-          color:#d8b65d;
+          border:none;
+          background:#d8b65d;
+          color:#12051f;
           font-family:'Bebas Neue', sans-serif;
           font-size:19px;
           letter-spacing:1px;
         ">Historial</button>
-
       </div>
     </div>
   `;
@@ -5726,10 +5712,10 @@ async function ensureCloudHistoryReady(force = false) {
   if (!currentUser) return [];
   if (!force && cloudSessionsLoaded && Array.isArray(cloudSessions)) return cloudSessions;
   try {
-    return await refreshCloudHistory(force);
+    return await refreshCloudHistory(true);
   } catch (error) {
     console.error('ensureCloudHistoryReady', error);
-    return getSessions();
+    return cloudSessions || [];
   }
 }
 
@@ -5765,16 +5751,16 @@ function showScreen(name) {
 
   if (name === 'history') {
     renderHistory();
-    ensureCloudHistoryReady(false).then(() => renderHistory());
+    ensureCloudHistoryReady(true).then(() => renderHistory());
     return;
   }
 
   if (name === 'home') {
-    try { renderHome(); } catch (error) { console.error('renderHome', error); }
+    renderHome();
     Promise.all([
       ensureRoutinesReady(false),
       ensureCloudHistoryReady(false)
-    ]).then(() => { try { renderHome(); } catch (error) { console.error('renderHome post-sync', error); } });
+    ]).then(renderHome);
     return;
   }
 
@@ -5900,11 +5886,6 @@ function getSessionsLocal() {
   return dedupeSessions(getAllRecoverableLocalSessions());
 }
 
-function setSessionsLocal(sessions) {
-  const clean = dedupeSessions(Array.isArray(sessions) ? sessions : []).map(stripCloudMeta);
-  localStorage.setItem('gymlog_sessions', JSON.stringify(clean));
-}
-
 function getLegacyLocalSessionsForCloudMigration() {
   return dedupeSessions(getAllRecoverableLocalSessions());
 }
@@ -5964,12 +5945,10 @@ async function loadCloudSessions() {
 
 async function refreshCloudHistory(force = false) {
   if (!currentUser) return [];
-  if (cloudHistoryRefreshPromise) return cloudHistoryRefreshPromise;
-  if (!force && cloudSessionsLoaded && Array.isArray(cloudSessions)) return cloudSessions;
-
+  if (cloudHistoryRefreshPromise && !force) return cloudHistoryRefreshPromise;
   cloudHistoryRefreshPromise = (async () => {
     const before = dedupeSessions([...(cloudSessions || []), ...getAllRecoverableLocalSessions()]);
-    if (before.length) cloudSessions = before;
+    if (before.length && !cloudSessionsLoaded) cloudSessions = before;
     await syncLocalSessionsToCloud();
     return await loadCloudSessions();
   })().finally(() => { cloudHistoryRefreshPromise = null; });
@@ -6011,11 +5990,14 @@ async function syncLocalSessionsToCloud() {
   }
   return true;
 }
-
 function getSessions() {
   const localSessions = getSessionsLocal();
-  const remoteSessions = Array.isArray(cloudSessions) ? cloudSessions : [];
-  const source = currentUser ? [...remoteSessions, ...localSessions] : localSessions;
+  const cloud = Array.isArray(cloudSessions) ? cloudSessions : [];
+
+  const source = currentUser
+    ? dedupeSessions([...cloud, ...localSessions])
+    : localSessions;
+
   return dedupeSessions(source).filter(s => !shouldHideFromHistory(s));
 }
 
@@ -6310,7 +6292,7 @@ function getProfileProgressHtml(sessions) {
   }
 
   if (!cloudSessionsLoaded && (!sessions || sessions.length === 0)) {
-    ensureCloudHistoryReady(false).then(() => renderProfile());
+    ensureCloudHistoryReady(true).then(() => renderProfile());
     return buttonsHtml + `<div class="profile-progress-content"><div class="profile-progress-empty">Sincronizando progreso con Supabase…</div></div>`;
   }
 
@@ -6348,7 +6330,7 @@ function renderHistory() {
 
   if (!cloudSessionsLoaded && sessions.length === 0) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">☁️</div><div class="empty-text">Sincronizando historial con Supabase…</div></div>`;
-    ensureCloudHistoryReady(false).then(() => renderHistory());
+    ensureCloudHistoryReady(true).then(() => renderHistory());
     return;
   }
 
@@ -6420,7 +6402,7 @@ function renderHistory() {
   if (currentUser && cloudSessionsLoaded) {
     const localCount = getAllRecoverableLocalSessions().length;
     const cloudCount = (cloudSessions || []).length;
-    if (localCount > cloudCount) refreshCloudHistory(false).then(() => renderHistory());
+    if (localCount > cloudCount) refreshCloudHistory(true).then(() => renderHistory());
   }
 }
 
