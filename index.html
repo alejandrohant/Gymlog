@@ -4229,12 +4229,6 @@ function exportSessionsCsv() {
   showToast('✅ CSV exportado');
 }
 
-setInterval(() => {
-  const historyOpen = document.getElementById('historyScreen')?.classList.contains('active');
-  if (!currentUser || !historyOpen || currentSession) return;
-  refreshCloudHistory(true).then(renderHistory);
-}, 8000);
-
 window.addEventListener('pageshow', () => {
   if (currentUser) loadCloudSessions().then(() => {
     renderHome();
@@ -5689,10 +5683,10 @@ async function ensureCloudHistoryReady(force = false) {
   if (!currentUser) return [];
   if (!force && cloudSessionsLoaded && Array.isArray(cloudSessions)) return cloudSessions;
   try {
-    return await refreshCloudHistory(true);
+    return await refreshCloudHistory(force);
   } catch (error) {
     console.error('ensureCloudHistoryReady', error);
-    return cloudSessions || [];
+    return getSessions();
   }
 }
 
@@ -5728,7 +5722,7 @@ function showScreen(name) {
 
   if (name === 'history') {
     renderHistory();
-    ensureCloudHistoryReady(true).then(() => renderHistory());
+    ensureCloudHistoryReady(false).then(() => renderHistory());
     return;
   }
 
@@ -5922,10 +5916,12 @@ async function loadCloudSessions() {
 
 async function refreshCloudHistory(force = false) {
   if (!currentUser) return [];
-  if (cloudHistoryRefreshPromise && !force) return cloudHistoryRefreshPromise;
+  if (cloudHistoryRefreshPromise) return cloudHistoryRefreshPromise;
+  if (!force && cloudSessionsLoaded && Array.isArray(cloudSessions)) return cloudSessions;
+
   cloudHistoryRefreshPromise = (async () => {
     const before = dedupeSessions([...(cloudSessions || []), ...getAllRecoverableLocalSessions()]);
-    if (before.length && !cloudSessionsLoaded) cloudSessions = before;
+    if (before.length) cloudSessions = before;
     await syncLocalSessionsToCloud();
     return await loadCloudSessions();
   })().finally(() => { cloudHistoryRefreshPromise = null; });
@@ -5969,9 +5965,9 @@ async function syncLocalSessionsToCloud() {
 }
 
 function getSessions() {
-  // Con sesión iniciada, Supabase es la fuente oficial del historial.
-  // El respaldo local solo se usa para migración hacia Supabase, no para pintar historial paralelo.
-  const source = currentUser ? (Array.isArray(cloudSessions) ? cloudSessions : []) : getSessionsLocal();
+  const localSessions = getSessionsLocal();
+  const remoteSessions = Array.isArray(cloudSessions) ? cloudSessions : [];
+  const source = currentUser ? [...remoteSessions, ...localSessions] : localSessions;
   return dedupeSessions(source).filter(s => !shouldHideFromHistory(s));
 }
 
@@ -6266,7 +6262,7 @@ function getProfileProgressHtml(sessions) {
   }
 
   if (!cloudSessionsLoaded && (!sessions || sessions.length === 0)) {
-    ensureCloudHistoryReady(true).then(() => renderProfile());
+    ensureCloudHistoryReady(false).then(() => renderProfile());
     return buttonsHtml + `<div class="profile-progress-content"><div class="profile-progress-empty">Sincronizando progreso con Supabase…</div></div>`;
   }
 
@@ -6304,7 +6300,7 @@ function renderHistory() {
 
   if (!cloudSessionsLoaded && sessions.length === 0) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">☁️</div><div class="empty-text">Sincronizando historial con Supabase…</div></div>`;
-    ensureCloudHistoryReady(true).then(() => renderHistory());
+    ensureCloudHistoryReady(false).then(() => renderHistory());
     return;
   }
 
@@ -6376,7 +6372,7 @@ function renderHistory() {
   if (currentUser && cloudSessionsLoaded) {
     const localCount = getAllRecoverableLocalSessions().length;
     const cloudCount = (cloudSessions || []).length;
-    if (localCount > cloudCount) refreshCloudHistory(true).then(() => renderHistory());
+    if (localCount > cloudCount) refreshCloudHistory(false).then(() => renderHistory());
   }
 }
 
