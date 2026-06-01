@@ -3187,7 +3187,7 @@ async function finishSession() {
 
   renderHome();
   renderHistory();
-  showPostSessionSummary(finishedSession, wasEditing);
+  showPostSessionSavedMessage(finishedSession, wasEditing);
 }
 
 
@@ -5149,16 +5149,7 @@ function getSessionSummaryStats(session) {
     bestSet: getSessionBestSet(session)
   };
 }
-function showPostSessionSummary(session, wasEditing = false) {
-  const stats = getSessionSummaryStats(session);
-  const bestText = stats.bestSet
-    ? `${escapeHtml(stats.bestSet.exerciseName)} · ${stats.bestSet.weight} lb × ${stats.bestSet.reps}`
-    : 'Sin mejor serie registrada';
-
-  const cardioText = stats.cardioMinutes || stats.cardioKm
-    ? `<div class="history-summary-card"><div class="history-summary-label">Cardio</div><div class="history-summary-value">${stats.cardioMinutes || 0} min · ${stats.cardioKm || 0} km</div></div>`
-    : '';
-
+function showPostSessionSavedMessage(session, wasEditing = false) {
   const oldOverlay = document.getElementById('postSessionSummaryOverlay');
   if (oldOverlay) oldOverlay.remove();
 
@@ -5179,7 +5170,7 @@ function showPostSessionSummary(session, wasEditing = false) {
   overlay.innerHTML = `
     <div style="
       width: 100%;
-      max-width: 440px;
+      max-width: 420px;
       border-radius: 26px;
       padding: 22px;
       background: linear-gradient(180deg, rgba(45,24,69,.98), rgba(18,5,31,.98));
@@ -5193,36 +5184,15 @@ function showPostSessionSummary(session, wasEditing = false) {
         font-size: 34px;
         letter-spacing: 1.6px;
         color: #d8b65d;
-        margin-bottom: 4px;
+        margin-bottom: 8px;
       ">
         Sesión guardada
       </div>
 
-      <div style="font-size: 14px; color: #bfb3cc; line-height: 1.45; margin-bottom: 18px;">
+      <div style="font-size: 14px; color: #bfb3cc; line-height: 1.5; margin-bottom: 18px;">
         ${wasEditing ? 'Cambios guardados correctamente.' : 'Entrenamiento terminado correctamente.'}<br>
-        <strong style="color:#f7f2ea;">${escapeHtml(session.routineName || 'Rutina')}</strong><br>
-        <span style="display:block;margin-top:8px;color:#d8b65d;">Si quieres compartir o generar tarjeta, ve a Historial.</span>
-      </div>
-
-      <div class="history-summary-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:0 0 14px;">
-        <div class="history-summary-card" style="display:block;">
-          <div class="history-summary-label">Ejercicios</div>
-          <div class="history-summary-value">${stats.exercisesCount}</div>
-        </div>
-        <div class="history-summary-card" style="display:block;">
-          <div class="history-summary-label">Series hechas</div>
-          <div class="history-summary-value">${stats.completedSets}</div>
-        </div>
-        <div class="history-summary-card" style="display:block;">
-          <div class="history-summary-label">Volumen</div>
-          <div class="history-summary-value">${stats.totalVolume.toLocaleString()} lb</div>
-        </div>
-        ${cardioText}
-      </div>
-
-      <div class="analysis-box" style="margin: 14px 0 18px;">
-        <div class="analysis-title">Mejor serie</div>
-        <div class="analysis-text">${bestText}</div>
+        <strong style="color:#f7f2ea;">${escapeHtml(session?.routineName || 'Rutina')}</strong><br>
+        <span style="display:block;margin-top:10px;color:#d8b65d;">Si quieres compartir o generar tarjeta, ve a Historial.</span>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -5263,6 +5233,7 @@ function showPostSessionSummary(session, wasEditing = false) {
     showScreen('history');
   };
 }
+
 function toggleSet(ei, si) {
   if (!currentSession?.exercises?.[ei]?.sets?.[si]) return;
   const ex = currentSession.exercises[ei];
