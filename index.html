@@ -1512,7 +1512,7 @@ function saveCurrentDraft() {
     console.warn('saveCurrentDraft', e);
   }
 
-  queueCurrentSessionCloudSave(false);
+  // Borrador local: evita tráfico a Supabase en cada captura.
 }
 
 function getCurrentDraft() {
@@ -1682,6 +1682,27 @@ function dedupeSessions(sessions) {
   return Array.from(map.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
+function updateSessionCaches(session) {
+  const clean = normalizeSession(session);
+  if (!clean) return;
+
+  const existingLocal = getSessionsLocal();
+  cloudSessions = dedupeSessions([
+    clean,
+    ...(cloudSessions || []).filter(item => sessionKey(item) !== sessionKey(clean)),
+    ...existingLocal.filter(item => sessionKey(item) !== sessionKey(clean))
+  ]);
+  cloudSessionsLoaded = true;
+  setSessionsLocal(cloudSessions);
+}
+
+function removeSessionFromCaches(session) {
+  const key = sessionKey(session);
+  if (!key) return;
+  cloudSessions = dedupeSessions((cloudSessions || []).filter(item => sessionKey(item) !== key));
+  setSessionsLocal(getSessionsLocal().filter(item => sessionKey(item) !== key));
+}
+
 function readSessionsArrayFromStorageKey(key) {
   try {
     const raw = JSON.parse(localStorage.getItem(key) || '[]');
@@ -1740,91 +1761,13 @@ function markCurrentSessionChanged() {
 }
 
 function queueCurrentSessionCloudSave(immediate = false) {
-  if (!currentUser || !currentSession || !isActiveCloudSession(currentSession)) return;
-  currentSessionCloudSavePending = true;
-  clearTimeout(currentSessionCloudTimer);
-  const run = () => saveActiveSessionToCloud();
-  if (immediate) run();
-  else currentSessionCloudTimer = setTimeout(run, 450);
+  // La sesión activa se guarda solo en localStorage.
+  // Supabase se toca al terminar, editar o eliminar una sesión.
+  return false;
 }
 
 async function saveActiveSessionToCloud() {
-  if (!currentUser || !currentSession) return false;
-  if (currentSessionCloudSaving) {
-    currentSessionCloudSavePending = true;
-    return false;
-  }
-
-  const sourceRef = makeSessionRef(currentSession);
-  const sourceRevision = currentSessionRevision;
-  const cleanSession = markActiveSession(currentSession);
-  if (!cleanSession) return false;
-
-  currentSessionCloudSavePending = false;
-  currentSessionCloudSaving = true;
-  try {
-    const { data: existing, error: checkError } = await supabaseClient
-      .from('sessions')
-      .select('id, data_json')
-      .eq('user_id', currentUser.id)
-      .eq('routine_name', cleanSession.routineName)
-      .eq('date', cleanSession.date)
-      .limit(1);
-
-    if (checkError) throw checkError;
-
-    if (existing && existing.length > 0) {
-      const existingRow = existing[0];
-      const existingId = existingRow.id;
-      const existingSession = normalizeSession(existingRow.data_json || {});
-      if (existingSession && !isActiveCloudSession(existingSession)) {
-        return true;
-      }
-      const { error } = await supabaseClient
-        .from('sessions')
-        .update({
-          routine_id: cleanSession.routineId,
-          routine_name: cleanSession.routineName,
-          date: cleanSession.date,
-          data_json: cleanSession,
-        })
-        .eq('user_id', currentUser.id)
-        .eq('id', existingId);
-      if (error) throw error;
-      cleanSession._cloudId = existingId;
-    } else {
-      const { data, error } = await supabaseClient
-        .from('sessions')
-        .insert({
-          user_id: currentUser.id,
-          routine_id: cleanSession.routineId,
-          routine_name: cleanSession.routineName,
-          date: cleanSession.date,
-          data_json: cleanSession,
-        })
-        .select('id')
-        .single();
-      if (error) throw error;
-      cleanSession._cloudId = data?.id || null;
-    }
-
-    if (currentSession && sameSessionRef(currentSession, sourceRef) && isActiveCloudSession(currentSession)) {
-      currentSession._cloudId = cleanSession._cloudId || currentSession._cloudId || null;
-    }
-    cloudSessions = dedupeSessions([...(cloudSessions || []), cleanSession]);
-    setSessionsLocal(getFinishedSessions());
-    return true;
-  } catch (error) {
-    console.error('saveActiveSessionToCloud', error);
-    return false;
-  } finally {
-    currentSessionCloudSaving = false;
-
-    if (currentUser && currentSession && isActiveCloudSession(currentSession) && sameSessionRef(currentSession, sourceRef) && (currentSessionCloudSavePending || currentSessionRevision !== sourceRevision)) {
-      clearTimeout(currentSessionCloudTimer);
-      currentSessionCloudTimer = setTimeout(() => saveActiveSessionToCloud(), 50);
-    }
-  }
+  return false;
 }
 
 
@@ -1855,8 +1798,9 @@ async function saveSession(session) {
     return false;
   }
 
-  if (existing && existing.length > 0) {
-    const existingId = existing[0].id;
+  let savedCloudId = existing?.[0]?.id || null;
+
+  if (savedCloudId) {
     const { error } = await supabaseClient
       .from('sessions')
       .update({
@@ -1866,7 +1810,7 @@ async function saveSession(session) {
         data_json: cleanSession,
       })
       .eq('user_id', currentUser.id)
-      .eq('id', existingId);
+      .eq('id', savedCloudId);
 
     if (error) {
       console.error('saveSession update', error);
@@ -1874,7 +1818,7 @@ async function saveSession(session) {
       return false;
     }
   } else {
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from('sessions')
       .insert({
         user_id: currentUser.id,
@@ -1882,18 +1826,24 @@ async function saveSession(session) {
         routine_name: cleanSession.routineName,
         date: cleanSession.date,
         data_json: cleanSession,
-      });
+      })
+      .select('id')
+      .single();
 
     if (error) {
       console.error('saveSession insert', error);
       showToast('❌ ' + error.message);
       return false;
     }
+
+    savedCloudId = data?.id || null;
   }
 
-  await loadCloudSessions();
+  cleanSession._cloudId = savedCloudId;
+  updateSessionCaches(cleanSession);
   return true;
 }
+
 
 function makeSessionRef(session) {
   return {
@@ -1944,7 +1894,8 @@ async function updateSavedSession(originalRef, updatedSession) {
     return false;
   }
 
-  await loadCloudSessions();
+  cleanSession._cloudId = originalRef?.cloudId || cleanSession._cloudId || null;
+  updateSessionCaches(cleanSession);
   return true;
 }
 
@@ -2112,20 +2063,20 @@ async function renderProfile() {
   if (currentUser) {
     const { data, error } = await supabaseClient
       .from('profiles')
-      .select('*')
+      .select('name, goal, weight, height, age, split, note')
       .eq('id', currentUser.id)
       .maybeSingle();
 
     if (!error && data) {
       profile = {
+        ...profile,
         name: data.name || '',
         goal: data.goal || '',
         weight: data.weight || '',
         height: data.height || '',
         age: data.age || '',
         split: data.split || '',
-        note: data.note || '',
-        photo: data.photo_url || ''
+        note: data.note || ''
       };
     }
   }
@@ -2181,16 +2132,20 @@ async function editProfile() {
   let current = getProfileLocal();
 
   if (currentUser) {
-    const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+    const { data } = await supabaseClient
+      .from('profiles')
+      .select('name, goal, weight, height, age, split, note')
+      .eq('id', currentUser.id)
+      .maybeSingle();
     if (data) current = {
+      ...current,
       name: data.name || '',
       goal: data.goal || '',
       weight: data.weight || '',
       height: data.height || '',
       age: data.age || '',
       split: data.split || '',
-      note: data.note || '',
-      photo: data.photo_url || ''
+      note: data.note || ''
     };
   }
 
@@ -2266,8 +2221,7 @@ async function editProfile() {
         height: updatedProfile.height,
         age: updatedProfile.age,
         split: updatedProfile.split,
-        note: updatedProfile.note,
-        photo_url: updatedProfile.photo || ''
+        note: updatedProfile.note
       });
       if (error) { showToast('❌ Error al guardar perfil'); return; }
     }
@@ -2288,21 +2242,7 @@ async function handleProfilePhoto(event) {
     let profile = getProfileLocal();
     profile.photo = e.target.result;
 
-    if (currentUser) {
-      const { error } = await supabaseClient.from('profiles').upsert({
-        id: currentUser.id,
-        name: profile.name || '',
-        goal: profile.goal || '',
-        weight: profile.weight || '',
-        height: profile.height || '',
-        age: profile.age || '',
-        split: profile.split || '',
-        note: profile.note || '',
-        photo_url: profile.photo || ''
-      });
-      if (error) { showToast('❌ Error al guardar foto'); return; }
-    }
-
+    // La foto se queda local para no subir ni descargar base64 desde Supabase.
     saveProfileLocal(profile);
     await renderProfile();
     showToast('✅ Foto guardada');
@@ -2986,7 +2926,6 @@ function startSession(routineId) {
   currentSession = markActiveSession(currentSession);
   currentSessionRevision = 0;
   saveCurrentDraft();
-  queueCurrentSessionCloudSave(true);
   renderHistory();
   document.getElementById('sessionTitle').textContent = routine.name.toUpperCase();
   document.getElementById('sessionDate').innerHTML = `<span class="session-kicker">Sesión en curso</span><div>${formatDateFull(new Date())}</div>`;
@@ -3224,9 +3163,6 @@ async function finishSession() {
   clearTimeout(currentSessionCloudTimer);
   currentSessionCloudTimer = null;
   currentSessionCloudSavePending = false;
-  for (let i = 0; currentSessionCloudSaving && i < 20; i++) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
 
   const wasEditing = !!editingSessionKey;
   const finishedSession = markFinishedSession(currentSession);
@@ -3241,7 +3177,6 @@ async function finishSession() {
   clearCurrentDraft();
   stopTimer();
   exitTrainingMode();
-  await loadCloudSessions();
   setSessionsLocal(getFinishedSessions());
 
   const finishBtn = document.querySelector('.finish-btn');
@@ -4289,10 +4224,9 @@ function exportSessionsCsv() {
 }
 
 window.addEventListener('pageshow', () => {
-  if (currentUser) loadCloudSessions().then(() => {
-    renderHome();
-    if (document.getElementById('historyScreen')?.classList.contains('active')) renderHistory();
-  });
+  if (!currentUser) return;
+  renderHome();
+  if (document.getElementById('historyScreen')?.classList.contains('active')) renderHistory();
 }, { passive: true });
 
 /* Auth listener anterior eliminado: la sesión se controla solo en el bloque final. */
@@ -5520,6 +5454,20 @@ function bindAuthFormEvents() {
   });
 }
 
+function renderAuthLoading(statusText = 'Restaurando sesión…') {
+  const panel = document.getElementById('authPanel');
+  if (!panel) return;
+  setAuthLocked(true);
+  activateOnlyScreen('auth');
+  updateBottomNav('auth');
+  panel.innerHTML = `
+    <div class="exercise-card" style="padding:26px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:28px;letter-spacing:.12em;line-height:1;">CUENTA</div>
+      <div style="color:var(--muted);font-size:14px;line-height:1.45;">${escapeHtml(statusText)}</div>
+    </div>
+  `;
+}
+
 function renderAuthLoggedOut(statusText = 'Inicia sesión para usar FORJA.') {
   const panel = document.getElementById('authPanel');
   if (!panel) return;
@@ -5612,29 +5560,31 @@ async function afterLogin(user) {
     return;
   }
 
-  cloudSessionsLoaded = false;
+  cloudSessions = getSessionsLocal();
+  cloudSessionsLoaded = cloudSessions.length > 0;
   routinesCloudLoaded = false;
   setAuthLocked(false);
   renderAuthLoggedIn();
 
   try { await loadCloudRoutines(true); } catch (error) { console.warn('loadCloudRoutines inicial', error); }
 
-  // La interfaz no debe quedarse vacía esperando Supabase.
   try { renderHome(); } catch (error) { console.warn('renderHome inicial', error); }
   try { renderHistory(); } catch (error) { console.warn('renderHistory inicial', error); }
-  try { renderProfile(); } catch (error) { console.warn('renderProfile inicial', error); }
   showScreen('home');
 
-  // Supabase sincroniza después, sin bloquear Rutinas, Historial ni Perfil.
   Promise.resolve().then(async () => {
-    try { await loadCloudRoutines(false); } catch (error) { console.warn('loadCloudRoutines post-sync', error); }
-    try { await syncLocalSessionsToCloud(); } catch (error) { console.warn('syncLocalSessionsToCloud', error); }
-    try { await refreshCloudHistory(true); } catch (error) { console.warn('refreshCloudHistory', error); }
+    try { await syncLocalSessionsToCloudOnce(); } catch (error) { console.warn('syncLocalSessionsToCloudOnce', error); }
+    try { await refreshCloudHistory(false); } catch (error) { console.warn('refreshCloudHistory', error); }
     try { renderHome(); } catch (error) { console.warn('renderHome post-sync', error); }
-    try { renderHistory(); } catch (error) { console.warn('renderHistory post-sync', error); }
-    try { renderProfile(); } catch (error) { console.warn('renderProfile post-sync', error); }
+    if (document.getElementById('historyScreen')?.classList.contains('active')) {
+      try { renderHistory(); } catch (error) { console.warn('renderHistory post-sync', error); }
+    }
+    if (document.getElementById('profileScreen')?.classList.contains('active')) {
+      try { renderProfile(); } catch (error) { console.warn('renderProfile post-sync', error); }
+    }
   });
 }
+
 
 async function signIn() {
   if (authBusy) return;
@@ -5763,12 +5713,13 @@ async function ensureCloudHistoryReady(force = false) {
   if (!currentUser) return [];
   if (!force && cloudSessionsLoaded && Array.isArray(cloudSessions)) return cloudSessions;
   try {
-    return await refreshCloudHistory(true);
+    return await refreshCloudHistory(force);
   } catch (error) {
     console.error('ensureCloudHistoryReady', error);
     return cloudSessions || [];
   }
 }
+
 
 function showScreen(name) {
   const requestedName = name;
@@ -5802,7 +5753,7 @@ function showScreen(name) {
 
   if (name === 'history') {
     renderHistory();
-    ensureCloudHistoryReady(true).then(() => renderHistory());
+    ensureCloudHistoryReady(false).then(() => renderHistory());
     return;
   }
 
@@ -5822,7 +5773,7 @@ async function initApp() {
   activateOnlyScreen('auth');
   updateBottomNav('auth');
   setAuthLocked(true);
-  renderAuthLoggedOut('Cargando cuenta…');
+  renderAuthLoading('Restaurando sesión…');
 
   const user = await getAuthUserFast();
   authBootDone = true;
@@ -5934,38 +5885,45 @@ function getAllRecoverableLocalSessions() {
 }
 
 function getSessionsLocal() {
-  return dedupeSessions(getAllRecoverableLocalSessions());
+  return dedupeSessions(readSessionsArrayFromStorageKey('gymlog_sessions'));
 }
 
 function getLegacyLocalSessionsForCloudMigration() {
   return dedupeSessions(getAllRecoverableLocalSessions());
 }
 
-async function forjaFetchAllSessionRows() {
+async function forjaFetchSessionRows(limit = 120) {
   if (!currentUser) return [];
-  const all = [];
-  const pageSize = 1000;
-  for (let from = 0; from < 10000; from += pageSize) {
-    const to = from + pageSize - 1;
-    const response = await withTimeout(
-      supabaseClient
-        .from('sessions')
-        .select('id, routine_id, routine_name, date, data_json, created_at')
-        .eq('user_id', currentUser.id)
-        .order('date', { ascending: false })
-        .range(from, to),
-      15000,
-      { data: null, error: new Error('Supabase tardó demasiado en responder.') }
-    );
-    if (response?.error) throw response.error;
-    const rows = response?.data || [];
-    all.push(...rows);
-    if (rows.length < pageSize) break;
-  }
-  return all;
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 120, 250));
+  const response = await withTimeout(
+    supabaseClient
+      .from('sessions')
+      .select('id, routine_id, routine_name, date, data_json, created_at')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending: false })
+      .range(0, safeLimit - 1),
+    15000,
+    { data: null, error: new Error('Supabase tardó demasiado en responder.') }
+  );
+  if (response?.error) throw response.error;
+  return response?.data || [];
 }
 
-async function loadCloudSessions() {
+async function forjaFetchSessionIdentityRows() {
+  if (!currentUser) return [];
+  const response = await withTimeout(
+    supabaseClient
+      .from('sessions')
+      .select('routine_name, date')
+      .eq('user_id', currentUser.id),
+    15000,
+    { data: null, error: new Error('Supabase tardó demasiado en responder.') }
+  );
+  if (response?.error) throw response.error;
+  return response?.data || [];
+}
+
+async function loadCloudSessions(limit = 120) {
   if (!currentUser) {
     cloudSessions = [];
     cloudSessionsLoaded = false;
@@ -5973,22 +5931,25 @@ async function loadCloudSessions() {
   }
 
   try {
-    const rows = await forjaFetchAllSessionRows();
-    cloudSessions = dedupeSessions(rows.map(row => ({
+    const rows = await forjaFetchSessionRows(limit);
+    const mapped = rows.map(row => ({
       ...(row.data_json || {}),
       _cloudId: row.id,
       routineId: row.data_json?.routineId || row.routine_id,
       routineName: row.data_json?.routineName || row.routine_name,
       date: row.data_json?.date || row.date,
       updatedAt: row.data_json?.updatedAt || row.created_at,
-    })));
+    }));
+
+    cloudSessions = dedupeSessions([...mapped, ...getSessionsLocal()]);
     cloudSessionsLoaded = true;
     setSessionsLocal(cloudSessions);
+    window.__forjaLastCloudHistorySyncAt = Date.now();
     return cloudSessions;
   } catch (error) {
     console.error('loadCloudSessions', error);
     cloudSessionsLoaded = true;
-    cloudSessions = dedupeSessions([...(cloudSessions || []), ...getAllRecoverableLocalSessions()]);
+    cloudSessions = dedupeSessions([...(cloudSessions || []), ...getSessionsLocal()]);
     showToast('❌ ' + (error.message || 'No se pudo cargar historial'));
     return cloudSessions;
   }
@@ -5996,51 +5957,79 @@ async function loadCloudSessions() {
 
 async function refreshCloudHistory(force = false) {
   if (!currentUser) return [];
+
+  const lastSync = Number(window.__forjaLastCloudHistorySyncAt || 0);
+  const freshEnough = Date.now() - lastSync < 10 * 60 * 1000;
+
+  if (!force && cloudSessionsLoaded && freshEnough) {
+    return cloudSessions || [];
+  }
+
   if (cloudHistoryRefreshPromise && !force) return cloudHistoryRefreshPromise;
-  cloudHistoryRefreshPromise = (async () => {
-    const before = dedupeSessions([...(cloudSessions || []), ...getAllRecoverableLocalSessions()]);
-    if (before.length && !cloudSessionsLoaded) cloudSessions = before;
-    await syncLocalSessionsToCloud();
-    return await loadCloudSessions();
-  })().finally(() => { cloudHistoryRefreshPromise = null; });
+
+  cloudHistoryRefreshPromise = loadCloudSessions(120)
+    .finally(() => { cloudHistoryRefreshPromise = null; });
+
   return cloudHistoryRefreshPromise;
+}
+
+function getMigrationKey() {
+  return currentUser?.id ? `forja_local_migration_done_v2_${currentUser.id}` : '';
+}
+
+async function syncLocalSessionsToCloudOnce() {
+  if (!currentUser) return true;
+  const key = getMigrationKey();
+  if (key && localStorage.getItem(key) === '1') return true;
+
+  const ok = await syncLocalSessionsToCloud();
+  if (ok && key) localStorage.setItem(key, '1');
+  return ok;
 }
 
 async function syncLocalSessionsToCloud() {
   if (!currentUser) return true;
-  const localSessions = getAllRecoverableLocalSessions();
+  const localSessions = getLegacyLocalSessionsForCloudMigration();
   if (!localSessions.length) return true;
 
   let rows = [];
-  try { rows = await forjaFetchAllSessionRows(); }
+  try { rows = await forjaFetchSessionIdentityRows(); }
   catch (error) { console.warn('syncLocalSessionsToCloud fetch', error); rows = []; }
 
-  const existingKeys = new Set((rows || []).map(row => {
-    const payload = row.data_json || {};
-    return sessionKey({
-      routineName: payload.routineName || row.routine_name,
-      routineId: payload.routineId || row.routine_id,
-      date: payload.date || row.date,
-      exercises: payload.exercises || []
-    });
-  }).filter(Boolean));
+  const existingKeys = new Set((rows || []).map(row => sessionKey({
+    routineName: row.routine_name,
+    date: row.date,
+    exercises: [{ sets: [{ done: true }] }]
+  })).filter(Boolean));
 
-  const pending = dedupeSessions(localSessions).filter(s => sessionKey(s) && !existingKeys.has(sessionKey(s)) && !isActiveCloudSession(s));
+  const pending = dedupeSessions(localSessions)
+    .filter(s => sessionKey(s) && !existingKeys.has(sessionKey(s)) && !isActiveCloudSession(s))
+    .slice(0, 50);
+
   if (!pending.length) return true;
 
-  for (const session of pending) {
+  const payload = pending.map(session => {
     const clean = stripCloudMeta({ ...session, status: 'finished', finishedAt: session.finishedAt || session.date });
-    const { error } = await supabaseClient.from('sessions').insert({
+    return {
       user_id: currentUser.id,
       routine_id: clean.routineId || clean.routineName || 'custom',
       routine_name: clean.routineName || 'Sesión',
       date: clean.date || clean.finishedAt || new Date().toISOString(),
       data_json: clean
-    });
-    if (error) console.warn('syncLocalSessionsToCloud insert', error);
+    };
+  });
+
+  const { error } = await supabaseClient.from('sessions').insert(payload);
+  if (error) {
+    console.warn('syncLocalSessionsToCloud insert', error);
+    return false;
   }
+
+  cloudSessions = dedupeSessions([...pending, ...(cloudSessions || []), ...getSessionsLocal()]);
+  setSessionsLocal(cloudSessions);
   return true;
 }
+
 function getSessions() {
   const localSessions = getSessionsLocal();
   const cloud = Array.isArray(cloudSessions) ? cloudSessions : [];
@@ -6343,7 +6332,7 @@ function getProfileProgressHtml(sessions) {
   }
 
   if (!cloudSessionsLoaded && (!sessions || sessions.length === 0)) {
-    ensureCloudHistoryReady(true).then(() => renderProfile());
+    ensureCloudHistoryReady(false).then(() => renderProfile());
     return buttonsHtml + `<div class="profile-progress-content"><div class="profile-progress-empty">Sincronizando progreso con Supabase…</div></div>`;
   }
 
@@ -6381,7 +6370,7 @@ function renderHistory() {
 
   if (!cloudSessionsLoaded && sessions.length === 0) {
     list.innerHTML = `<div class="empty"><div class="empty-icon">☁️</div><div class="empty-text">Sincronizando historial con Supabase…</div></div>`;
-    ensureCloudHistoryReady(true).then(() => renderHistory());
+    ensureCloudHistoryReady(false).then(() => renderHistory());
     return;
   }
 
@@ -6436,7 +6425,7 @@ function renderHistory() {
           <div class="history-symbol">${escapeHtml(emoji)}</div>
           <div class="history-clean-main">
             <div class="history-name">${escapeHtml(s.routineName || 'Sesión')}${active ? ' <span style="font-size:11px;letter-spacing:.8px;color:#f3c969;margin-left:6px;">EN CURSO</span>' : ''}</div>
-            <div class="routine-meta">${exercises.length} ejercicios registrados${active ? ' · actualizándose en Supabase' : ''}</div>
+            <div class="routine-meta">${exercises.length} ejercicios registrados${active ? ' · borrador local' : ''}</div>
           </div>
           <div class="history-date-clean">${formatDate(s.date)}</div>
         </div>
@@ -6450,11 +6439,6 @@ function renderHistory() {
       }).join('')}
   `;
 
-  if (currentUser && cloudSessionsLoaded) {
-    const localCount = getAllRecoverableLocalSessions().length;
-    const cloudCount = (cloudSessions || []).length;
-    if (localCount > cloudCount) refreshCloudHistory(true).then(() => renderHistory());
-  }
 }
 
 initApp();</script>
