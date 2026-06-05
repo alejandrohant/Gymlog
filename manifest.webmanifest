@@ -1,22 +1,23 @@
 {
   "name": "FORJA — Bitácora de entrenamiento",
   "short_name": "FORJA",
-  "start_url": "./index.html",
+  "start_url": "./index.html?v=13",
   "display": "standalone",
   "background_color": "#12051f",
   "theme_color": "#12051f",
   "icons": [
     {
-      "src": "forja-icon.png?v=20260605",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "forja-icon-180.png?v=20260605",
+      "src": "forja-icon-180.png?v=13",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "forja-icon.png?v=13",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "scope": "./"
 }

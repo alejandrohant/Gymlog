@@ -1,4 +1,4 @@
-<!-- FORJA_BUILD: limpio-estructural-fondo-uniforme-2026-05-25 -->
+<!-- FORJA_BUILD: local-limpio-sin-supabase-2026-06-03 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -10,11 +10,12 @@
 <meta content="dark" name="color-scheme"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <title>FORJA — Bitácora de entrenamiento</title>
-<link href="forja-icon.png?v=20260605" rel="icon" sizes="512x512" type="image/png"/>
-<link href="forja-icon-180.png?v=20260605" rel="apple-touch-icon" sizes="180x180"/>
-<link href="manifest.webmanifest?v=20260605" rel="manifest"/>
+<link href="forja-icon.png?v=13" rel="icon" sizes="512x512" type="image/png"/>
+<link href="forja-icon.png?v=13" rel="apple-touch-icon" sizes="180x180"/>
+<link href="manifest.webmanifest?v=13" rel="manifest"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="styles.css?v=20260605">
+<link href="styles.css?v=13" rel="stylesheet"/>
+
 </head>
 <body>
 <div class="header">
@@ -38,7 +39,7 @@
 <button aria-label="Rutinas" class="nav-btn" onclick="showScreen('home')" title="Rutinas">🏋️</button>
 <button aria-label="Historial" class="nav-btn" onclick="showScreen('history')" title="Historial">📋</button>
 <button aria-label="Progreso" class="nav-btn" onclick="showScreen('profile')" title="Progreso">📈</button>
-<button aria-label="Cuenta" class="nav-btn active" onclick="showScreen('auth')" title="Cuenta">🔐</button>
+<button aria-label="Datos" class="nav-btn" onclick="showScreen('auth')" title="Datos locales">💾</button>
 </div>
 <div class="screen" id="homeScreen">
 <div class="section-title">HOY TOCA</div>
@@ -71,12 +72,11 @@
 <div class="section-title">PROGRESO</div>
 <div id="profileContent"></div>
 </div>
-<div class="screen active" id="authScreen">
-<div class="section-title">CUENTA</div>
+<div class="screen" id="authScreen">
+<div class="section-title">DATOS LOCALES</div>
 <div id="authPanel"></div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=20260605"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>
