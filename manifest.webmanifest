@@ -7,10 +7,16 @@
   "theme_color": "#12051f",
   "icons": [
     {
-      "src": "forja-icon.png?v=10",
+      "src": "forja-icon.png?v=20260605",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "forja-icon-180.png?v=20260605",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
